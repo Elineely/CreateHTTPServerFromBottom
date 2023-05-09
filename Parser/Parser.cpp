@@ -1,14 +1,17 @@
 #include "Parser.hpp"
-#include "utils.hpp"
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
+
+#include "utils.hpp"
 
 // Default Constructor
 Parser::Parser(void) {
   this->data_.first_line = NULL;
   this->pool_.total_line = NULL;
   this->pool_.line_len = 0;
+  this->pool_.prev_offset = 0;
   this->pool_.offset = 0;
   this->pool_.found_newline = false;
 }
@@ -32,8 +35,22 @@ Parser& Parser::operator=(Parser const& rhs) {
 }
 
 // Private member functions
-char* Parser::ParseFirstLine(char* buf) {
-  (void)buf;
+char* Parser::ParseFirstLine(void) {
+  size_t prev_offset = this->pool_.prev_offset;
+  size_t offset = this->pool_.offset;
+  std::string input(this->pool_.total_line, prev_offset,
+                    offset - prev_offset - 2);
+  std::stringstream ss(input);
+  std::string method;
+  std::string uri;
+  std::string http_version;
+
+  ss >> method >> uri >> http_version;
+  if (method != "GET" && method != "POST" && method != "DELETE") {
+    this->data_.err_num = kInvalidMethod;
+    return (NULL);
+  }
+
   return (NULL);
 }
 
@@ -68,9 +85,10 @@ void Parser::FindNewlineInPool(void) {
   find = std::strstr(total_line + offset, "\r\n");
   if (find == NULL) {
     this->pool_.found_newline = false;
-    return ;
+    return;
   }
   this->pool_.found_newline = true;
+  this->pool_.prev_offset = offset;
   this->pool_.offset = static_cast<size_t>((find + 2) - total_line);
 }
 
@@ -80,15 +98,15 @@ void Parser::ReadBuffer(char* buf) {
     this->SaveBufferInPool(buf);
     this->FindNewlineInPool();
     if (this->pool_.found_newline == false) {
-      return ;
+      return;
     }
     if (this->data_.first_line == NULL) {
-      // this->data_.first_line = this->ParseFirstLine(buf);
+      this->data_.first_line = this->ParseFirstLine();
       // std::cout << this->data_.first_line << std::endl;
     } else {
       // ParseHeader()
     }
-  } catch(std::exception &e) {
+  } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
 }
