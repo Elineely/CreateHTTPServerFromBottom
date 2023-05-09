@@ -6,17 +6,21 @@
 #include <vector>
 
 enum ErrorNum {
-
+  kInvalidMethod;
 };
 
 struct RequestPool {
   char* total_line;
   size_t line_len;
+  size_t prev_offset;
   size_t offset;
   bool found_newline;
 };
 
 struct Request {
+  std::string method;
+  std::string uri;
+  std::string http_version;
   char* first_line;
   std::map<std::string, char*> header;
   std::vector<char> body;
@@ -40,7 +44,7 @@ class Parser {
   struct RequestPool pool_;
 
   // Member Functions
-  char* ParseFirstLine(char* buf);
+  char* ParseFirstLine(void);
   void SaveBufferInPool(char* buf);
   void FindNewlineInPool(void);
 };
