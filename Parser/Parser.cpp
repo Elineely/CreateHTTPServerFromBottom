@@ -10,6 +10,7 @@ Parser::Parser(void) {
   this->pool_.total_line = NULL;
   this->pool_.line_len = 0;
   this->pool_.offset = 0;
+  this->pool_.found_newline = false;
 }
 
 // Copy Constructor
@@ -57,10 +58,30 @@ void Parser::SaveBufferInPool(char* buf) {
   }
 }
 
+void Parser::FindNewlineInPool(void) {
+  const char* find;
+  const char* total_line;
+  size_t offset;
+
+  offset = this->pool_.offset;
+  total_line = this->pool_.total_line;
+  find = std::strstr(total_line + offset, "\r\n");
+  if (find == NULL) {
+    this->pool_.found_newline = false;
+    return ;
+  }
+  this->pool_.found_newline = true;
+  this->pool_.offset = static_cast<size_t>((find + 2) - total_line);
+}
+
 // Public member functions
 void Parser::ReadBuffer(char* buf) {
   try {
     this->SaveBufferInPool(buf);
+    this->FindNewlineInPool();
+    if (this->pool_.found_newline == false) {
+      return ;
+    }
     if (this->data_.first_line == NULL) {
       // this->data_.first_line = this->ParseFirstLine(buf);
       // std::cout << this->data_.first_line << std::endl;

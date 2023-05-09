@@ -13,6 +13,7 @@ struct RequestPool {
   char* total_line;
   size_t line_len;
   size_t offset;
+  bool found_newline;
 };
 
 struct Request {
@@ -41,6 +42,7 @@ class Parser {
   // Member Functions
   char* ParseFirstLine(char* buf);
   void SaveBufferInPool(char* buf);
+  void FindNewlineInPool(void);
 };
 
 #endif
