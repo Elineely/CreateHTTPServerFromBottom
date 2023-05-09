@@ -40,6 +40,7 @@ class Parser {
 
   // Member Functions
   char* ParseFirstLine(char* buf);
+  void SaveBufferInPool(char* buf);
 };
 
 #endif
