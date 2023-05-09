@@ -1,7 +1,8 @@
 NAME 						:=	parser
 
 SRC_FILES				:=	main			\
-										Parser
+										Parser		\
+										utils
 
 SRCS						:=	$(addsuffix .cpp, $(SRC_FILES))
 
