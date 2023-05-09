@@ -1,7 +1,12 @@
 #include "Parser.hpp"
 #include <iostream>
 
-Parser::Parser(void) { this->data_.first_line = NULL; }
+Parser::Parser(void) {
+  this->data_.first_line = NULL;
+  this->pool_.total_line = NULL;
+  this->pool_.line_len = 0;
+  this->pool_.offset = 0;
+}
 
 Parser::Parser(const Parser& src) { (void)src; }
 
