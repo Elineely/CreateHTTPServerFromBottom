@@ -5,8 +5,14 @@
 #include <string>
 #include <vector>
 
-enum ErrorNum {
-  kInvalidMethod;
+enum StatusCode {
+  BAD_REQUEST_400 = 400,
+};
+
+enum ValidationStatus {
+  NOT_INSPECTED = -1,
+  VALID,
+  INVALID
 };
 
 struct RequestPool {
@@ -17,14 +23,16 @@ struct RequestPool {
   bool found_newline;
 };
 
+// TODO: char* 자료형에서 string 으로 변환할 때 '0' 을 null character 로
+// 인식하는지 확인 필요
 struct Request {
   std::string method;
   std::string uri;
   std::string http_version;
-  char* first_line;
+  ValidationStatus first_line_validation;
   std::map<std::string, char*> header;
   std::vector<char> body;
-  ErrorNum err_num;
+  StatusCode status;
 };
 
 class Parser {
@@ -44,7 +52,7 @@ class Parser {
   struct RequestPool pool_;
 
   // Member Functions
-  char* ParseFirstLine(void);
+  void ParseFirstLine(void);
   void SaveBufferInPool(char* buf);
   void FindNewlineInPool(void);
 };
