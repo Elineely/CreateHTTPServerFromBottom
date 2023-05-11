@@ -8,7 +8,7 @@
 
 // Default Constructor
 Parser::Parser(void) {
-  this->data_.first_line = NULL;
+  this->data_.first_line_validation = NOT_INSPECTED;
   this->pool_.total_line = NULL;
   this->pool_.line_len = 0;
   this->pool_.prev_offset = 0;
@@ -75,6 +75,7 @@ void Parser::ParseFirstLine(void) {
   this->data_.method = method;
   this->data_.uri = uri;
   this->data_.http_version = http_version;
+  this->data_.first_line_validation = VALID;
 }
 
 // QUESTION: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
@@ -113,7 +114,6 @@ void Parser::FindNewlineInPool(void) {
   this->pool_.found_newline = true;
   this->pool_.prev_offset = offset;
   this->pool_.offset = static_cast<size_t>((find + 2) - total_line);
-  this->data_.first_line_validation = VALID;
 }
 
 // Public member functions
@@ -126,6 +126,9 @@ void Parser::ReadBuffer(char* buf) {
     }
     if (this->data_.first_line_validation == NOT_INSPECTED) {
       this->ParseFirstLine();
+      std::cout << this->data_.method << std::endl;
+      std::cout << this->data_.uri << std::endl;
+      std::cout << this->data_.http_version << std::endl;
     } else {
       // ParseHeader()
     }
