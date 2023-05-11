@@ -70,4 +70,15 @@ std::string ft_strtrim(const std::string &str) {
 
   return trimmed_str;
 }
-// " HELLO WORLD "
+
+std::vector<std::string> ft_split(const std::string &str, char delimiter) {
+  std::string buf;
+  std::stringstream ss(str);
+  std::vector<std::string> vec;
+
+  while (std::getline(ss, buf, delimiter)) {
+    vec.push_back(buf);
+  }
+
+  return (vec);
+}
