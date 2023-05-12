@@ -35,6 +35,7 @@ class Config
 		Config& operator=(const Config& a);
 		~Config();
         
+        int getServerPort();
         void showServerConf();
 
 };

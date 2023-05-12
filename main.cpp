@@ -4,8 +4,9 @@
 int main()
 {
 	std::cout << "wellcome Cute webserv!!" << std::endl;
+	
 	Config server_conf("server.conf");
-	server_conf.showServerConf();
-	// Server server(server_conf);
+
+	Server server(server_conf);
 	
 }

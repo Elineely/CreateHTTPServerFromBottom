@@ -16,7 +16,6 @@ void showIterMap(map_string_string map)
 	}
 }
 
-
 void Config::showServerConf()
 {
 	for(config_map::iterator iter = serverConf.begin(); iter != serverConf.end(); ++iter)

@@ -90,8 +90,10 @@ std::vector<std::string> Config::parse_split(std::string readLine, char delimite
 
 Config::Config(const Config& other)
 {
-    std::cout << "Config Constructor Call" << std::endl;
-	*this = other;
+  std::cout << "Config Constructor Call" << std::endl;
+	fileName = other.fileName;
+	serverConf = other.serverConf;
+	nullMap = other.nullMap;
 }
 
 Config& Config::operator=(const Config& other)
@@ -99,7 +101,10 @@ Config& Config::operator=(const Config& other)
     if (this == &other)
         return *this;
     std::cout << "Config Assignment Operator Call" << std::endl;
-    return *this;
+		fileName = other.fileName;
+		serverConf = other.serverConf;
+		nullMap = other.nullMap;
+		return *this;
 }
 
 Config::~Config()

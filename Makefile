@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/12 16:26:28 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/12 16:45:03 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,7 +19,8 @@ CXXFLAGS				=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address
 SRCS						=	main.cpp \
 									server/Server.cpp	\
 									config/Config.cpp	\
-									config/print.cpp
+									config/print.cpp	\
+									config/get.cpp
 
 OBJS						=	$(SRCS:.cpp=.o)
 

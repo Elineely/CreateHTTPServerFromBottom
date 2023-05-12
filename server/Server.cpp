@@ -40,7 +40,7 @@ Server::Server()
     std::cout << "Server Constructor Call" << std::endl;
 }
 
-Server::Server(Config serverConf) : serverConf(serverConf)
+Server::Server(Config serverConf)
 {
     std::cout << "Server Constructor Call" << std::endl;
     server_sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -52,7 +52,7 @@ Server::Server(Config serverConf) : serverConf(serverConf)
     std::cout << "success socket" << std::endl;
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port=htons(10000);
+    serv_addr.sin_port=htons(serverConf.getServerPort());
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     int kq;
@@ -91,6 +91,7 @@ Server::Server(Config serverConf) : serverConf(serverConf)
         {
             std::cout << "kevent() error" << std::endl;
         }
+        change_list.clear();
         for (int i=0; i <current_events; ++i)
         {
             current_event = &event_list[i];
@@ -142,7 +143,6 @@ Server::Server(Config serverConf) : serverConf(serverConf)
             // {
 
             // }
-            change_list.clear();
         }
     }
     shutdown(server_sock, SHUT_RDWR);
