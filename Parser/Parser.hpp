@@ -57,10 +57,11 @@ class Parser {
   struct RequestPool pool_;
 
   // Member Functions
-  void ParseFirstLine(void);
   void SaveBufferInPool(char* buf);
   bool FindNewlineInPool(void);
+  void ParseFirstLine(void);
   void ParseHeaders(std::map<std::string, std::string>& headers);
+  void ParseBody(std::vector<char>& body);
 };
 
 #endif

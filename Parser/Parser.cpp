@@ -119,7 +119,7 @@ bool Parser::FindNewlineInPool(void) {
     } else {
       this->data_.validation_phase = COMPLETE;
     }
-    this->pool_.offset = static_cast<size_t>((find + 4) - total_line);
+    this->pool_.offset = offset + 2;
   } else {
     this->pool_.offset = static_cast<size_t>((find + 2) - total_line);
   }
@@ -156,12 +156,45 @@ void Parser::ParseHeaders(std::map<std::string, std::string>& headers) {
            this->data_.validation_phase == ON_HEADER);
 }
 
+void Parser::ParseBody(std::vector<char>& body) {
+  char* total_line = this->pool_.total_line;
+  size_t offset = this->pool_.offset;
+  size_t line_len = this->pool_.line_len;
+  long long content_length =
+      std::strtoll(this->data_.headers["content-length"].c_str(), NULL, 10);
+
+  // TODO: chunked body 인 경우에는 사이즈 다르게 설정하기
+  body.reserve(line_len - offset);
+
+  for (size_t idx = offset; idx < line_len; idx += 1) {
+    body.push_back(*(total_line + idx));
+  }
+
+  if (content_length < 0) {
+    this->data_.status = BAD_REQUEST_400;
+    throw std::invalid_argument("Content-length should be positive value");
+  }
+  // TODO: chunked body 인 경우에는 다른 조건문으로 판단하기
+  if (static_cast<size_t>(content_length) != body.size()) {
+    this->data_.status = BAD_REQUEST_400;
+    throw std::invalid_argument(
+        "Content-length and body length should be equal");
+  }
+  this->data_.validation_phase = COMPLETE;
+  std::cout << "Body:";
+  for (std::vector<char>::iterator it = body.begin(); it != body.end(); it++) {
+    std::cout << *it;
+  }
+  std::cout << std::endl;
+}
+
 // Public member functions
 void Parser::ReadBuffer(char* buf) {
   try {
     // CRLF 가 2번으로 마무리되면 더 이상 받지 않도록 처리
     this->SaveBufferInPool(buf);
-    if (this->FindNewlineInPool() == false) {
+    if (this->FindNewlineInPool() == false &&
+        this->data_.validation_phase != ON_BODY) {
       return;
     }
     switch (this->data_.validation_phase) {
@@ -174,8 +207,10 @@ void Parser::ReadBuffer(char* buf) {
       case ON_HEADER:
         this->ParseHeaders(this->data_.headers);
         break;
+      case ON_BODY:
         // TODO: Body 에서 "HELLO\0WORLD" 와 같은 문자열이 들어왔을 때 어떻게
         // 처리할 지? (char* vs std::string)
+        this->ParseBody(this->data_.body);
 
       default:
         break;
