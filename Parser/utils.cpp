@@ -82,3 +82,12 @@ std::vector<std::string> ft_split(const std::string &str, char delimiter) {
 
   return (vec);
 }
+
+std::string &ft_toLower(const std::string &str) {
+  std::string result(str);
+
+  std::transform(result.begin(), result.end(), result.begin(),
+                 tolower_functor());
+
+  return (result);
+}
