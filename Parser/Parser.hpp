@@ -62,6 +62,7 @@ class Parser {
   void ParseFirstLine(void);
   void ParseHeaders(std::map<std::string, std::string>& headers);
   void ParseBody(std::vector<char>& body);
+  void ParseChunkedBody(std::vector<char>& body);
 };
 
 #endif

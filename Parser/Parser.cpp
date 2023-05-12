@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 #include "utils.hpp"
 
@@ -101,6 +102,7 @@ void Parser::SaveBufferInPool(char* buf) {
 bool Parser::FindNewlineInPool(void) {
   const char* find;
   const char* total_line;
+  std::map<std::string, std::string> headers = this->data_.headers;
   size_t offset;
 
   offset = this->pool_.offset;
@@ -111,10 +113,9 @@ bool Parser::FindNewlineInPool(void) {
   }
   this->pool_.prev_offset = offset;
   if (std::strncmp(total_line + offset - 2, "\r\n\r\n", 4) == 0) {
-    // TODO: chunked body 인 경우도 확인하기
     if (this->data_.method == "POST" &&
-        this->data_.headers.find("content-length") !=
-            this->data_.headers.end()) {
+        (headers.find("content-length") != headers.end() ||
+         headers["transfer-encoding"] == "chunked")) {
       this->data_.validation_phase = ON_BODY;
     } else {
       this->data_.validation_phase = COMPLETE;
@@ -163,18 +164,17 @@ void Parser::ParseBody(std::vector<char>& body) {
   long long content_length =
       std::strtoll(this->data_.headers["content-length"].c_str(), NULL, 10);
 
-  // TODO: chunked body 인 경우에는 사이즈 다르게 설정하기
+  if (content_length < 0) {
+    this->data_.status = BAD_REQUEST_400;
+    throw std::invalid_argument("Content-length should be positive value");
+  }
+
   body.reserve(line_len - offset);
 
   for (size_t idx = offset; idx < line_len; idx += 1) {
     body.push_back(*(total_line + idx));
   }
 
-  if (content_length < 0) {
-    this->data_.status = BAD_REQUEST_400;
-    throw std::invalid_argument("Content-length should be positive value");
-  }
-  // TODO: chunked body 인 경우에는 다른 조건문으로 판단하기
   if (static_cast<size_t>(content_length) != body.size()) {
     this->data_.status = BAD_REQUEST_400;
     throw std::invalid_argument(
@@ -188,15 +188,62 @@ void Parser::ParseBody(std::vector<char>& body) {
   std::cout << std::endl;
 }
 
+void Parser::ParseChunkedBody(std::vector<char>& body) {
+  while (true) {
+    char* body_curr = this->pool_.total_line + this->pool_.prev_offset;
+    char* find = std::strstr(body_curr, "\r\n");
+    if (find == NULL) {
+      break;
+    }
+    std::string str_chunk_size(body_curr,
+                               static_cast<size_t>(find - body_curr));
+    long long chunk_size = std::stoll(str_chunk_size);
+    std::cout << "chunk_size:" << chunk_size << std::endl;
+    if (str_chunk_size != "0" && chunk_size <= 0) {
+      this->data_.status = BAD_REQUEST_400;
+      throw std::invalid_argument("Chunk size should be positive value");
+    }
+    char* next_newline = std::strstr(find + 2, "\r\n");
+    if (next_newline == NULL) {
+      break;
+    }
+    if (static_cast<long long>(next_newline - (find + 2)) != chunk_size) {
+      this->data_.status = BAD_REQUEST_400;
+      throw std::invalid_argument("Chunk body should be equal with chunk size");
+    }
+    for (char* ptr = find + 2; ptr < next_newline; ptr += 1) {
+      body.push_back(*ptr);
+    }
+
+    for (std::vector<char>::iterator it = body.begin(); it != body.end();
+         it++) {
+      std::cout << *it;
+    }
+
+    std::cout << std::endl;
+
+    this->pool_.prev_offset = next_newline - this->pool_.total_line + 2;
+    this->pool_.offset = this->pool_.prev_offset;
+  }
+}
+
 // Public member functions
 void Parser::ReadBuffer(char* buf) {
   try {
-    // CRLF 가 2번으로 마무리되면 더 이상 받지 않도록 처리
+    std::map<std::string, std::string>& headers = this->data_.headers;
+    if (this->data_.validation_phase == COMPLETE) {
+      return;
+    }
+
+    // 클라이언트로 받은 데이터를 Pool 에 저장
     this->SaveBufferInPool(buf);
+    // 마지막으로 CRLF 를 찾은 지점 이후에 CRLF 가 들어왔는지 확인
     if (this->FindNewlineInPool() == false &&
         this->data_.validation_phase != ON_BODY) {
       return;
     }
+
+    // Validation 단계에 따라 first-line, header, [body] 를 파싱
     switch (this->data_.validation_phase) {
       case READY:
         this->ParseFirstLine();
@@ -205,12 +252,16 @@ void Parser::ReadBuffer(char* buf) {
         std::cout << this->data_.http_version << std::endl;
         break;
       case ON_HEADER:
-        this->ParseHeaders(this->data_.headers);
+        this->ParseHeaders(headers);
         break;
       case ON_BODY:
         // TODO: Body 에서 "HELLO\0WORLD" 와 같은 문자열이 들어왔을 때 어떻게
         // 처리할 지? (char* vs std::string)
-        this->ParseBody(this->data_.body);
+        if (headers.find("content-length") != headers.end()) {
+          this->ParseBody(this->data_.body);
+        } else if (headers["transfer-encoding"] == "chunked") {
+          this->ParseChunkedBody(this->data_.body);
+        }
 
       default:
         break;
