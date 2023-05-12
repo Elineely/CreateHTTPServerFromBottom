@@ -1,8 +1,13 @@
-#include "Parser.hpp"
+#include "Config.hpp"
 
-Parser::Parser(std::string fileName)
+Config::Config()
 {
-    std::ifstream file(fileName.c_str());
+	std::cout << "Config Construct call" << std::endl;
+}
+
+Config::Config(std::string fileName)
+{
+	std::ifstream file(fileName.c_str());
 
 	if (file.fail())
 	{
@@ -17,9 +22,9 @@ Parser::Parser(std::string fileName)
 }
 
 // enter code after '{' token
-parser_map Parser::get_parse_brace(std::ifstream &file, int &currentLine)
+config_map Config::get_parse_brace(std::ifstream &file, int &currentLine)
 {
-	parser_map map;
+	config_map map;
 	std::string readLine;
 
 	while(getline(file, readLine, '\n'))
@@ -39,8 +44,8 @@ parser_map Parser::get_parse_brace(std::ifstream &file, int &currentLine)
 			split_line[0].erase(remove(split_line[0].begin(), split_line[0].end(), ' '), split_line[0].end());
 			split_line[1].erase(remove(split_line[1].begin(), split_line[1].end(), ' '), split_line[0].end());
 			if (split_line[1].compare("[") == 0)
-				map.insert(parser_map_type(split_line[0], parser_type(split_line[1], get_parse_brace2(file, currentLine) )));
-			map.insert(parser_map_type(split_line[0], parser_type(split_line[1], nullMap )));
+				map.insert(config_map_type(split_line[0], config_type(split_line[1], get_parse_brace2(file, currentLine) )));
+			map.insert(config_map_type(split_line[0], config_type(split_line[1], nullMap )));
 			std::cout << "[" << split_line[0] << "] : [" << split_line[1] << "] Line : " << currentLine << std::endl;
 		}
 		currentLine++;
@@ -48,7 +53,7 @@ parser_map Parser::get_parse_brace(std::ifstream &file, int &currentLine)
 	return map;
 }
 
-map_string_string Parser::get_parse_brace2(std::ifstream &file, int &currentLine)
+map_string_string Config::get_parse_brace2(std::ifstream &file, int &currentLine)
 {
 	map_string_string map;
 	std::string readLine;
@@ -77,7 +82,7 @@ map_string_string Parser::get_parse_brace2(std::ifstream &file, int &currentLine
 	return map;
 }
 
-parser_map Parser::get_parse_brackat(std::ifstream &file, int &currentLine)
+config_map Config::get_parse_brackat(std::ifstream &file, int &currentLine)
 {
 	std::string readLine;
 
@@ -86,7 +91,7 @@ parser_map Parser::get_parse_brackat(std::ifstream &file, int &currentLine)
 	return (get_parse_brace(file, currentLine));
 }
 
-std::vector<std::string> Parser::parse_split(std::string readLine, char delimiter)
+std::vector<std::string> Config::parse_split(std::string readLine, char delimiter)
 {
 	std::string buffer;
 	std::istringstream iss(readLine); 
@@ -107,9 +112,9 @@ void showIterMap(map_string_string map)
 	}
 }
 
-void Parser::showServerConf()
+void Config::showServerConf()
 {
-	for(parser_map::iterator iter = serverConf.begin(); iter != serverConf.end(); ++iter)
+	for(config_map::iterator iter = serverConf.begin(); iter != serverConf.end(); ++iter)
 	{
 		std::cout << iter->first << " : " << iter->second.first << std::endl;
 		if (iter->second.second != nullMap)
@@ -120,7 +125,21 @@ void Parser::showServerConf()
 	}
 }
 
-Parser::~Parser()
+Config::Config(const Config& other)
+{
+    std::cout << "Config Constructor Call" << std::endl;
+	*this = other;
+}
+
+Config& Config::operator=(const Config& other)
+{
+    if (this == &other)
+        return *this;
+    std::cout << "Config Assignment Operator Call" << std::endl;
+    return *this;
+}
+
+Config::~Config()
 {
 
 }

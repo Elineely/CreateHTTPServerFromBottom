@@ -6,28 +6,29 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/10 20:20:47 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/12 13:06:24 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
-NAME 						= 	static_webserv
+NAME 						= cute_webserv
 
+INCLUDE 				=	-Iinclude/
 CXX							=	c++
 CXXFLAGS				=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address
 
 SRCS						=	main.cpp \
 									server/Server.cpp	\
-									parse/Parser.cpp
+									config/Config.cpp
 
 OBJS						=	$(SRCS:.cpp=.o)
 
 all: $(NAME)
 
 $(NAME)		: $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(OBJS) -o $@
 	
 %.o			: %.cpp
-	$(CC) $(CFLAGS) -g -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) -g -c $< -o $@
 
 clean:
 	rm -rf $(OBJS)

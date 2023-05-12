@@ -16,6 +16,7 @@
 
 // std::container header
 #include <list>
+#include <vector>
 
 // common I/O header
 #include <fcntl.h>
@@ -25,15 +26,22 @@
 #include <stdio.h>
 
 // Paser header
-#include "Parser.hpp"
+#include "Config.hpp"
+
+#define BUF_SIZE 1024
+#define MAX_KEVENT_LISTEN 8
 
 class Server  {
 	private:
-		Parser serverConf;
+		int server_sock;
+		int client_addr_size;
+		struct sockaddr_in serv_addr;
+		struct sockaddr_in client_addr;
+		Config serverConf;
 		Server();
 
 	public:
-		Server(Parser serverConf);
+		Server(Config serverConf);
 		Server(const Server& a);
 		~Server();
 		Server& operator=(const Server& a);
