@@ -8,12 +8,11 @@
 
 // Default Constructor
 Parser::Parser(void) {
-  this->data_.first_line_validation = NOT_INSPECTED;
+  this->data_.validation_phase = READY;
   this->pool_.total_line = NULL;
   this->pool_.line_len = 0;
   this->pool_.prev_offset = 0;
   this->pool_.offset = 0;
-  this->pool_.found_newline = false;
 }
 
 // Copy Constructor
@@ -75,7 +74,7 @@ void Parser::ParseFirstLine(void) {
   this->data_.method = method;
   this->data_.uri = uri;
   this->data_.http_version = http_version;
-  this->data_.first_line_validation = VALID;
+  this->data_.validation_phase = ON_HEADER;
 }
 
 // QUESTION: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
@@ -99,7 +98,7 @@ void Parser::SaveBufferInPool(char* buf) {
   }
 }
 
-void Parser::FindNewlineInPool(void) {
+bool Parser::FindNewlineInPool(void) {
   const char* find;
   const char* total_line;
   size_t offset;
@@ -108,29 +107,61 @@ void Parser::FindNewlineInPool(void) {
   total_line = this->pool_.total_line;
   find = std::strstr(total_line + offset, "\r\n");
   if (find == NULL) {
-    this->pool_.found_newline = false;
-    return;
+    return (false);
   }
-  this->pool_.found_newline = true;
   this->pool_.prev_offset = offset;
   this->pool_.offset = static_cast<size_t>((find + 2) - total_line);
+  return (true);
+}
+
+void Parser::ParseHeaders(std::map<std::string, std::string>& headers) {
+  do {
+    size_t offset = this->pool_.offset;
+    size_t prev_offset = this->pool_.prev_offset;
+    // '\r\n' 을 포함해서 저장
+    std::string input(this->pool_.total_line, prev_offset,
+                      offset - prev_offset);
+    std::vector<std::string> vec;
+    std::string key;
+    std::string value;
+
+    vec = ft_split(input, ':', 1);
+    if (vec.size() != 2) {
+      this->data_.status = BAD_REQUEST_400;
+      throw std::invalid_argument("HTTP header value should be one");
+    }
+
+    if (headers.find(vec[KEY]) != headers.end()) {
+      this->data_.status = BAD_REQUEST_400;
+      throw std::invalid_argument("HTTP header field should not be duplicated");
+    }
+
+    key = ft_toLower(vec[KEY]);
+    value = ft_strtrim(vec[VALUE]);
+    headers[key] = value;
+    std::cout << "key:" << key << "/ value:" << value << std::endl;
+  } while (this->FindNewlineInPool() == true);
 }
 
 // Public member functions
 void Parser::ReadBuffer(char* buf) {
   try {
     this->SaveBufferInPool(buf);
-    this->FindNewlineInPool();
-    if (this->pool_.found_newline == false) {
+    if (this->FindNewlineInPool() == false) {
       return;
     }
-    if (this->data_.first_line_validation == NOT_INSPECTED) {
-      this->ParseFirstLine();
-      std::cout << this->data_.method << std::endl;
-      std::cout << this->data_.uri << std::endl;
-      std::cout << this->data_.http_version << std::endl;
-    } else {
-      // ParseHeader()
+    switch (this->data_.validation_phase) {
+      case READY:
+        this->ParseFirstLine();
+        std::cout << this->data_.method << std::endl;
+        std::cout << this->data_.uri << std::endl;
+        std::cout << this->data_.http_version << std::endl;
+        break;
+      case ON_HEADER:
+        this->ParseHeaders(this->data_.headers);
+        break;
+      default:
+        break;
     }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;

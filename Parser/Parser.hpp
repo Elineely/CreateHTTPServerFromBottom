@@ -5,14 +5,20 @@
 #include <string>
 #include <vector>
 
+enum KeyValuePair {
+  KEY = 0,
+  VALUE = 1
+};
+
 enum StatusCode {
   BAD_REQUEST_400 = 400,
 };
 
 enum ValidationStatus {
-  NOT_INSPECTED = -1,
-  VALID,
-  INVALID
+  READY,
+  ON_HEADER,
+  ON_BODY,
+  COMPLETE
 };
 
 struct RequestPool {
@@ -20,7 +26,6 @@ struct RequestPool {
   size_t line_len;
   size_t prev_offset;
   size_t offset;
-  bool found_newline;
 };
 
 // TODO: char* 자료형에서 string 으로 변환할 때 '0' 을 null character 로
@@ -29,8 +34,8 @@ struct Request {
   std::string method;
   std::string uri;
   std::string http_version;
-  ValidationStatus first_line_validation;
-  std::map<std::string, char*> header;
+  ValidationStatus validation_phase;
+  std::map<std::string, std::string> headers;
   std::vector<char> body;
   StatusCode status;
 };
@@ -54,7 +59,8 @@ class Parser {
   // Member Functions
   void ParseFirstLine(void);
   void SaveBufferInPool(char* buf);
-  void FindNewlineInPool(void);
+  bool FindNewlineInPool(void);
+  void ParseHeaders(std::map<std::string, std::string>& headers);
 };
 
 #endif
