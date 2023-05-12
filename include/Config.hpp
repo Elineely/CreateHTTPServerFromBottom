@@ -9,9 +9,9 @@
 #include <iostream>
 #include <algorithm>
 
-typedef std::pair<std::string, std::string> pair_string_string;
-typedef std::map<std::string, std::string> map_string_string;
-typedef std::pair<std::string, map_string_string > config_type;
+typedef std::pair<std::string, std::vector<std::string> > pair_string_string_type;
+typedef std::map<std::string, std::vector<std::string> > map_string_string;
+typedef std::pair<std::vector<std::string>, map_string_string > config_type;
 typedef std::map<std::string, config_type> config_map;
 typedef std::pair<std::string, config_type> config_map_type;
 
@@ -24,7 +24,7 @@ class Config
 
     private:
         config_map                  get_parse_brace(std::ifstream &file, int &currentLine);
-        map_string_string           get_parse_brace2(std::ifstream &file, int &currentLine);
+        map_string_string           expend_key_brace(std::ifstream &file, int &currentLine);
         config_map                  get_parse_brackat(std::ifstream &file, int &currentLine);
         std::vector<std::string>    parse_split(std::string readLine, char delimiter);
 

@@ -29,53 +29,37 @@ config_map Config::get_parse_brace(std::ifstream &file, int &currentLine)
 
 	while(getline(file, readLine, '\n'))
 	{
-		if (readLine.find("}") != std::string::npos || readLine.find("]") != std::string::npos)
-		{
-			std::cout << "meed } or ] in brace1 " << std::endl;
+		if (readLine.find("}") != std::string::npos)
 			return map;	
-		}
 		{
-			std::vector<std::string> split_line = parse_split(readLine, ':');
-			if (split_line.size() != 2)
-			{
-				std::cout << "not vaild format Line Number : " << currentLine << std::endl;
-				break ;
-			}
-			split_line[0].erase(remove(split_line[0].begin(), split_line[0].end(), ' '), split_line[0].end());
-			split_line[1].erase(remove(split_line[1].begin(), split_line[1].end(), ' '), split_line[0].end());
-			if (split_line[1].compare("[") == 0)
-				map.insert(config_map_type(split_line[0], config_type(split_line[1], get_parse_brace2(file, currentLine) )));
-			map.insert(config_map_type(split_line[0], config_type(split_line[1], nullMap )));
-			std::cout << "[" << split_line[0] << "] : [" << split_line[1] << "] Line : " << currentLine << std::endl;
+			std::vector<std::string> split_line = parse_split(readLine, ' ');
+			std::vector<std::string> second_vector;
+			for (int i=1; i<split_line.size(); ++i)
+				second_vector.push_back(split_line[i]);
+			if (split_line[1].compare("{") == 0)
+				map.insert(config_map_type(split_line[0], config_type(second_vector, expend_key_brace(file, currentLine) )));
+			map.insert(config_map_type(split_line[0], config_type(second_vector, nullMap )));
 		}
 		currentLine++;
 	}
 	return map;
 }
 
-map_string_string Config::get_parse_brace2(std::ifstream &file, int &currentLine)
+map_string_string Config::expend_key_brace(std::ifstream &file, int &currentLine)
 {
 	map_string_string map;
 	std::string readLine;
 
-	getline(file, readLine, '\n');
 	while(getline(file, readLine, '\n'))
 	{
-		if (readLine.find("}") != std::string::npos || readLine.find("]") != std::string::npos)
-		{
-			std::cout << "meed } or ] in brace2 " << std::endl;
+		if (readLine.find("}") != std::string::npos)
 			return map;	
-		}
-		{
-			std::cout << "readLine : " << readLine << std::endl;
-			std::vector<std::string> split_line = parse_split(readLine, ':');
-			if (split_line.size() != 2)
-			{
-				std::cout << "not vaild format Line Number : " << currentLine << std::endl;
-			}
-			split_line[0].erase(remove(split_line[0].begin(), split_line[0].end(), ' '), split_line[0].end());
-			split_line[1].erase(remove(split_line[1].begin(), split_line[1].end(), ' '), split_line[0].end());
-			map.insert(pair_string_string(split_line[0], split_line[1]));
+		{ 
+			std::vector<std::string> second_vector;
+			std::vector<std::string> split_line = parse_split(readLine, ' ');
+			for (int i=1; i<split_line.size(); ++i)
+				second_vector.push_back(split_line[i]);
+			map.insert(pair_string_string_type(split_line[0], second_vector));
 		}
 		currentLine++;
 	}
@@ -86,7 +70,7 @@ config_map Config::get_parse_brackat(std::ifstream &file, int &currentLine)
 {
 	std::string readLine;
 
-	getline(file, readLine, '\n'); // pass brace
+	getline(file, readLine, '\n'); // pass brace {
 	currentLine++;
 	return (get_parse_brace(file, currentLine));
 }
@@ -97,32 +81,11 @@ std::vector<std::string> Config::parse_split(std::string readLine, char delimite
 	std::istringstream iss(readLine); 
 	std::vector<std::string> split_readLine;
 
-	while (getline(iss, buffer, delimiter)) {
+	while (iss >> buffer) {
         split_readLine.push_back(buffer);               // 절삭된 문자열을 vector에 저장
     }
  
 	return split_readLine;
-}
-
-void showIterMap(map_string_string map)
-{
-	for (map_string_string::iterator iter = map.begin(); iter != map.end(); ++iter)
-	{
-		std::cout << "		" << iter->first << " : " << iter->second << std::endl;
-	}
-}
-
-void Config::showServerConf()
-{
-	for(config_map::iterator iter = serverConf.begin(); iter != serverConf.end(); ++iter)
-	{
-		std::cout << iter->first << " : " << iter->second.first << std::endl;
-		if (iter->second.second != nullMap)
-		{
-			showIterMap(iter->second.second);
-			std::cout << "	]" << std::endl;
-		}
-	}
 }
 
 Config::Config(const Config& other)
