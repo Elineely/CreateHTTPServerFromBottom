@@ -27,6 +27,7 @@
 
 // Paser header
 #include "Config.hpp"
+#include "Parser.hpp"
 
 #define BUF_SIZE 1024
 #define MAX_KEVENT_LISTEN 8

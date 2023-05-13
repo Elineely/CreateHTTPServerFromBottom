@@ -128,6 +128,23 @@ Server::Server(Config serverConf)
                     char buff[1024];
                     int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
 
+                    //
+                    //  parse section
+                    //
+                    Parser paser();
+
+
+
+                    //
+                    // bring to returnHTTPmessage();
+                    //
+
+
+
+                    //
+                    //  send http message section 
+                    //
+                    
                     if (recv_size <= 0)
                     {
                         if (recv_size < 0)

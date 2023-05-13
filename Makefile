@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/12 16:45:03 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/13 16:39:19 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,9 @@ SRCS						=	main.cpp \
 									server/Server.cpp	\
 									config/Config.cpp	\
 									config/print.cpp	\
-									config/get.cpp
+									config/get.cpp		\
+									Parser/Parser.cpp	\
+									Parser/utils.cpp
 
 OBJS						=	$(SRCS:.cpp=.o)
 
