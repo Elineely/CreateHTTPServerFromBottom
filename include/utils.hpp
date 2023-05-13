@@ -1,5 +1,5 @@
-#ifndef utils_H
-#define utils_H
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include <algorithm>
 #include <cctype>
@@ -7,6 +7,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <map>
+
+std::vector<std::string> config_ft_split(std::string readLine,
+                                             char delimiter);
+
 
 // 소문자 변환 펑터 객체
 struct tolower_functor {

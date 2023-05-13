@@ -10,39 +10,80 @@
 #                                                                              #
 # **************************************************************************** #
 
-NAME 						= cute_webserv
+NAME 							:= cute_webserv
 
-INCLUDE 				=	-Iinclude/
-CXX							=	c++
-CXXFLAGS				=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address
+INCLUDE						:=	-I./include/
 
-SRCS						=	main.cpp \
-									server/Server.cpp	\
-									config/Config.cpp	\
-									config/print.cpp	\
-									config/get.cpp		\
-									Parser/Parser.cpp	\
-									Parser/utils.cpp
+SRC_DIR						:=	src/
+SRC_MAIN					:=	main.cpp
 
-OBJS						=	$(SRCS:.cpp=.o)
+SRC_CONFIG_DIR		:=	Config/
+SRC_CONFIG_FILES	:=	Config.cpp	\
+											get.cpp			\
+											print.cpp
 
-all: $(NAME)
+SRC_PARSER_DIR		:=	Parser/
+SRC_PARSER_FILES	:=	Parser.cpp
 
-$(NAME)		: $(OBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(OBJS) -o $@
-	
-%.o			: %.cpp
-	$(CC) $(CFLAGS) $(INCLUDE) -g -c $< -o $@
+SRC_SERVER_DIR		:=	Server/
+SRC_SERVER_FILES	:=	Server.cpp
 
-clean:
-	rm -rf $(OBJS)
+SRC_UTILS_DIR			:=	utils/
+SRC_UTILS_FILES		:=	config_ft_split.cpp				\
+											ft_split.cpp							\
+											ft_strdup.cpp							\
+											ft_strjoin.cpp						\
+											ft_strlen.cpp							\
+											ft_strtrim.cpp						\
+											ft_toLower.cpp
 
-fclean:
-	make clean
-	rm -rf $(NAME)
 
-re: 
-	make fclean
-	make all
+SRC_FILES					:=	$(SRC_MAIN)	\
+											$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))	\
+											$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
+											$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
+											$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
+											$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES))
 
-.PHONY: all clean fclean re
+SRCS							:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
+
+OBJ_DIR						:=	obj/
+OBJS							:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
+
+ifdef DEBUG_MODE
+	CFLAGS					:=	$(CFLAGS) -g
+endif
+
+ifdef D_SANI
+	CFLAGS					:=	$(CFLAGS) -g -fsanitize=address
+endif
+
+.PHONY : all
+all : $(NAME)
+
+.PHONY : clean
+clean :
+	rm -rf $(OBJ_DIR)
+
+.PHONY : fclean
+fclean : clean
+	rm -f $(NAME)
+
+.PHONY : re
+re : fclean all
+
+.PHONY : debug
+debug : fclean
+	make -j4 DEBUG_MODE=1 all
+
+.PHONY : dsani
+dsani : fclean
+	make -j4 D_SANI=1 all
+
+$(NAME) : $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(OBJS): $(OBJ_DIR)%.o: %.cpp
+	mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
+

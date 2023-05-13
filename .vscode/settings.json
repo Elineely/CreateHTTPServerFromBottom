@@ -74,6 +74,10 @@
     "ratio": "cpp",
     "stdexcept": "cpp",
     "type_traits": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "__verbose_abort": "cpp",
+    "variant": "cpp",
+    "compare": "cpp",
+    "concepts": "cpp"
   }
 }
