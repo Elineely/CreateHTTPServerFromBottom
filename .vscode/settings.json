@@ -3,6 +3,7 @@
   "editor.tabSize": 2,
   "editor.detectIndentation": true,
   "files.associations": {
+<<<<<<< HEAD
     "string": "cpp",
     "utility": "cpp",
     "iosfwd": "cpp",
@@ -37,10 +38,19 @@
     "tuple": "cpp",
     "unordered_map": "cpp",
     "algorithm": "cpp",
+=======
+    "map": "cpp",
+    "iosfwd": "cpp",
+    "new": "cpp",
+    "string": "cpp",
+    "vector": "cpp",
+    "__bit_reference": "cpp",
+>>>>>>> main
     "__bits": "cpp",
     "__config": "cpp",
     "__debug": "cpp",
     "__errc": "cpp",
+<<<<<<< HEAD
     "__functional_base": "cpp",
     "__locale": "cpp",
     "__nullptr": "cpp",
@@ -54,6 +64,25 @@
     "chrono": "cpp",
     "clocale": "cpp",
     "cmath": "cpp",
+=======
+    "__hash_table": "cpp",
+    "__locale": "cpp",
+    "__mutex_base": "cpp",
+    "__node_handle": "cpp",
+    "__split_buffer": "cpp",
+    "__threading_support": "cpp",
+    "__tree": "cpp",
+    "__tuple": "cpp",
+    "__verbose_abort": "cpp",
+    "array": "cpp",
+    "atomic": "cpp",
+    "bit": "cpp",
+    "bitset": "cpp",
+    "cctype": "cpp",
+    "clocale": "cpp",
+    "cmath": "cpp",
+    "complex": "cpp",
+>>>>>>> main
     "cstdarg": "cpp",
     "cstddef": "cpp",
     "cstdint": "cpp",
@@ -65,6 +94,7 @@
     "cwctype": "cpp",
     "exception": "cpp",
     "initializer_list": "cpp",
+<<<<<<< HEAD
     "iomanip": "cpp",
     "ios": "cpp",
     "limits": "cpp",
@@ -75,5 +105,34 @@
     "stdexcept": "cpp",
     "type_traits": "cpp",
     "typeinfo": "cpp"
+=======
+    "ios": "cpp",
+    "iostream": "cpp",
+    "istream": "cpp",
+    "limits": "cpp",
+    "list": "cpp",
+    "locale": "cpp",
+    "memory": "cpp",
+    "mutex": "cpp",
+    "optional": "cpp",
+    "ostream": "cpp",
+    "ratio": "cpp",
+    "sstream": "cpp",
+    "stdexcept": "cpp",
+    "streambuf": "cpp",
+    "string_view": "cpp",
+    "system_error": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "typeinfo": "cpp",
+    "unordered_map": "cpp",
+    "variant": "cpp",
+    "__nullptr": "cpp",
+    "__string": "cpp",
+    "chrono": "cpp",
+    "compare": "cpp",
+    "concepts": "cpp",
+    "algorithm": "cpp"
+>>>>>>> main
   }
 }
