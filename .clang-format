@@ -1,0 +1,7 @@
+---
+BasedOnStyle: Google
+BreakBeforeBraces: Allman
+Standard: Cpp03
+UseTab: Never
+
+...

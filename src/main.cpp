@@ -3,10 +3,9 @@
 
 int main()
 {
-	std::cout << "wellcome Cute webserv!!" << std::endl;
-	
-	Config server_conf("server.conf");
+  std::cout << "wellcome Cute webserv!!" << std::endl;
 
-	Server server(server_conf);
-	
+  Config server_conf("/server.conf");
+
+  Server server(server_conf);
 }
