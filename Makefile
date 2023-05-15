@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/13 16:39:19 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/13 20:59:13 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,7 +29,7 @@ SRC_SERVER_DIR		:=	Server/
 SRC_SERVER_FILES	:=	Server.cpp
 
 SRC_UTILS_DIR			:=	utils/
-SRC_UTILS_FILES		:=	config_ft_split.cpp				\
+SRC_UTILS_FILES		:=	ft_config_split.cpp				\
 											ft_split.cpp							\
 											ft_strdup.cpp							\
 											ft_strjoin.cpp						\

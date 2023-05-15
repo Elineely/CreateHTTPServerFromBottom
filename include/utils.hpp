@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-std::vector<std::string> config_ft_split(std::string readLine,
+std::vector<std::string> ft_config_split(std::string readLine,
                                              char delimiter);
 
 
