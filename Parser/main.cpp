@@ -33,7 +33,7 @@ int main(void) {
       std::strcpy(start_line, "GET /index.html HTTP/1.1\r\n");
       std::strcpy(headers,
                   "Server: Cute Web Server \r\nDate: Wed, 11 May 2023 09:10:00 "
-                  "KST\r\nr\n");
+                  "KST\r\n\r\n");
       break;
     default:
       break;
