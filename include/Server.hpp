@@ -51,13 +51,13 @@ struct t_kqueue
 class Server
 {
  private:
-  t_socket _socket;
-  t_kqueue _kqueue;
-  Config serverConf;
+  t_socket m_socket;
+  t_kqueue m_kqueue;
+  Config server;
   Server();
 
  public:
-  Server(Config serverConf);
+  Server(Config server);
   Server(const Server &a);
   ~Server();
   Server &operator=(const Server &a);

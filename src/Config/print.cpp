@@ -21,13 +21,13 @@ void showIterMap(map_string_string map)
 
 void Config::showServerConf()
 {
-  for (config_map::iterator iter = serverConf.begin(); iter != serverConf.end();
-       ++iter)
+  for (config_map::iterator iter = m_server_conf.begin();
+       iter != m_server_conf.end(); ++iter)
   {
     std::cout << iter->first << " ";
     showIterVector(iter->second.first);
     std::cout << std::endl;
-    if (iter->second.second != nullMap)
+    if (iter->second.second != m_null_map)
     {
       showIterMap(iter->second.second);
       std::cout << "	}" << std::endl;

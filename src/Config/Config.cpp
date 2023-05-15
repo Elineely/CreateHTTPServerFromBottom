@@ -14,7 +14,7 @@ Config::Config(std::string file_name)
   std::cout << "SUCCESS read file !!" << std::endl;
 
   std::string readLine;
-  serverConf = get_parse_brackat(file);
+  m_server_conf = get_parse_brackat(file);
 }
 
 // enter code after '{' token
@@ -34,8 +34,8 @@ config_map Config::get_parse_brace(std::ifstream &file)
       if (split_line[1].compare("{") == 0)
         map.insert(config_map_type(
             split_line[0], config_type(second_vector, expend_key_brace(file))));
-      map.insert(
-          config_map_type(split_line[0], config_type(second_vector, nullMap)));
+      map.insert(config_map_type(split_line[0],
+                                 config_type(second_vector, m_null_map)));
     }
   }
   return map;
@@ -71,18 +71,18 @@ config_map Config::get_parse_brackat(std::ifstream &file)
 Config::Config(const Config &other)
 {
   std::cout << "Config Constructor Call" << std::endl;
-  fileName = other.fileName;
-  serverConf = other.serverConf;
-  nullMap = other.nullMap;
+  m_file_name = other.m_file_name;
+  m_server_conf = other.m_server_conf;
+  m_null_map = other.m_null_map;
 }
 
 Config &Config::operator=(const Config &other)
 {
   if (this == &other) return *this;
   std::cout << "Config Assignment Operator Call" << std::endl;
-  fileName = other.fileName;
-  serverConf = other.serverConf;
-  nullMap = other.nullMap;
+  m_file_name = other.m_file_name;
+  m_server_conf = other.m_server_conf;
+  m_null_map = other.m_null_map;
   return *this;
 }
 

@@ -20,9 +20,9 @@ typedef std::pair<std::string, config_type> config_map_type;
 class Config
 {
  private:
-  std::string fileName;
-  config_map serverConf;
-  map_string_string nullMap;
+  std::string m_file_name;
+  config_map m_server_conf;
+  map_string_string m_null_map;
 
  private:
   config_map get_parse_brace(std::ifstream &file);
@@ -31,9 +31,9 @@ class Config
 
  public:
   Config();
-  Config(std::string fileName);
+  Config(std::string file_name);
   Config(const Config &other);
-  Config &operator=(const Config &a);
+  Config &operator=(const Config &other);
   ~Config();
 
   int getServerPort();
