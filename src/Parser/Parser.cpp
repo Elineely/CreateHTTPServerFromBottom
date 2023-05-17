@@ -8,36 +8,27 @@
 #include "utils.hpp"
 
 // Default Constructor
-Parser::Parser(void)
-{
-  m_data.validation_phase = READY;
-  m_pool.total_line = NULL;
-  m_pool.line_len = 0;
-  m_pool.prev_offset = 0;
-  m_pool.offset = 0;
-}
+Parser::Parser(void) {}
+
+// Destructor
+Parser::~Parser(void) {}
 
 // Copy Constructor
 Parser::Parser(const Parser& src)
 {
-  (void)src;
-}
-
-// Destructor
-Parser::~Parser(void)
-{
-  if (m_pool.total_line != NULL)
+  if (this != &src)
   {
-    delete m_pool.total_line;
+    *this = src;
   }
 }
 
 // Copy Assignment Operator
 Parser& Parser::operator=(Parser const& rhs)
 {
-  (void)rhs;
   if (this != &rhs)
   {
+    m_data = rhs.m_data;
+    m_pool = rhs.m_pool;
   }
   return *this;
 }
