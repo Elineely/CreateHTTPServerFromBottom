@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/17 12:08:38 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/17 17:49:47 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,8 @@ SRC_MAIN				:=	main.cpp
 SRC_CONFIG_DIR			:=	Config/
 SRC_CONFIG_FILES		:=	Config.cpp	\
 							get.cpp		\
-							print.cpp
+							print.cpp	\
+							content.cpp
 
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp

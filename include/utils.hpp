@@ -29,6 +29,8 @@ std::string ft_toLower(const std::string &str);
 int ft_error(int status_code);
 int ft_error(int status_code, const char *error_message);
 void ft_error(int status_code, const char *error_message, int exit_flag);
+void ft_config_error(const char *error_message, int current_line,
+                     int exit_flag);
 void ft_process_print(const char *str);
 
 #endif
