@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/15 18:17:53 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/17 12:08:38 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -35,7 +35,9 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_strjoin.cpp			\
 							ft_strlen.cpp			\
 							ft_strtrim.cpp			\
-							ft_toLower.cpp
+							ft_toLower.cpp			\
+							ft_error.cpp			\
+							ft_process_print.cpp
 
 SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
