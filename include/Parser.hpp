@@ -1,46 +1,50 @@
-#ifndef Parser_HPP
-#define Parser_HPP
+#ifndef PARSER_HPP
+#define PARSER_HPP
 
 #include <map>
 #include <string>
 #include <vector>
 
-enum KeyValuePair {
+enum KeyValuePair
+{
   KEY = 0,
   VALUE = 1
 };
 
-enum StatusCode {
+enum StatusCode
+{
   BAD_REQUEST_400 = 400,
 };
 
-enum ValidationStatus {
+enum ValidationStatus
+{
   READY,
   ON_HEADER,
   ON_BODY,
   COMPLETE
 };
 
-struct RequestPool {
+struct RequestPool
+{
   char* total_line;
   size_t line_len;
   size_t prev_offset;
   size_t offset;
 };
 
-// TODO: char* 자료형에서 string 으로 변환할 때 '0' 을 null character 로
-// 인식하는지 확인 필요
-struct Request {
+struct Request
+{
+  ValidationStatus validation_phase;
   std::string method;
   std::string uri;
   std::string http_version;
-  ValidationStatus validation_phase;
   std::map<std::string, std::string> headers;
   std::vector<char> body;
   StatusCode status;
 };
 
-class Parser {
+class Parser
+{
  public:
   // Canonical Form
   Parser(void);
@@ -53,8 +57,8 @@ class Parser {
 
  private:
   // Member Variables
-  struct Request data_;
-  struct RequestPool pool_;
+  struct Request m_data;
+  struct RequestPool m_pool;
 
   // Member Functions
   void SaveBufferInPool(char* buf);
