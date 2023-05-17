@@ -45,11 +45,11 @@ struct RequestPool
   }
 
   // Copy constructor
-  RequestPool(const RequestPool& rhs)
+  RequestPool(const RequestPool& src)
   {
-    if (this != &rhs)
+    if (this != &src)
     {
-      *this = rhs;
+      *this = src;
     }
   }
 
@@ -89,11 +89,11 @@ struct Request
   ~Request(void) {}
 
   // Copy Constructor
-  Request(const Request& rhs)
+  Request(const Request& src)
   {
-    if (this != &rhs)
+    if (this != &src)
     {
-      *this = rhs;
+      *this = src;
     }
   }
 
