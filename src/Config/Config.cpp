@@ -4,7 +4,7 @@ Config::Config() { std::cout << "Config Construct call" << std::endl; }
 
 Config::Config(std::string file_name)
 {
-  std::ifstream file("/Users/baggiseon/cute_webserv/server.conf");
+  std::ifstream file(file_name);
 
   if (file.fail()) ft_error(0, "ERROR: config file open fail", 1);
   ft_process_print("Config file open Success!!");
