@@ -13,6 +13,7 @@ enum KeyValuePair
 
 enum StatusCode
 {
+  NO_PROBLEM = 0,
   BAD_REQUEST_400 = 400,
 };
 
@@ -30,17 +31,86 @@ struct RequestPool
   size_t line_len;
   size_t prev_offset;
   size_t offset;
+
+  // Default Constructor
+  RequestPool(void) : total_line(NULL) {}
+
+  // Destructor
+  ~RequestPool(void)
+  {
+    if (total_line != NULL)
+    {
+      delete total_line;
+    }
+  }
+
+  // Copy constructor
+  RequestPool(const RequestPool& rhs)
+  {
+    if (this != &rhs)
+    {
+      *this = rhs;
+    }
+  }
+
+  // Copy assignment
+  RequestPool& operator=(const RequestPool& rhs)
+  {
+    if (this != &rhs)
+    {
+      line_len = rhs.line_len;
+      prev_offset = rhs.prev_offset;
+      offset = rhs.offset;
+      if (total_line != NULL)
+      {
+        delete total_line;
+      }
+      total_line = new char[line_len];
+      std::memcpy(total_line, rhs.total_line, line_len);
+    }
+    return (*this);
+  }
 };
 
 struct Request
 {
-  ValidationStatus validation_phase;
+  ValidationStatus validation_phase;  // 파싱 단계를 알려주는 변수
+  StatusCode status;  // 오류 발생 여부를 알려주는 변수
   std::string method;
   std::string uri;
   std::string http_version;
   std::map<std::string, std::string> headers;
   std::vector<char> body;
-  StatusCode status;
+
+  // Default Constructor
+  Request(void) : validation_phase(READY), status(NO_PROBLEM) {}
+
+  // Destructor
+  ~Request(void) {}
+
+  // Copy Constructor
+  Request(const Request& rhs)
+  {
+    if (this != &rhs)
+    {
+      *this = rhs;
+    }
+  }
+
+  // Copy Assignment
+  Request& operator=(const Request& rhs)
+  {
+    if (this != &rhs)
+    {
+      validation_phase = rhs.validation_phase;
+      uri = rhs.uri;
+      http_version = rhs.http_version;
+      headers = rhs.headers;
+      body = rhs.body;
+      status = rhs.status;
+    }
+    return (*this);
+  }
 };
 
 class Parser
