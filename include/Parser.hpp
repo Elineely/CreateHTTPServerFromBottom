@@ -125,7 +125,7 @@ class Parser
   Parser& operator=(Parser const& rhs);
 
   // Member Functions
-  void ReadBuffer(char* buf);
+  void readBuffer(char* buf);
 
  private:
   // Member Variables
@@ -133,12 +133,12 @@ class Parser
   struct RequestPool m_pool;
 
   // Member Functions
-  void SaveBufferInPool(char* buf);
-  bool FindNewlineInPool(void);
-  void ParseFirstLine(void);
-  void ParseHeaders(void);
-  void ParseBody(void);
-  void ParseChunkedBody(void);
+  void saveBufferInPool(char* buf);
+  bool findNewlineInPool(void);
+  void parseFirstLine(void);
+  void parseHeaders(void);
+  void parseBody(void);
+  void parseChunkedBody(void);
 };
 
 #endif

@@ -41,7 +41,7 @@ int main(void) {
 
   // ===============================
   Parser parser;
-  parser.ReadBuffer(start_line);
-  parser.ReadBuffer(headers);
-  parser.ReadBuffer(body);
+  parser.readBuffer(start_line);
+  parser.readBuffer(headers);
+  parser.readBuffer(body);
 }

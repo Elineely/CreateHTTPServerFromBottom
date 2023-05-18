@@ -34,7 +34,7 @@ Parser& Parser::operator=(Parser const& rhs)
 }
 
 // Private member functions
-void Parser::ParseFirstLine(void)
+void Parser::parseFirstLine(void)
 {
   // \r\n 은 제외하고 input 에 저장
   std::string input(m_pool.total_line, m_pool.prev_offset,
@@ -86,7 +86,7 @@ void Parser::ParseFirstLine(void)
 }
 
 // QUESTION: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
-void Parser::SaveBufferInPool(char* buf)
+void Parser::saveBufferInPool(char* buf)
 {
   size_t buf_len;
   char* temp_buf;
@@ -113,7 +113,7 @@ void Parser::SaveBufferInPool(char* buf)
   }
 }
 
-bool Parser::FindNewlineInPool(void)
+bool Parser::findNewlineInPool(void)
 {
   const char* find;
 
@@ -146,7 +146,7 @@ bool Parser::FindNewlineInPool(void)
   return (true);
 }
 
-void Parser::ParseHeaders(void)
+void Parser::parseHeaders(void)
 {
   do
   {
@@ -174,10 +174,10 @@ void Parser::ParseHeaders(void)
     value = ft_strtrim(vec[VALUE]);
     m_data.headers[key] = value;
     std::cout << "key:" << key << "/ value:" << value << std::endl;
-  } while (FindNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
+  } while (findNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
 }
 
-void Parser::ParseBody(void)
+void Parser::parseBody(void)
 {
   long long content_length =
       std::strtoll(m_data.headers["content-length"].c_str(), NULL, 10);
@@ -213,11 +213,12 @@ void Parser::ParseBody(void)
   std::cout << std::endl;
 }
 
-void Parser::ParseChunkedBody(void)
+void Parser::parseChunkedBody(void)
 {
   while (true)
   {
-    char* body_curr = m_pool.total_line + m_pool.prev_offset; // 마지막 파싱 위치
+    char* body_curr =
+        m_pool.total_line + m_pool.prev_offset;  // 마지막 파싱 위치
     char* find = std::strstr(body_curr, "\r\n");
     if (find == NULL)
     {
@@ -245,7 +246,7 @@ void Parser::ParseChunkedBody(void)
       m_data.status = BAD_REQUEST_400;
       throw std::invalid_argument("Chunk body should be equal with chunk size");
     }
-    
+
     for (char* ptr = find + 2; ptr < next_newline; ptr += 1)
     {
       m_data.body.push_back(*ptr);
@@ -266,7 +267,7 @@ void Parser::ParseChunkedBody(void)
 }
 
 // Public member functions
-void Parser::ReadBuffer(char* buf)
+void Parser::readBuffer(char* buf)
 {
   try
   {
@@ -276,10 +277,10 @@ void Parser::ReadBuffer(char* buf)
     }
 
     // 클라이언트가 보낸 데이터를 RequestPool 에 저장
-    SaveBufferInPool(buf);
+    saveBufferInPool(buf);
 
     // 마지막으로 CRLF 를 찾은 지점 이후에 CRLF 가 들어왔는지 확인
-    if (FindNewlineInPool() == false && m_data.validation_phase != ON_BODY)
+    if (findNewlineInPool() == false && m_data.validation_phase != ON_BODY)
     {
       return;
     }
@@ -288,22 +289,22 @@ void Parser::ReadBuffer(char* buf)
     switch (m_data.validation_phase)
     {
       case READY:
-        ParseFirstLine();
+        parseFirstLine();
         std::cout << m_data.method << std::endl;
         std::cout << m_data.uri << std::endl;
         std::cout << m_data.http_version << std::endl;
         break;
       case ON_HEADER:
-        ParseHeaders();
+        parseHeaders();
         break;
       case ON_BODY:
         if (m_data.headers.find("content-length") != m_data.headers.end())
         {
-          ParseBody();
+          parseBody();
         }
         else if (m_data.headers["transfer-encoding"] == "chunked")
         {
-          ParseChunkedBody();
+          parseChunkedBody();
         }
 
       default:
