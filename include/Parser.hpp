@@ -11,6 +11,7 @@ enum KeyValuePair
   VALUE = 1
 };
 
+// TODO: HTTP Response 와 공유하기 위해 헤더 파일 이동
 enum StatusCode
 {
   NO_PROBLEM = 0,
@@ -72,6 +73,7 @@ struct RequestPool
   }
 };
 
+// TODO: HTTP Response 와 공유하기 위해 헤더 파일 이동
 struct Request
 {
   ValidationStatus validation_phase;  // 파싱 단계를 알려주는 변수
