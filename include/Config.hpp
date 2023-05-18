@@ -58,7 +58,7 @@ class Config
   t_location get_location_expend(std::ifstream &config_file,
                                  content_list_type vaild_content_list,
                                  int content_size);
-  // void showServerConf();
+  void showServerConf();
 };
 
 #endif
