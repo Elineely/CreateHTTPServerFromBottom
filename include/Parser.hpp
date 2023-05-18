@@ -135,7 +135,7 @@ class Parser
   bool FindNewlineInPool(void);
   void ParseFirstLine(void);
   void ParseHeaders(void);
-  void ParseBody(std::vector<char>& body);
+  void ParseBody(void);
   void ParseChunkedBody(std::vector<char>& body);
 };
 

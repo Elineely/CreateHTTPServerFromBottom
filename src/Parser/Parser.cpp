@@ -177,11 +177,8 @@ void Parser::ParseHeaders(void)
   } while (FindNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
 }
 
-void Parser::ParseBody(std::vector<char>& body)
+void Parser::ParseBody(void)
 {
-  char* total_line = m_pool.total_line;
-  size_t offset = m_pool.offset;
-  size_t line_len = m_pool.line_len;
   long long content_length =
       std::strtoll(m_data.headers["content-length"].c_str(), NULL, 10);
 
@@ -191,22 +188,25 @@ void Parser::ParseBody(std::vector<char>& body)
     throw std::invalid_argument("Content-length should be positive value");
   }
 
-  body.reserve(line_len - offset);
-
-  for (size_t idx = offset; idx < line_len; idx += 1)
+  m_data.body.reserve(m_pool.line_len - m_pool.offset);
+  for (size_t idx = m_pool.offset; idx < m_pool.line_len; idx += 1)
   {
-    body.push_back(*(total_line + idx));
+    m_data.body.push_back(*(m_pool.total_line + idx));
   }
 
-  if (static_cast<size_t>(content_length) != body.size())
+  if (static_cast<size_t>(content_length) != m_data.body.size())
   {
     m_data.status = BAD_REQUEST_400;
     throw std::invalid_argument(
-        "Content-length and body length should be equal");
+        "Content-length and m_data.body length should be equal");
   }
+
   m_data.validation_phase = COMPLETE;
+
+  // TODO: 디버깅용 출력문. 나중에 삭제하기
   std::cout << "Body:";
-  for (std::vector<char>::iterator it = body.begin(); it != body.end(); it++)
+  for (std::vector<char>::iterator it = m_data.body.begin();
+       it != m_data.body.end(); it++)
   {
     std::cout << *it;
   }
@@ -295,7 +295,7 @@ void Parser::ReadBuffer(char* buf)
       case ON_BODY:
         if (m_data.headers.find("content-length") != m_data.headers.end())
         {
-          ParseBody(m_data.body);
+          ParseBody();
         }
         else if (m_data.headers["transfer-encoding"] == "chunked")
         {
