@@ -1,23 +1,12 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
-#include <vector>
 #include <map>
 #include <string>
+#include <vector>
 
-enum StatusCode
-{
-  NO_PROBLEM = 0,
-  BAD_REQUEST_400 = 400,
-};
-
-enum ValidationStatus
-{
-  READY,
-  ON_HEADER,
-  ON_BODY,
-  COMPLETE
-};
+#include "StatusCode.hpp"
+#include "ValidationStatus.hpp"
 
 struct Request
 {
