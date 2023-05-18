@@ -290,7 +290,7 @@ void Parser::ReadBuffer(char* buf)
         std::cout << m_data.http_version << std::endl;
         break;
       case ON_HEADER:
-        ParseHeaders(m_data.headers);
+        ParseHeaders();
         break;
       case ON_BODY:
         if (m_data.headers.find("content-length") != m_data.headers.end())
