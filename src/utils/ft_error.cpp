@@ -24,17 +24,9 @@ int ft_error(int status_code, const char *error_message)
   return status_code;
 }
 
-void ft_error(int status_code, const char *error_message, int exit_flag)
+void ft_error_exit(int exit_flag, const char *error_message)
 {
-  if (status_code != 0) return;
   print_error(error_message);
-  exit(exit_flag);
-  return;
-}
-
-void ft_config_error(const char *error_message, int current_line, int exit_flag)
-{
-  print_error(error_message, current_line);
   exit(exit_flag);
   return;
 }

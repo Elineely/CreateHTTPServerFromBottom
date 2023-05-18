@@ -22,7 +22,7 @@ Config::Config(std::string config_file_name,
 
   if (content_file.fail())
   {
-    ft_error(0, "ERROR: content file open fail", 1);
+    ft_error_exit(1, "ERROR: content file open fail");
   }
   ft_process_print("config_content file open Success!!");
   set_vaild_content_list(content_file, vaild_content_list);
@@ -30,7 +30,7 @@ Config::Config(std::string config_file_name,
 
   if (config_file.fail())
   {
-    ft_error(0, "ERROR: config file open fail", 1);
+    ft_error_exit(1, "ERROR: config file open fail");
   }
   ft_process_print("Config file open Success!!");
   set_m_server_conf(config_file, vaild_content_list);
@@ -54,3 +54,5 @@ Config &Config::operator=(const Config &other)
 }
 
 Config::~Config() {}
+
+config_vector Config::get_m_server_conf() const { return m_server_conf; }

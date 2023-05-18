@@ -18,12 +18,19 @@ bool isContentCount(int content_count, int valid_count)
   return false;
 }
 
+void configErrorExit(const char *error_message, int current_line, int exit_flag)
+{
+  std::cout << error_message << " " << current_line << std::endl;
+  exit(exit_flag);
+  return;
+}
+
 t_location Config::get_location_expend(std::ifstream &config_file,
                                        content_list_type vaild_content_list,
                                        int content_size)
 {
   if (isContentCount(content_size, 3))
-    ft_config_error("Error: non-vaild content in line:", current_line, 1);
+    configErrorExit("Error: non-vaild content in line:", current_line, 1);
   std::string read_line;
   t_location temp_location;
   std::map<std::string, std::string> temp_location_map;
@@ -37,7 +44,7 @@ t_location Config::get_location_expend(std::ifstream &config_file,
     }
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list) ||
         split_content_line.size() >= 3)
-      ft_config_error("Error: non-vaild content in line:", current_line, 1);
+      configErrorExit("Error: non-vaild content in line:", current_line, 1);
     temp_location_map.insert(std::pair<std::string, std::string>(
         split_content_line[0], split_content_line[1]));
     current_line++;
@@ -66,7 +73,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
       break;
     }
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list))
-      ft_config_error("Error: non-vaild content in line:", current_line, 1);
+      configErrorExit("Error: non-vaild content in line:", current_line, 1);
     if (split_content_line[0] == "location")
     {
       current_line++;
@@ -106,7 +113,7 @@ void Config::set_m_server_conf(std::ifstream &config_file,
     std::vector<std::string> split_content_line = ft_config_split(read_line);
     if (split_content_line.size() != 2 || split_content_line[0] != "server" ||
         split_content_line[1] != "{")
-      ft_config_error("Error: non-vaild content in line:", current_line, 1);
+      configErrorExit("Error: non-vaild content in line:", current_line, 1);
     ++current_line;
     m_server_conf.push_back(
         get_parse_server_block(config_file, vaild_content_list));
