@@ -5,25 +5,12 @@
 #include <string>
 #include <vector>
 
+#include "Request.hpp"
+
 enum KeyValuePair
 {
   KEY = 0,
   VALUE = 1
-};
-
-// TODO: HTTP Response 와 공유하기 위해 헤더 파일 이동
-enum StatusCode
-{
-  NO_PROBLEM = 0,
-  BAD_REQUEST_400 = 400,
-};
-
-enum ValidationStatus
-{
-  READY,
-  ON_HEADER,
-  ON_BODY,
-  COMPLETE
 };
 
 struct RequestPool
@@ -68,48 +55,6 @@ struct RequestPool
       }
       total_line = new char[line_len];
       std::memmove(total_line, rhs.total_line, line_len + 1);
-    }
-    return (*this);
-  }
-};
-
-// TODO: HTTP Response 와 공유하기 위해 헤더 파일 이동
-struct Request
-{
-  ValidationStatus validation_phase;  // 파싱 단계를 알려주는 변수
-  StatusCode status;  // 오류 발생 여부를 알려주는 변수
-  std::string method;
-  std::string uri;
-  std::string http_version;
-  std::map<std::string, std::string> headers;
-  std::vector<char> body;
-
-  // Default Constructor
-  Request(void) : validation_phase(READY), status(NO_PROBLEM) {}
-
-  // Destructor
-  ~Request(void) {}
-
-  // Copy Constructor
-  Request(const Request& src)
-  {
-    if (this != &src)
-    {
-      *this = src;
-    }
-  }
-
-  // Copy Assignment
-  Request& operator=(const Request& rhs)
-  {
-    if (this != &rhs)
-    {
-      validation_phase = rhs.validation_phase;
-      uri = rhs.uri;
-      http_version = rhs.http_version;
-      headers = rhs.headers;
-      body = rhs.body;
-      status = rhs.status;
     }
     return (*this);
   }
