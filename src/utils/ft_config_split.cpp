@@ -1,4 +1,4 @@
-#include "../../include/utils.hpp"
+#include "utils.hpp"
 
 std::vector<std::string> ft_config_split(std::string readLine)
 {

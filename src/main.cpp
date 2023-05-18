@@ -1,12 +1,12 @@
 #include "Config.hpp"
 #include "Server.hpp"
 
-int main()
+int main(int argc, char **argv)
 {
   std::cout << "wellcome Cute webserv!!" << std::endl;
 
-  // 실행프로그램 기준으로 상대 경로를 정의한다
-  Config server_conf("./server.conf");
-
+  Config server_conf(argc == 2 ? argv[1] : DEFAULT_SERVER_FILE,
+                     SERVER_CONTENT_FILE);
+  server_conf.showServerConf();
   Server server(server_conf);
 }

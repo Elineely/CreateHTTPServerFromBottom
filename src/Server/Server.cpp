@@ -38,7 +38,7 @@ Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
 
 Server::Server(Config server_conf)
 {
-  std::cout << "Server Constructor Call" << std::endl;
+  config_vector server = server_conf.get_m_server_conf();
   m_socket.server_sock = socket(PF_INET, SOCK_STREAM, 0);
   if (m_socket.server_sock == -1)
   {
@@ -47,7 +47,8 @@ Server::Server(Config server_conf)
   }
   std::cout << "success socket" << std::endl;
   m_socket.serv_addr.sin_family = AF_INET;
-  m_socket.serv_addr.sin_port = htons(server_conf.getServerPort());
+
+  m_socket.serv_addr.sin_port = htons(atoi(server[0].listen[0].c_str()));
   m_socket.serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if (bind(m_socket.server_sock, (const struct sockaddr *)&m_socket.serv_addr,

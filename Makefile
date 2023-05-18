@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/15 18:17:53 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/18 16:47:00 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,8 +19,8 @@ SRC_MAIN				:=	main.cpp
 
 SRC_CONFIG_DIR			:=	Config/
 SRC_CONFIG_FILES		:=	Config.cpp	\
-							get.cpp		\
-							print.cpp
+							print.cpp	\
+							content.cpp
 
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
@@ -35,7 +35,9 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_strjoin.cpp			\
 							ft_strlen.cpp			\
 							ft_strtrim.cpp			\
-							ft_toLower.cpp
+							ft_toLower.cpp			\
+							ft_error.cpp			\
+							ft_process_print.cpp
 
 SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\

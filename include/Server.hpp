@@ -34,6 +34,10 @@
 #define BUF_SIZE 1024
 #define MAX_EVENT_LIST_SIZE 8
 
+// 실행프로그램 기준으로 상대 경로를 정의한다
+#define DEFAULT_SERVER_FILE "./server.conf"
+#define SERVER_CONTENT_FILE "./server_content.conf"
+
 struct t_socket
 {
   int server_sock;
