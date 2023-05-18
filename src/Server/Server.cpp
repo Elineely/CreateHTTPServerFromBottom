@@ -47,7 +47,8 @@ Server::Server(Config server_conf)
   }
   std::cout << "success socket" << std::endl;
   m_socket.serv_addr.sin_family = AF_INET;
-  m_socket.serv_addr.sin_port = htons(server_conf.getServerPort());
+  m_socket.serv_addr.sin_port =
+      htons(atoi(server_conf.m_server_conf[0].listen[0].c_str()));
   m_socket.serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if (bind(m_socket.server_sock, (const struct sockaddr *)&m_socket.serv_addr,

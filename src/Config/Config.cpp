@@ -20,9 +20,6 @@ Config::Config(std::string config_file_name,
   std::ifstream content_file(config_content_file_name);
   content_list_type vaild_content_list;
 
-  std::string read_line;
-  int i = 0;
-
   if (content_file.fail())
   {
     ft_error(0, "ERROR: content file open fail", 1);
@@ -46,7 +43,6 @@ Config::Config(const Config &other)
 {
   std::cout << "Config Constructor Call" << std::endl;
   m_server_conf = other.m_server_conf;
-  // m_null_map = other.m_null_map;
 }
 
 Config &Config::operator=(const Config &other)
@@ -54,7 +50,6 @@ Config &Config::operator=(const Config &other)
   if (this == &other) return *this;
   std::cout << "Config Assignment Operator Call" << std::endl;
   m_server_conf = other.m_server_conf;
-  // m_null_map = other.m_null_map;
   return *this;
 }
 
