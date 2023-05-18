@@ -36,10 +36,9 @@ Parser& Parser::operator=(Parser const& rhs)
 // Private member functions
 void Parser::ParseFirstLine(void)
 {
-  size_t prev_offset = m_pool.prev_offset;
-  size_t offset = m_pool.offset;
   // \r\n 은 제외하고 input 에 저장
-  std::string input(m_pool.total_line, prev_offset, offset - prev_offset - 2);
+  std::string input(m_pool.total_line, m_pool.prev_offset,
+                    m_pool.offset - m_pool.prev_offset - 2);
   std::string method;
   std::string uri;
   std::string http_version;
@@ -117,19 +116,20 @@ void Parser::SaveBufferInPool(char* buf)
 bool Parser::FindNewlineInPool(void)
 {
   const char* find;
-  std::map<std::string, std::string> headers = m_data.headers;
 
   find = std::strstr(m_pool.total_line + m_pool.offset, "\r\n");
   if (find == NULL)
   {
     return (false);
   }
+
   m_pool.prev_offset = m_pool.offset;
-  if (std::strncmp(m_pool.total_line + m_pool.prev_offset - 2, "\r\n\r\n", 4) == 0)
+  if (std::strncmp(m_pool.total_line + m_pool.prev_offset - 2, "\r\n\r\n", 4) ==
+      0)
   {
     if (m_data.method == "POST" &&
-        (headers.find("content-length") != headers.end() ||
-         headers["transfer-encoding"] == "chunked"))
+        (m_data.headers.find("content-length") != m_data.headers.end() ||
+         m_data.headers["transfer-encoding"] == "chunked"))
     {
       m_data.validation_phase = ON_BODY;
     }
@@ -146,14 +146,13 @@ bool Parser::FindNewlineInPool(void)
   return (true);
 }
 
-void Parser::ParseHeaders(std::map<std::string, std::string>& headers)
+void Parser::ParseHeaders(void)
 {
   do
   {
-    size_t offset = m_pool.offset;
-    size_t prev_offset = m_pool.prev_offset;
-    // '\r\n' 을 포함해서 저장
-    std::string input(m_pool.total_line, prev_offset, offset - prev_offset);
+    // '\r\n' 을 제외하고 저장
+    std::string input(m_pool.total_line, m_pool.prev_offset,
+                      m_pool.offset - m_pool.prev_offset - 2);
     std::vector<std::string> vec;
     std::string key;
     std::string value;
@@ -166,14 +165,14 @@ void Parser::ParseHeaders(std::map<std::string, std::string>& headers)
     }
 
     key = ft_toLower(vec[KEY]);
-    if (headers.find(key) != headers.end())
+    if (m_data.headers.find(key) != m_data.headers.end())
     {
       m_data.status = BAD_REQUEST_400;
       throw std::invalid_argument("HTTP header field should not be duplicated");
     }
 
     value = ft_strtrim(vec[VALUE]);
-    headers[key] = value;
+    m_data.headers[key] = value;
     std::cout << "key:" << key << "/ value:" << value << std::endl;
   } while (FindNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
 }
@@ -272,8 +271,9 @@ void Parser::ReadBuffer(char* buf)
       return;
     }
 
-    // 클라이언트로 받은 데이터를 Pool 에 저장
+    // 클라이언트가 보낸 데이터를 RequestPool 에 저장
     SaveBufferInPool(buf);
+
     // 마지막으로 CRLF 를 찾은 지점 이후에 CRLF 가 들어왔는지 확인
     if (FindNewlineInPool() == false && m_data.validation_phase != ON_BODY)
     {
