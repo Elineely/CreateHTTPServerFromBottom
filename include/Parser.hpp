@@ -138,7 +138,7 @@ class Parser
   void ParseFirstLine(void);
   void ParseHeaders(void);
   void ParseBody(void);
-  void ParseChunkedBody(std::vector<char>& body);
+  void ParseChunkedBody(void);
 };
 
 #endif

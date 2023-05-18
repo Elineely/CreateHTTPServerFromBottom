@@ -198,7 +198,7 @@ void Parser::ParseBody(void)
   {
     m_data.status = BAD_REQUEST_400;
     throw std::invalid_argument(
-        "Content-length and m_data.body length should be equal");
+        "Content-length and body length should be equal");
   }
 
   m_data.validation_phase = COMPLETE;
@@ -213,11 +213,11 @@ void Parser::ParseBody(void)
   std::cout << std::endl;
 }
 
-void Parser::ParseChunkedBody(std::vector<char>& body)
+void Parser::ParseChunkedBody(void)
 {
   while (true)
   {
-    char* body_curr = m_pool.total_line + m_pool.prev_offset;
+    char* body_curr = m_pool.total_line + m_pool.prev_offset; // 마지막 파싱 위치
     char* find = std::strstr(body_curr, "\r\n");
     if (find == NULL)
     {
@@ -233,23 +233,27 @@ void Parser::ParseChunkedBody(std::vector<char>& body)
       m_data.status = BAD_REQUEST_400;
       throw std::invalid_argument("Chunk size should be positive value");
     }
+
     char* next_newline = std::strstr(find + 2, "\r\n");
     if (next_newline == NULL)
     {
       break;
     }
+
     if (static_cast<long long>(next_newline - (find + 2)) != chunk_size)
     {
       m_data.status = BAD_REQUEST_400;
       throw std::invalid_argument("Chunk body should be equal with chunk size");
     }
+    
     for (char* ptr = find + 2; ptr < next_newline; ptr += 1)
     {
-      body.push_back(*ptr);
+      m_data.body.push_back(*ptr);
     }
 
-    // DEBUG: Chunked body 내용 출력
-    for (std::vector<char>::iterator it = body.begin(); it != body.end(); it++)
+    // TODO: 디버깅용 출력문. 나중에 삭제하기
+    for (std::vector<char>::iterator it = m_data.body.begin();
+         it != m_data.body.end(); it++)
     {
       std::cout << *it;
     }
@@ -299,7 +303,7 @@ void Parser::ReadBuffer(char* buf)
         }
         else if (m_data.headers["transfer-encoding"] == "chunked")
         {
-          ParseChunkedBody(m_data.body);
+          ParseChunkedBody();
         }
 
       default:
