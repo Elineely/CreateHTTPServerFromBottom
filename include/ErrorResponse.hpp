@@ -1,0 +1,5 @@
+class ErrorResponse
+{
+  ErrorResponse();
+  ~ErrorResponse();
+};
