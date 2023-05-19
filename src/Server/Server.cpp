@@ -109,7 +109,7 @@ Server::Server(Config server_conf)
           if (client_sock == -1)
           {
             strerror(errno);
-            return;
+            break;
           }
           std::cout << "새로운 클라이언트가 연결 되었습니다." << std::endl;
           fcntl(client_sock, F_SETFL, O_NONBLOCK);
