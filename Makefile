@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/18 16:47:00 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/19 16:02:29 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,11 @@ SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
 
 SRC_SERVER_DIR			:=	Server/
-SRC_SERVER_FILES		:=	Server.cpp
+SRC_SERVER_FILES		:=	Server.cpp 	\
+							socket.cpp	\
+							listen.cpp	\
+							bind.cpp	\
+							kqueue.cpp
 
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\
