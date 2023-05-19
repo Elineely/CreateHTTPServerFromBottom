@@ -31,12 +31,27 @@
 #include "Config.hpp"
 #include "Parser.hpp"
 
+// Server Set value
 #define BUF_SIZE 1024
 #define MAX_EVENT_LIST_SIZE 8
+
+// 한 소켓에 최대로 기다릴 수 있는 요청의 수
+#define BACK_LOG 5
 
 // 실행프로그램 기준으로 상대 경로를 정의한다
 #define DEFAULT_SERVER_FILE "./server.conf"
 #define SERVER_CONTENT_FILE "./server_content.conf"
+
+enum e_kqueue_event
+{
+  SERVER_READ = 0,
+  SERVER_WRITE,
+  SERVER_ERROR,
+  CLIENT_READ,
+  CLIENT_WRTIE,
+  CLIENT_ERROR,
+  PROCESS_END
+};
 
 struct t_socket
 {
@@ -65,6 +80,11 @@ class Server
   Server(const Server &a);
   ~Server();
   Server &operator=(const Server &a);
+
+  int getKqueue();
+  void setSocket(Config server_conf);
+  void startBind(int server_sock, const struct sockaddr *server_addr);
+  void startListen(int server_sock, int back_log);
 };
 
 #endif
