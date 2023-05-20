@@ -26,6 +26,7 @@ stop:
 
 prune: stop
 	@echo ${BLUE}"docker system prune will be executed"${NC}; \
-	sudo docker system prune -a -f --volumes
+	sudo docker system prune -a -f
+	docker volume rm $(docker volume ls  -q --filter dangling=true)
 	@echo ${BLUE}"Bind mounted volumes will be deleted"${NC};
 	@rm -rf "$(PWD)/data"
