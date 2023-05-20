@@ -26,7 +26,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /Users/joonhyuk/workspace/docker/data
+      device: ./data
       o: bind
 
 networks:
