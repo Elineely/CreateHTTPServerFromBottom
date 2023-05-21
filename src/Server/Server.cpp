@@ -34,128 +34,143 @@ void sendClientHttpMessage(int clientNum)
   send(clientNum, cnt_type, strlen(cnt_type), 0);
 }
 
-Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
+e_kqueue_event getEventStatus(struct kevent *current_event, int server_sock)
+{
+  if (current_event->flags & EV_ERROR)
+  {
+    if (current_event->ident == server_sock)
+      return SERVER_ERROR;
+    else
+      return CLIENT_ERROR;
+    // disconnect anything
+  }
+  // can read buff event
+  else if (current_event->filter == EVFILT_READ)
+  {
+    // to server
+    if (current_event->ident == server_sock)
+    {
+      return SERVER_READ;
+    }
+    // to client
+    else
+    {
+      return CLIENT_READ;
+    }
+  }
+  return PROCESS_END;
+}
 
 Server::Server(Config server_conf)
 {
-  std::cout << "Server Constructor Call" << std::endl;
-  m_socket.server_sock = socket(PF_INET, SOCK_STREAM, 0);
-  if (m_socket.server_sock == -1)
-  {
-    strerror(errno);
-    return;
-  }
-  std::cout << "success socket" << std::endl;
-  m_socket.serv_addr.sin_family = AF_INET;
-  m_socket.serv_addr.sin_port = htons(server_conf.getServerPort());
-  m_socket.serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  setSocket(server_conf);
+  std::cout << "success Socket" << std::endl;
 
-  if (bind(m_socket.server_sock, (const struct sockaddr *)&m_socket.serv_addr,
-           sizeof(m_socket.serv_addr)) == -1)
-  {
-    std::cout << "bind error" << std::endl;
-    return;
-  }
+  startBind(m_socket.server_sock, (const struct sockaddr *)&m_socket.serv_addr);
   std::cout << "success bind" << std::endl;
-  if (listen(m_socket.server_sock, 5) == -1)
-  {
-    std::cout << "listen error" << std::endl;
-    return;
-  }
+
+  startListen(m_socket.server_sock, BACK_LOG);
   std::cout << "success listen" << std::endl;
 
-  m_kqueue.kq = kqueue();
-  if (m_kqueue.kq == -1)
-  {
-    std::cout << "kqueue() error :" << strerror(errno) << std::endl;
-    return;
-  }
+  m_kqueue.kq = getKqueue();
+  std::cout << "success Kqueue" << std::endl;
 
   int client_sock;
   int client_addr_size;
-  struct sockaddr_in client_addr;
   int current_events;
   struct kevent *current_event;
+  struct sockaddr_in client_addr;
   AddEventToChangeList(m_kqueue.change_list, m_socket.server_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, NULL);
   while (1)
   {
+    // set
     current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0],
                             m_kqueue.change_list.size(), m_kqueue.event_list,
                             MAX_EVENT_LIST_SIZE, NULL);
     if (current_events == -1)
     {
-      std::cout << "kevent() error" << std::endl;
+      std::cout << "kevent() error" << strerror(errno) << std::endl;
     }
     m_kqueue.change_list.clear();
+
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
 
-      if (current_event->flags & EV_ERROR)
+      e_kqueue_event event_status;
+      event_status = getEventStatus(current_event, m_socket.server_sock);
+      switch (event_status)
       {
-        if (current_event->ident == m_socket.server_sock)
-          std::cout << "server socket error" << std::endl;
-        else
-          std::cout << "client socket error" << std::endl;
-        // disconnect anything
-      }
-      // can read buff event
-      else if (current_event->filter == EVFILT_READ)
-      {
-        // to server
-        if (current_event->ident == m_socket.server_sock)
-        {
+        case SERVER_READ:
           client_sock =
               accept(m_socket.server_sock, (struct sockaddr *)&client_addr,
                      reinterpret_cast<socklen_t *>(&client_addr_size));
           if (client_sock == -1)
           {
             strerror(errno);
-            return;
+            break;
           }
           std::cout << "새로운 클라이언트가 연결 되었습니다." << std::endl;
           fcntl(client_sock, F_SETFL, O_NONBLOCK);
           AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                                EV_ADD | EV_ENABLE, 0, 0, NULL);
           m_kqueue.socket_clients[client_sock] = "";
-        }
-        // to client
-        else if (m_kqueue.socket_clients.find(current_event->ident) !=
-                 m_kqueue.socket_clients.end())
-        {
-          char buff[1024];
-          int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-          //
-          //  parse section
-          //
-          Parser paser;
-          //
-          //  send to HTTP Message section ;
-          //
-          //
-          //  return http message section
-          //
-          if (recv_size <= 0)
-          {
-            if (recv_size < 0) std::cout << "client read error" << std::endl;
-            // disconnect_ anything
-          }
-          std::cout << "client message to server : " << buff << std::endl;
-          sendClientHttpMessage(current_event->ident);
-        }
-      }
-      // can write buff event
-      // else if (EVFILT_WRITE)
-      // {
+          break;
+        case SERVER_WRITE:
+          break;
 
-      // }
+        case SERVER_ERROR:
+          std::cout << "server socket error" << std::endl;
+          break;
+
+        case CLIENT_READ:
+          if (m_kqueue.socket_clients.find(current_event->ident) !=
+              m_kqueue.socket_clients.end())
+          {
+            char buff[1024];
+            int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
+            //
+            //  parse section
+            //
+            Parser paser;
+            //
+            //  send to HTTP Message section ;
+            //
+            //
+            //  return http message section
+            //
+            if (recv_size <= 0)
+            {
+              if (recv_size < 0) std::cout << "client read error" << std::endl;
+              // disconnect_ anything
+            }
+            std::cout << "client message to server : " << buff << std::endl;
+            sendClientHttpMessage(current_event->ident);
+          }
+          break;
+
+        case CLIENT_WRTIE:
+          break;
+
+        case CLIENT_ERROR:
+          std::cout << "client socket error" << std::endl;
+          break;
+
+        case PROCESS_END:
+          break;
+
+        default:
+          break;
+      }
     }
   }
   shutdown(m_socket.server_sock, SHUT_RDWR);
   close(m_socket.server_sock);
   return;
 }
+
+Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
 
 Server::Server(const Server &other)
 {
