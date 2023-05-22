@@ -5,37 +5,49 @@
 
 Response::Response()
 {
-  _target_file = "";
-  _body = "";
-  response_message = "";
+  m_file_path = "";
+  m_body = "";
+  m_status_code = NO_PROBLEM;
+  m_request = Request();
+  m_config = Config();
+  m_cgi_flag = false;
+  m_cgi_bin_path = NULL;
+  m_cgi_params = NULL;
 }
 Response::Response(Request& request_data, Config& config_data)
 {
-  _target_file = "";
-  _body = "";
-  response_message = "";
-
-  // request구조체의 복사대입연산자 필요
-  request = request_data;
-  config = config_data;
+  m_file_path = "";
+  m_body = "";
+  m_status_code = NO_PROBLEM;
+  m_request = request_data;
+  m_config = config_data;
+  m_cgi_flag = false;
+  m_cgi_bin_path = NULL;
+  m_cgi_params = NULL;
 }
 Response::Response(const Response& obj)
 {
-  _target_file = obj._target_file;
-  _body = obj._body;
-  response_message = obj.response_message;
-  request = obj.request;
-  config = obj.config;
+  m_file_path = obj.m_file_path;
+  m_body = obj.m_body;
+  m_status_code = obj.m_status_code;
+  m_request = obj.m_request;
+  m_config = obj.m_config;
+  m_cgi_flag = obj.m_cgi_flag;
+  m_cgi_bin_path = obj.m_cgi_bin_path;
+  m_cgi_params = obj.m_cgi_params;
 }
 Response& Response::operator=(Response const& obj)
 {
   if (this != &obj)
   {
-    _target_file = obj._target_file;
-    _body = obj._body;
-    response_message = obj.response_message;
-    request = obj.request;
-    config = obj.config;
+    m_file_path = obj.m_file_path;
+    m_body = obj.m_body;
+    m_status_code = obj.m_status_code;
+    m_request = obj.m_request;
+    m_config = obj.m_config;
+    m_cgi_flag = obj.m_cgi_flag;
+    m_cgi_bin_path = obj.m_cgi_bin_path;
+    m_cgi_params = obj.m_cgi_params;
   }
   return (*this);
 }
@@ -46,6 +58,7 @@ std::string statusCodeToString(StatusCode obj)
   std::string code;
   std::string reason;
 
+  // 하드코딩으로 되어있는데 나중에 map으로 고쳐야함.
   switch (obj)
   {
     case OK_200:
@@ -102,50 +115,50 @@ std::string getMIME(std::string target_file)
   return (mime);
 }
 
-void Response::headerContentType()
+void Response::generateHeaderContentType()
 {
-  response_message.append("Content-Type: ");
-  response_message.append(getMIME(_target_file));
-  response_message.append("\r\n");
+  m_response_message.append("Content-Type: ");
+  m_response_message.append(getMIME(m_file_path));
+  m_response_message.append("\r\n");
 }
-void Response::headerContentLength()
+void Response::generateHeaderContentLength()
 {
   std::stringstream ss;
-  ss << _body.length();
-  response_message.append("Content-Length: ");
-  response_message.append(ss.str());
-  response_message.append("\r\n");
+  ss << m_body.length();
+  m_response_message.append("Content-Length: ");
+  m_response_message.append(ss.str());
+  m_response_message.append("\r\n");
 }
 
 void Response::makeBody()
 {
-  std::ifstream fileStream(_target_file);
+  std::ifstream fileStream(m_file_path);
 
   if (fileStream)
   {
     std::stringstream buffer;
     buffer << fileStream.rdbuf();
-    _body = buffer.str();
+    m_body = buffer.str();
     fileStream.close();
   }
   else
-    throw NOT_FOUND;
+    throw NOT_FOUND_404;
 }
 
 void Response::setStartLine()
 {
-  response_message.append("HTTP/1.1 ");
-  response_message.append(statusCodeToString(this->request.status));
-  response_message.append("\r\n");
+  m_response_message.append("HTTP/1.1 ");
+  m_response_message.append(statusCodeToString(this->m_request.status));
+  m_response_message.append("\r\n");
 }
 void Response::setHeaders()
 {
-  headerContentType();
-  headerContentLength();
+  generateHeaderContentType();
+  generateHeaderContentLength();
   // headerConnection();
   // headerServer();
   // headerLocation();
   // headerDate();
-  response_message.append("\r\n");
+  m_response_message.append("\r\n");
 }
-void Response::setBody() { response_message.append(_body); }
+void Response::setBody() { m_response_message.append(m_body); }

@@ -21,6 +21,7 @@ class Response
   bool m_cgi_flag;
   char* m_cgi_bin_path;
   char** m_cgi_params;
+  std::string m_response_message;
 
  public:
   Response();
