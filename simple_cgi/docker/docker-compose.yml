@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    image: nginx
+    ports:
+      - 80:80
+    restart: on-failure:3
+    networks:
+      - my_server
+
+  php-fpm:
+    container_name: php-fpm
+    build: ./php-fpm
+    image: php-fpm
+    restart: on-failure:3
+    volumes:
+      - php_data:/var/www/html/php
+    networks:
+      - my_server
+
+volumes:
+  php_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data
+      o: bind
+
+networks:
+  my_server:
+    driver: bridge
