@@ -1,3 +1,10 @@
+#ifndef METHODHANDLER_HPP
+#define METHODHANDLER_HPP
+
+#include "Config.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+
 class MethodHandler
 {
  protected:
@@ -36,6 +43,8 @@ class GetMethodHandler : public MethodHandler
  private:
   // GetMethodHandler(void);
 };
+
+#endif
 
 // class PostMethodHandler : public MethodHandler
 // {

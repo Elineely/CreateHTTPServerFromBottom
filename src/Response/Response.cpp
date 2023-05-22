@@ -1,15 +1,15 @@
+#include "Response.hpp"
+
 #include <fstream>
 #include <string>
 
-#include "ResponseGenerator.hpp"
-
-ResponseGenerator::ResponseGenerator()
+Response::Response()
 {
   _target_file = "";
   _body = "";
   response_message = "";
 }
-ResponseGenerator::ResponseGenerator(Request& request_data, Config& config_data)
+Response::Response(Request& request_data, Config& config_data)
 {
   _target_file = "";
   _body = "";
@@ -19,7 +19,7 @@ ResponseGenerator::ResponseGenerator(Request& request_data, Config& config_data)
   request = request_data;
   config = config_data;
 }
-ResponseGenerator::ResponseGenerator(const ResponseGenerator& obj)
+Response::Response(const Response& obj)
 {
   _target_file = obj._target_file;
   _body = obj._body;
@@ -27,7 +27,7 @@ ResponseGenerator::ResponseGenerator(const ResponseGenerator& obj)
   request = obj.request;
   config = obj.config;
 }
-ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
+Response& Response::operator=(Response const& obj)
 {
   if (this != &obj)
   {
@@ -102,13 +102,13 @@ std::string getMIME(std::string target_file)
   return (mime);
 }
 
-void ResponseGenerator::headerContentType()
+void Response::headerContentType()
 {
   response_message.append("Content-Type: ");
   response_message.append(getMIME(_target_file));
   response_message.append("\r\n");
 }
-void ResponseGenerator::headerContentLength()
+void Response::headerContentLength()
 {
   std::stringstream ss;
   ss << _body.length();
@@ -117,7 +117,7 @@ void ResponseGenerator::headerContentLength()
   response_message.append("\r\n");
 }
 
-void ResponseGenerator::makeBody()
+void Response::makeBody()
 {
   std::ifstream fileStream(_target_file);
 
@@ -132,13 +132,13 @@ void ResponseGenerator::makeBody()
     throw NOT_FOUND;
 }
 
-void ResponseGenerator::setStartLine()
+void Response::setStartLine()
 {
   response_message.append("HTTP/1.1 ");
   response_message.append(statusCodeToString(this->request.status));
   response_message.append("\r\n");
 }
-void ResponseGenerator::setHeaders()
+void Response::setHeaders()
 {
   headerContentType();
   headerContentLength();
@@ -148,4 +148,4 @@ void ResponseGenerator::setHeaders()
   // headerDate();
   response_message.append("\r\n");
 }
-void ResponseGenerator::setBody() { response_message.append(_body); }
+void Response::setBody() { response_message.append(_body); }
