@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/19 16:02:29 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/22 15:45:46 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -85,7 +85,7 @@ dsani : fclean
 	make -j4 D_SANI=1 all
 
 $(NAME) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ 
 
 $(OBJS): $(OBJ_DIR)%.o: %.cpp
 	mkdir -p $(@D)

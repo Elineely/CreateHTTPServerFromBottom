@@ -25,6 +25,7 @@ class Parser
 
   // Member Functions
   void readBuffer(char* buf);
+  ValidationStatus get_validation_phase(void);
 
  private:
   // Member Variables

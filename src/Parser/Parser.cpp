@@ -33,6 +33,12 @@ Parser& Parser::operator=(Parser const& rhs)
   return *this;
 }
 
+// Public member functions
+ValidationStatus Parser::get_validation_phase(void)
+{
+  return (m_data.validation_phase);
+}
+
 // Private member functions
 void Parser::parseFirstLine(void)
 {
@@ -153,25 +159,34 @@ void Parser::parseHeaders(void)
     // '\r\n' 을 제외하고 저장
     std::string input(m_pool.total_line, m_pool.prev_offset,
                       m_pool.offset - m_pool.prev_offset - 2);
-    std::vector<std::string> vec;
     std::string key;
     std::string value;
+    size_t idx1;
+    size_t idx2;
 
-    vec = ft_split(input, ':', 1);
-    if (vec.size() != 2)
+    idx1 = input.find_first_of(':', 0);
+    std::cout << "input is: " << input << std::endl;
+    if (idx1 == std::string::npos)
     {
       m_data.status = BAD_REQUEST_400;
-      throw std::invalid_argument("HTTP header value should be one");
+      throw std::invalid_argument("[HEADERS] There is no key.");
     }
 
-    key = ft_toLower(vec[KEY]);
+    key = ft_toLower(input.substr(0, idx1));
     if (m_data.headers.find(key) != m_data.headers.end())
     {
       m_data.status = BAD_REQUEST_400;
       throw std::invalid_argument("HTTP header field should not be duplicated");
     }
 
-    value = ft_strtrim(vec[VALUE]);
+    idx2 = input.find_first_of('\n', idx1 + 1);
+    if (idx2 == std::string::npos)
+    {
+      m_data.status = BAD_REQUEST_400;
+      throw std::invalid_argument("[HEADERS] There is no CRLF.");
+    }
+
+    value = ft_strtrim(input.substr(idx1 + 1, (idx2 - idx1 - 1)));
     m_data.headers[key] = value;
     std::cout << "key:" << key << "/ value:" << value << std::endl;
   } while (findNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
@@ -286,29 +301,33 @@ void Parser::readBuffer(char* buf)
     }
 
     // Validation 단계에 따라 first-line, header, [body] 를 파싱
-    switch (m_data.validation_phase)
+    while (m_data.validation_phase != COMPLETE)
     {
-      case READY:
-        parseFirstLine();
-        std::cout << m_data.method << std::endl;
-        std::cout << m_data.uri << std::endl;
-        std::cout << m_data.http_version << std::endl;
-        break;
-      case ON_HEADER:
-        parseHeaders();
-        break;
-      case ON_BODY:
-        if (m_data.headers.find("content-length") != m_data.headers.end())
-        {
-          parseBody();
-        }
-        else if (m_data.headers["transfer-encoding"] == "chunked")
-        {
-          parseChunkedBody();
-        }
+      switch (m_data.validation_phase)
+      {
+        case READY:
+          parseFirstLine();
+          std::cout << m_data.method << std::endl;
+          std::cout << m_data.uri << std::endl;
+          std::cout << m_data.http_version << std::endl;
+          break;
+        case ON_HEADER:
+          std::cout << "on_header" << std::endl;
+          parseHeaders();
+          break;
+        case ON_BODY:
+          if (m_data.headers.find("content-length") != m_data.headers.end())
+          {
+            parseBody();
+          }
+          else if (m_data.headers["transfer-encoding"] == "chunked")
+          {
+            parseChunkedBody();
+          }
 
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
   catch (std::exception& e)

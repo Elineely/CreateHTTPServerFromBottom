@@ -48,7 +48,7 @@ enum e_kqueue_event
   SERVER_WRITE,
   SERVER_ERROR,
   CLIENT_READ,
-  CLIENT_WRTIE,
+  CLIENT_WRITE,
   CLIENT_ERROR,
   PROCESS_END
 };
@@ -66,7 +66,12 @@ struct t_kqueue
   std::vector<struct kevent> change_list;
   std::map<int, std::string> socket_clients;
 };
-
+struct t_response_write
+{
+  t_response_write() {}
+  char *message;
+  ssize_t send_byte;
+};
 class Server
 {
  private:
