@@ -149,12 +149,12 @@ Server::Server(Config server_conf)
 
           std::cout << buff << std::endl;
           std::cout << "buff end " << std::endl;
-          // parser->readBuffer(buff);
-          // if (parser->get_validation_phase() != COMPLETE)
-          // {
-          //   continue;
-          // }
-          // std::cout << "in here" << std::endl;
+          parser->readBuffer(buff);
+          if (parser->get_validation_phase() != COMPLETE)
+          {
+            continue;
+          }
+          std::cout << "in here" << std::endl;
 
           //
           // sendClientHttpMessage(current_event->ident);
