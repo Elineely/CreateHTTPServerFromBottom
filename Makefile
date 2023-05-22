@@ -55,11 +55,11 @@ OBJ_DIR				:=	obj/
 OBJS				:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
 ifdef DEBUG_MODE
-	CFLAGS					:=	$(CFLAGS) -g
+	CXXFLAGS					:=	$(CXXFLAGS) -g3
 endif
 
 ifdef D_SANI
-	CFLAGS					:=	$(CFLAGS) -g -fsanitize=address
+	CXXFLAGS					:=	$(CXXFLAGS) -g3 -fsanitize=address
 endif
 
 .PHONY : all
@@ -85,7 +85,7 @@ dsani : fclean
 	make -j4 D_SANI=1 all
 
 $(NAME) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ 
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJS): $(OBJ_DIR)%.o: %.cpp
 	mkdir -p $(@D)
