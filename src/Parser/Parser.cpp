@@ -54,6 +54,7 @@ void Parser::parseFirstLine(void)
   // 1. HTTP Method 탐색
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
+  std::cout << "Method is: " << method << std::endl;
   if (method != "GET" && method != "POST" && method != "DELETE")
   {
     m_data.status = BAD_REQUEST_400;
@@ -156,9 +157,9 @@ void Parser::parseHeaders(void)
 {
   do
   {
-    // '\r\n' 을 제외하고 저장
+    // '\r\n' 을 포함해서 저장
     std::string input(m_pool.total_line, m_pool.prev_offset,
-                      m_pool.offset - m_pool.prev_offset - 2);
+                      m_pool.offset - m_pool.prev_offset);
     std::string key;
     std::string value;
     size_t idx1;
@@ -327,6 +328,11 @@ void Parser::readBuffer(char* buf)
 
         default:
           break;
+      }
+
+      if (findNewlineInPool() == false)
+      {
+        break;
       }
     }
   }
