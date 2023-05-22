@@ -52,14 +52,14 @@ static int pipeAndFork(int** pipe_fd, pid_t* pid)
 {
   if (pipe(*pipe_fd) == ERROR)
   {
-    std::cerr << "pipe error" << std::endl;
+    // std::cerr << "pipe error" << std::endl;
     return (ERROR);
   }
 
   *pid = fork();
   if (*pid == ERROR)
   {
-    std::cerr << "fork error" << std::endl;
+    // std::cerr << "fork error" << std::endl;
     return (ERROR);
   }
 
@@ -85,8 +85,8 @@ void GetCgiHandler::outsourceCgiRequest(void)
 
     if (dup2(pipe_fd[WRITE], STDOUT_FILENO) == ERROR)
     {
-      std::cerr << "redirecting stdout error" << std::endl;
-      // return (error);
+      // std::cerr << "redirecting stdout error" << std::endl;
+      // throw (error);
     }
 
     char* cgi_bin_path = "./php-cgi";
@@ -95,41 +95,39 @@ void GetCgiHandler::outsourceCgiRequest(void)
 
     if (execve(cgi_bin_path, argv, envp) == ERROR)
     {
-      std::cerr << "executing cgi error" << std::endl;
-      // return (error);
+      // std::cerr << "executing cgi error" << std::endl;
+      // throw (error);
     }
   }
 
 // parent process
     close(pipe_fd[WRITE]);
 
-// joonhan's code
-  //   char buffer[4096];
-  //   std::string output;
-  //   ssize_t bytes_read;
-  //   while (true)
-  //   {
-  //     bytes_read = read(pipe_fd[READ], buffer, sizeof(buffer));
-  //     if (bytes_read <= 0)
-  //     {
-  //       break;
-  //     }
-  //     output.append(buffer, bytes_read);
+    char buffer[4096]; // 크기,,?
+    std::string content;
+    ssize_t bytes_read;
+    while (true) // 조건문 수정
+    {
+      bytes_read = read(pipe_fd[READ], buffer, sizeof(buffer));
+      if (bytes_read <= 0)
+      {
+        break ;
+      }
+      content.append(buffer, bytes_read);
 
-  //   int status;
+    int status;
 
-  //   waitpid(pid, &status, 0);
-  //   if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
-  //   {
-  //     std::cout << output << std::endl;
-  //   }
-  //   else
-  //   {
-  //     std::cerr << "CGI execution failed" << std::endl;
-  //   }
-  // }
-
-  return (0);
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+    {
+      // Response 클래스에 넘겨주기
+    }
+    else
+    {
+      std::cerr << "CGI execution failed" << std::endl;
+      // throw (error);
+    }
+  }
 }
 
 void GetCgiHandler::giveDataToResponse(void)
