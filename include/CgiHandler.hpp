@@ -1,6 +1,5 @@
 
-
-// CgiHandler class
+// CgiHandler virtual class
 class CgiHandler
 {
  protected:
@@ -13,7 +12,8 @@ class CgiHandler
   CgiHandler(/* ??? */);
   virtual ~CgiHandler(void);
 
-/* 공통 함수 = 0 */
+  virtual void outsourceCgiRequest(void) = 0;
+  virtual void giveDataToResponse(void) = 0;
 
  private:
   CgiHandler(const CgiHandler& obj);
@@ -25,10 +25,15 @@ class CgiHandler
 class GetCgiHandler : public CgiHandler
 {
  public:
-  GetCgiHandler(const GetCgiHandler& obj);
   GetCgiHandler(/* ??? */);
-  virtual ~GetCgiHandler(void);
+  GetCgiHandler(const GetCgiHandler& obj);
   GetCgiHandler& operator=(GetCgiHandler const& obj);
+  virtual ~GetCgiHandler(void);
+
+  virtual void outsourceCgiRequest(void);
+  virtual void giveDataToResponse(void);
+
+  // cgi_bin_path(cgi binary 파일 위치), cgi_envp(cgi 실행 프로그램에 넘겨줄 환경 변수) 필요
 
  private:
   GetCgiHandler(void);
@@ -39,10 +44,10 @@ class GetCgiHandler : public CgiHandler
 class PostCgiHandler : public CgiHandler
 {
  public:
-  PostCgiHandler(const PostCgiHandler& obj);
   PostCgiHandler(/* ??? */);
-  virtual ~PostCgiHandler(void);
+  PostCgiHandler(const PostCgiHandler& obj);
   PostCgiHandler& operator=(PostCgiHandler const& obj);
+  virtual ~PostCgiHandler(void);
 
  private:
   PostCgiHandler(void);
@@ -53,10 +58,10 @@ class PostCgiHandler : public CgiHandler
 class DeleteCgiHandler : public CgiHandler
 {
  public:
-  DeleteCgiHandler(const DeleteCgiHandler& obj);
   DeleteCgiHandler(/* ??? */);
-  virtual ~DeleteCgiHandler(void);
+  DeleteCgiHandler(const DeleteCgiHandler& obj);
   DeleteCgiHandler& operator=(DeleteCgiHandler const& obj);
+  virtual ~DeleteCgiHandler(void);
 
  private:
   DeleteCgiHandler(void);
