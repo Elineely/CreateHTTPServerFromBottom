@@ -1,6 +1,10 @@
 #ifndef HttpProcessor_HPP
 #define HttpProcessor_HPP
 
+#include "Config.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+
 class HttpProcessor
 {
  public:
