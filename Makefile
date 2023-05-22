@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
+#    By: surlee <surlee@student.42.seoul.kr>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/19 16:02:29 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/22 19:45:28 by surlee           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,6 +24,12 @@ SRC_CONFIG_FILES		:=	Config.cpp	\
 
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
+
+SRC_RESPONSE_DIR		:= Response/
+SRC_RESPONSE_FILES		:= Response.cpp
+
+SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
+SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
 
 SRC_SERVER_DIR			:=	Server/
 SRC_SERVER_FILES		:=	Server.cpp 	\
@@ -47,7 +53,9 @@ SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
 							$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
 							$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
+							$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
 							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
+							$(addprefix $(SRC_RESPONSE_DIR), $(SRC_RESPONSE_FILES))	\
 							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES))
 SRCS				:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
