@@ -53,6 +53,8 @@ t_location Config::get_location_expend(std::ifstream &config_file,
   temp_location.index = temp_location_map["index"];
   temp_location.language = temp_location_map["language"];
   temp_location.root = temp_location_map["root"];
+  temp_location.ourcgi_pass = temp_location_map["ourcgi_pass"];
+  temp_location.ourcgi_index = temp_location_map["ourcgi_index"];
 
   return temp_location;
 }
