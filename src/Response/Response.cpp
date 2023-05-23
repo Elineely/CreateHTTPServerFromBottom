@@ -51,77 +51,112 @@ Response& Response::operator=(Response const& obj)
   }
   return (*this);
 }
-
-std::string statusCodeToString(StatusCode obj)
+Response::~Response()
 {
-  std::stringstream ss;
-  std::string code;
-  std::string reason;
-
-  // 하드코딩으로 되어있는데 나중에 map으로 고쳐야함.
-  switch (obj)
-  {
-    case OK_200:
-      reason = "OK";
-      break;
-
-    default:
-      break;
-  }
-  ss << obj;
-  code = ss.str();
-  return (code + " " + reason);
-}
+  delete m_cgi_bin_path;
+  // i를 어디까지 하고 삭제할지 생각해봐야할듯?
+  for (int i = 0; i < 3; ++i) delete m_cgi_params[i];
+  delete m_cgi_params;
+};
 std::string getMIME(std::string target_file)
 {
-  std::string extension;
-  std::string mime;
+  std::map<std::string, std::string> mime_map;
 
-  extension = target_file.substr(target_file.rfind(".", std::string::npos));
-  if (extension == ".html")
-    mime = "text/html";
-  else if (extension == ".htm")
-    mime = "text/html";
-  else if (extension == ".css")
-    mime = "text/css";
-  else if (extension == ".ico")
-    mime = "image/x-icon";
-  else if (extension == ".avi")
-    mime = "video/x-msvideo";
-  else if (extension == ".bmp")
-    mime = "image/bmp";
-  else if (extension == ".doc")
-    mime = "application/msword";
-  else if (extension == ".gif")
-    mime = "image/gif";
-  else if (extension == ".gz")
-    mime = "application/x-gzip";
-  else if (extension == ".ico")
-    mime = "image/x-icon";
-  else if (extension == ".jpg")
-    mime = "image/jpeg";
-  else if (extension == ".jpeg")
-    mime = "image/jpeg";
-  else if (extension == ".png")
-    mime = "image/png";
-  else if (extension == ".txt")
-    mime = "text/plain";
-  else if (extension == ".mp3")
-    mime = "audio/mp3";
-  else if (extension == ".pdf")
-    mime = "application/pdf";
+  mime_map.insert(std::make_pair(".html", "text/html"));
+  mime_map.insert(std::make_pair(".htm", "text/html"));
+  mime_map.insert(std::make_pair(".css", "text/css"));
+  mime_map.insert(std::make_pair(".ico", "image/x-icon"));
+  mime_map.insert(std::make_pair(".avi", "video/x-msvideo"));
+  mime_map.insert(std::make_pair(".bmp", "image/bmp"));
+  mime_map.insert(std::make_pair(".doc", "application/msword"));
+  mime_map.insert(std::make_pair(".gif", "image/gif"));
+  mime_map.insert(std::make_pair(".gz", "application/x-gzip"));
+  mime_map.insert(std::make_pair(".ico", "image/x-icon"));
+  mime_map.insert(std::make_pair(".jpg", "image/jpeg"));
+  mime_map.insert(std::make_pair(".jpeg", "image/jpeg"));
+  mime_map.insert(std::make_pair(".png", "image/png"));
+  mime_map.insert(std::make_pair(".txt", "text/plain"));
+  mime_map.insert(std::make_pair(".mp3", "audio/mp3"));
+  mime_map.insert(std::make_pair(".pdf", "application/pdf"));
+  mime_map.insert(std::make_pair("default", "text/html"));
+
+  std::string extension = target_file.substr(target_file.rfind("."));
+  std::map<std::string, std::string>::iterator it = mime_map.find(extension);
+
+  if (it != mime_map.end())
+    return it->second;  // Return the matched MIME type
   else
-    mime = "text/html";
-  return (mime);
+    return mime_map["default"];
+
+  // std::string extension;
+  // std::string mime;
+
+  // extension = target_file.substr(target_file.rfind(".",
+  // std::string::npos)); if (extension == ".html")
+  //   mime = "text/html";
+  // else if (extension == ".htm")
+  //   mime = "text/html";
+  // else if (extension == ".css")
+  //   mime = "text/css";
+  // else if (extension == ".ico")
+  //   mime = "image/x-icon";
+  // else if (extension == ".avi")
+  //   mime = "video/x-msvideo";
+  // else if (extension == ".bmp")
+  //   mime = "image/bmp";
+  // else if (extension == ".doc")
+  //   mime = "application/msword";
+  // else if (extension == ".gif")
+  //   mime = "image/gif";
+  // else if (extension == ".gz")
+  //   mime = "application/x-gzip";
+  // else if (extension == ".ico")
+  //   mime = "image/x-icon";
+  // else if (extension == ".jpg")
+  //   mime = "image/jpeg";
+  // else if (extension == ".jpeg")
+  //   mime = "image/jpeg";
+  // else if (extension == ".png")
+  //   mime = "image/png";
+  // else if (extension == ".txt")
+  //   mime = "text/plain";
+  // else if (extension == ".mp3")
+  //   mime = "audio/mp3";
+  // else if (extension == ".pdf")
+  //   mime = "application/pdf";
+  // else
+  //   mime = "text/html";
 }
 
-void Response::generateHeaderContentType()
+void Response::generateVersion() { m_response_message.append("HTTP/1.1 "); }
+void Response::generateStatusCode()
+{
+  std::stringstream ss;
+  std::string status_code;
+
+  ss << m_status_code;
+  status_code = ss.str();
+  m_response_message.append(status_code);
+}
+void Response::generateReasonPhrase()
+{
+  std::map<int, std::string> reason_map;
+  std::string reason_phrase;
+
+  // Inserting key-value pairs into the map
+  reason_map.insert(std::make_pair(200, "OK"));
+  reason_map.insert(std::make_pair(404, "NOT_FOUND"));
+
+  m_response_message.append(" " + reason_map[m_status_code]);
+}
+
+void Response::generateContentType()
 {
   m_response_message.append("Content-Type: ");
   m_response_message.append(getMIME(m_file_path));
   m_response_message.append("\r\n");
 }
-void Response::generateHeaderContentLength()
+void Response::generateContentLength()
 {
   std::stringstream ss;
   ss << m_body.length();
@@ -130,31 +165,17 @@ void Response::generateHeaderContentLength()
   m_response_message.append("\r\n");
 }
 
-void Response::makeBody()
-{
-  std::ifstream fileStream(m_file_path);
-
-  if (fileStream)
-  {
-    std::stringstream buffer;
-    buffer << fileStream.rdbuf();
-    m_body = buffer.str();
-    fileStream.close();
-  }
-  else
-    throw NOT_FOUND_404;
-}
-
 void Response::setStartLine()
 {
-  m_response_message.append("HTTP/1.1 ");
-  m_response_message.append(statusCodeToString(this->m_request.status));
+  generateVersion();
+  generateStatusCode();
+  generateReasonPhrase();
   m_response_message.append("\r\n");
 }
 void Response::setHeaders()
 {
-  generateHeaderContentType();
-  generateHeaderContentLength();
+  generateContentType();
+  generateContentLength();
   // headerConnection();
   // headerServer();
   // headerLocation();
@@ -162,3 +183,24 @@ void Response::setHeaders()
   m_response_message.append("\r\n");
 }
 void Response::setBody() { m_response_message.append(m_body); }
+void Response::setErrorBody()
+{
+  // status코드에 따른 html문들을 파일 혹은 스트링으로 만들어서 집어넣어야할듯?
+  // 거기에 따른 body를 붙이면 끝
+}
+
+const char* Response::generateErrorResponseMessage()
+{
+  setStartLine();
+  setHeaders();
+  setErrorBody();
+}
+
+const char* Response::generateResponseMessage()
+{
+  setStartLine();
+  setHeaders();
+  setBody();
+
+  return (m_response_message.c_str());
+}

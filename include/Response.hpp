@@ -23,6 +23,19 @@ class Response
   char** m_cgi_params;
   std::string m_response_message;
 
+  // for genearte Start Line
+  void generateVersion();
+  void generateStatusCode();
+  void generateReasonPhrase();
+  // for generate Headers
+  void generateContentType();
+  void generateContentLength();
+  // for generate Response Message
+  void setStartLine();
+  void setHeaders();
+  void setBody();
+  void setErrorBody();
+
  public:
   Response();
   Response(Request& request_data, Config& config_data);
@@ -30,14 +43,8 @@ class Response
   ~Response();
   Response& operator=(const Response& obj);
 
-  void makeBody();
-  void setStartLine();
-  void setHeaders();
-  void setBody();
-  void generateHeaderContentType();
-  void generateHeaderContentLength();
-  char* generateErrorResponseMessage();
-  char* generateResponseMessage();
+  const char* generateErrorResponseMessage();
+  const char* generateResponseMessage();
 };
 
 #endif
