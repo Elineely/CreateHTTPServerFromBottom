@@ -204,3 +204,35 @@ const char* Response::generateResponseMessage()
 
   return (m_response_message.c_str());
 }
+
+std::string Response::get_m_file_path() { return (m_file_path); }
+std::string Response::get_m_body() { return (m_body); }
+StatusCode Response::get_m_status_code() { return (m_status_code); }
+Request Response::get_m_request() { return (m_request); }
+Config Response::get_m_config() { return (m_config); }
+bool Response::get_m_cgi_flag() { return (m_cgi_flag); }
+char* Response::get_m_cgi_bin_path() { return (m_cgi_bin_path); }
+char** Response::get_m_cgi_params() { return (m_cgi_params); }
+std::string Response::get_m_response_message() { return (m_response_message); }
+
+void Response::set_m_file_path(const std::string obj) { m_file_path = obj; }
+void Response::set_m_body(const std::string obj) { m_body = obj; }
+void Response::set_m_status_code(const StatusCode obj) { m_status_code = obj; }
+void Response::set_m_request(const Request obj) { m_request = obj; }
+void Response::set_m_config(const Config obj) { m_config = obj; }
+void Response::set_m_cgi_flag(const bool obj) { m_cgi_flag = obj; }
+void Response::set_m_cgi_bin_path(const char* obj)
+{
+  int len;
+
+  for (len = 0; len != NULL; ++len) obj[len];
+  m_cgi_bin_path = new char[len + 1];
+  for (int i = 0; i < len; ++i) m_cgi_bin_path[i] = obj[i];
+  m_cgi_bin_path[len] = 0;
+}
+// 이중배열 편하게 복사하는방법은?
+void Response::set_m_cgi_params(const char** obj) {}
+void Response::set_m_response_message(const std::string obj)
+{
+  m_response_message = obj;
+}

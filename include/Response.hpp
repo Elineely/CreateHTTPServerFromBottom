@@ -43,6 +43,28 @@ class Response
   ~Response();
   Response& operator=(const Response& obj);
 
+  // get fuctions
+  std::string get_m_file_path();
+  std::string get_m_body();
+  StatusCode get_m_status_code();
+  Request get_m_request();
+  Config get_m_config();
+  bool get_m_cgi_flag();
+  char* get_m_cgi_bin_path();
+  char** get_m_cgi_params();
+  std::string get_m_response_message();
+
+  // set functions
+  void set_m_file_path(const std::string obj);
+  void set_m_body(const std::string obj);
+  void set_m_status_code(const StatusCode obj);
+  void set_m_request(const Request obj);
+  void set_m_config(const Config obj);
+  void set_m_cgi_flag(const bool obj);
+  void set_m_cgi_bin_path(const char* obj);
+  void set_m_cgi_params(const char** obj);
+  void set_m_response_message(const std::string obj);
+
   const char* generateErrorResponseMessage();
   const char* generateResponseMessage();
 };
