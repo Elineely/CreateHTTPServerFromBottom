@@ -19,7 +19,7 @@ char *getHttpMessage()
   char *return_buff = (char *)malloc(1000000);
   int file_length;
   std::string file_buff;
-  std::ifstream test_file("./10mb");
+  std::ifstream test_file("./test_message");
   std::string line;
 
   while (getline(test_file, line))
