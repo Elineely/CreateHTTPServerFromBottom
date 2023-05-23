@@ -114,14 +114,16 @@ void GetCgiHandler::outsourceCgiRequest(void)
     }
     close(to_parent_fds[READ]);
 
+// 정상 출력 or 위치 설정 잘못된 경우 or 권한 or 헤더 이상의 경우 -> 4개 분기
+// 헤더와 body 분리(\n\n)? 통째로?
+
     int status;
 
     waitpid(pid, &status, 0);
     // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
     if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
     {
-      // Response 클래스에 content 넘겨주기
-      // giveDataToResponse();
+      // MethodHandler에 데이터 넘겨주기
     }
     else
     {
@@ -195,19 +197,24 @@ void PostCgiHandler::outsourceCgiRequest(void)
     close(to_parent_fds[READ]);
     close(to_child_fds[WRITE]);
 
-    char buffer[4096]; // 크기
-    std::string request_data;
-    ssize_t bytes_read;
+    // char buffer[4096]; // 크기
+    // std::string request_data;
+    // ssize_t bytes_read;
 
-// 순서대로 주고 받는지 테스트 -> close() 잘하면 순서대로 주고 받음
-    while (true) // 조건문 수정?
+    // while (true) // 조건문 수정?
+    // {
+    //   bytes_read = read(to_child_fds[READ], buffer, sizeof(buffer));
+    //   if (bytes_read <= 0)
+    //   {
+    //     break ;
+    //   }
+    //   request_data.append(buffer, bytes_read);
+    // }
+    // close(to_child_fds[READ]);
+
+    if (dup2(to_child_fds[READ], STDIN_FILENO) == ERROR)
     {
-      bytes_read = read(to_child_fds[READ], buffer, sizeof(buffer));
-      if (bytes_read <= 0)
-      {
-        break ;
-      }
-      request_data.append(buffer, bytes_read);
+      // throw (error);
     }
     close(to_child_fds[READ]);
 
@@ -220,10 +227,9 @@ void PostCgiHandler::outsourceCgiRequest(void)
     char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
     char* const argv[] = {cgi_bin_path, "index.php", NULL}; // t_location {ourcgi_index}
     char* const envp[] = {NULL};
-//  request_data;
+//  request_data를 표준입력 파라미터로 넘겨주려면?
+// 아니면 requst_data를 dup2(to_child_fds[READ], STDIN_FILENO)해서 바로 받기?
 
-// GET -> 바이너리 프로그램에 index.php와 envp 넣으면 html로 만들어줌
-// POST, DELETE -> ???
     if (execve(cgi_bin_path, argv, envp) == ERROR)
     {
       // throw (error);
@@ -234,7 +240,9 @@ void PostCgiHandler::outsourceCgiRequest(void)
     close(to_parent_fds[WRITE]);
     close(to_child_fds[READ]);
 
-    if (write(to_child_fds[WRITE], /* request.data */ , sizeof(data)) == ERROR)
+    if (write(to_child_fds[WRITE], /* request_data */ , sizeof(data)) == ERROR)
+    // request의 body만 넘기는 거면, 세 번째 인자는 CONTENT_LENGTH 쓰면 됨
+    // 데이터 부분에 요청 정보가 들어오는 POST (앞에서 어디까지 분류되나)
     {
       // throw error;
     }
@@ -261,8 +269,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
     // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
     if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
     {
-      // Response 클래스에 content 넘겨주기
-      // giveDataToResponse();
+      // MethodHandler에 데이터 넘겨주기
     }
     else
     {
@@ -272,3 +279,5 @@ void PostCgiHandler::outsourceCgiRequest(void)
 
 void PostCgiHandler::giveDataToResponse(void)
 {}
+
+//DeleteCgiHandler (일단 POST와 비슷?)

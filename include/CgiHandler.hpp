@@ -1,3 +1,5 @@
+#ifndef CGIHANDLER_HPP
+#define CGIHANDLER_HPP
 
 // CgiHandler virtual class
 class CgiHandler
@@ -13,7 +15,10 @@ class CgiHandler
   virtual ~CgiHandler(void);
 
   virtual void outsourceCgiRequest(void) = 0;
-  virtual void giveDataToResponse(void) = 0;
+
+// CGI의 출력값을 검증하는 함수
+    // 정상 출력 or 위치 설정 잘못된 경우 or 권한 or 헤더 이상의 경우 -> 4개 분기
+//CGI로부터 정상 출력 받았을 때 : 헤더와 body 분리(\n\n)? or 통째로?
 
  private:
   CgiHandler(const CgiHandler& obj);
@@ -31,9 +36,6 @@ class GetCgiHandler : public CgiHandler
   virtual ~GetCgiHandler(void);
 
   virtual void outsourceCgiRequest(void);
-  virtual void giveDataToResponse(void);
-
-  // cgi_bin_path(cgi binary 파일 위치), cgi_envp(cgi 실행 프로그램에 넘겨줄 환경 변수) 필요
 
  private:
   GetCgiHandler(void);
@@ -49,6 +51,8 @@ class PostCgiHandler : public CgiHandler
   PostCgiHandler& operator=(PostCgiHandler const& obj);
   virtual ~PostCgiHandler(void);
 
+  virtual void outsourceCgiRequest(void);
+
  private:
   PostCgiHandler(void);
 };
@@ -63,6 +67,10 @@ class DeleteCgiHandler : public CgiHandler
   DeleteCgiHandler& operator=(DeleteCgiHandler const& obj);
   virtual ~DeleteCgiHandler(void);
 
+  virtual void outsourceCgiRequest(void);
+
  private:
   DeleteCgiHandler(void);
 };
+
+#endif
