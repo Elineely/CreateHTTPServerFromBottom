@@ -6,7 +6,7 @@
 #    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/23 15:21:11 by kipark           ###   ########seoul.kr   #
+#    Updated: 2023/05/23 17:23:27 by kipark           ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,11 +25,11 @@ SRC_CONFIG_FILES		:=	Config.cpp	\
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
 
-SRC_RESPONSE_DIR		:= Response/
-SRC_RESPONSE_FILES		:= Response.cpp
+# SRC_RESPONSE_DIR		:= Response/
+# SRC_RESPONSE_FILES		:= Response.cpp
 
-SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
-SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
+# SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
+# SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
 
 SRC_SERVER_DIR			:=	Server/
 SRC_SERVER_FILES		:=	Server.cpp 	\

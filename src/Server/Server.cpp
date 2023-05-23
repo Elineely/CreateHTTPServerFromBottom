@@ -14,27 +14,27 @@ void AddEventToChangeList(std::vector<struct kevent> &change_list,
   change_list.push_back(temp_event);
 }
 
-void sendClientHttpMessage(int clientNum)
+char *getHttpMessage()
 {
-  char protocol[] = "HTTP/1.1 200 OK\r\n";
-  char server[] = "Server:Linux Web Server \r\n";
-  char date[] = "Date: Wed, 03 May 2023 05:53:31 GM \r\n";
-  char cnt_len[] = "Content-length:10\r\n";
-  char cnt_type[BUF_SIZE];
-  char buff[BUF_SIZE];
+  char *return_buff = (char *)malloc(1000000);
+  int file_length;
+  std::string file_buff;
+  std::ifstream test_file("./10mb");
+  std::string line;
 
-  FILE *send_file;
-
-  // here is size of
-  sprintf(cnt_type,
-          "HTTP/1.1 200 OK\r\nServer:Linux Web Server \r\nDate: Wed, 03 May "
-          "2023 05:53:31 GM \r\nContent-length:10\r\n"
-          "Content-Type:text/plain\r\n\r\n<h1>hi<h1>");
-  send(clientNum, protocol, strlen(protocol), 0);
-  send(clientNum, server, strlen(server), 0);
-  send(clientNum, date, strlen(date), 0);
-  send(clientNum, cnt_len, strlen(cnt_len), 0);
-  send(clientNum, cnt_type, strlen(cnt_type), 0);
+  while (getline(test_file, line))
+  {
+    file_buff.append(line);
+  }
+  test_file.close();
+  file_length = ft_strlen(file_buff.c_str());
+  sprintf(return_buff,
+          "HTTP/1.1 200 OK\r\nServer:Linux Web Server \r\nDate: Wed, "
+          "03 May "
+          "2023 05:53:31 GM \r\nContent-length:%d\r\n"
+          "Content-Type:text/plain\r\n\r\n%s",
+          file_length, file_buff.c_str());
+  return return_buff;
 }
 
 void disconnect_socket(int socket) { close(socket); }
@@ -107,8 +107,6 @@ Server::Server(Config server_conf)
     }
     m_kqueue.change_list.clear();
 
-    std::cout << current_events << std::endl;
-
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
@@ -146,47 +144,20 @@ Server::Server(Config server_conf)
 
         case CLIENT_READ:
         {
-          std::cout << "--- in CIENT_READ" << std::endl;
-
           // Parser *parser = static_cast<Parser *>(current_event->udata);
           char buff[BUF_SIZE];
           int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-          std::cout << "READ" << std::endl;
           // parser->readBuffer(buff);
           // if (parser->get_validation_phase() != COMPLETE)
           // {
           //   continue;
           // }
-          // std::cout << "in here" << std::endl;
 
-          //
-          // sendClientHttpMessage(current_event->ident);
-          //
-
-          // partial write event();
-          char *return_buff = (char *)malloc(1000000);
-          int file_length;
-          std::string file_buff;
-          std::ifstream test_file("./10mb");
-          std::string line;
-
-          while (getline(test_file, line))
-          {
-            file_buff.append(line);
-          }
-          test_file.close();
-          file_length = ft_strlen(file_buff.c_str());
-          sprintf(return_buff,
-                  "HTTP/1.1 200 OK\r\nServer:Linux Web Server \r\nDate: Wed, "
-                  "03 May "
-                  "2023 05:53:31 GM \r\nContent-length:%d\r\n"
-                  "Content-Type:text/plain\r\n\r\n%s",
-                  file_length, file_buff.c_str());
-
-          std::cout << "buff : " << ft_strlen(buff) << std::endl;
+          // getttpMessage
+          char *message = getHttpMessage();
 
           t_response_write *response =
-              new t_response_write(return_buff, ft_strlen(return_buff));
+              new t_response_write(message, ft_strlen(message));
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
                                response);
@@ -203,27 +174,18 @@ Server::Server(Config server_conf)
 
         case CLIENT_WRITE:
         {
-          std::cout << "--- in CLIENT_WRITE" << std::endl;
-
-          t_response_write *response =
-              static_cast<t_response_write *>(current_event->udata);
+          t_response_write *response;
+          response = static_cast<t_response_write *>(current_event->udata);
 
           int send_byte = 0;
-          // std::cout << "send " << response->message << std::endl;
-          // std::cout << response->offset << " " << response->offset <<
-          // std::endl; std::cout << response->length << " " << response->length
-          // << std::endl;
           send_byte =
               send(current_event->ident, response->message + response->offset,
                    response->length - response->offset, 0);
           response->offset += send_byte;
-          std::cout << "send_byte : " << send_byte << std::endl;
+          std::cout << "server end byte to fd : " << current_event->ident
+                    << "  send_byte : " << send_byte << std::endl;
           if (response->length > response->offset)
           {
-            std::cout << "in length offtset " << std::endl;
-            AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-                                 EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-                                 response);
             continue;
           }
           std::cout << "send END" << std::endl;
