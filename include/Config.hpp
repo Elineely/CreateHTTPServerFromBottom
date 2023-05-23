@@ -16,6 +16,8 @@ struct t_location
   std::string root;
   std::string auto_index;
   std::string index;
+  std::string ourcgi_pass;
+  std::string ourcgi_index;
 };
 
 struct t_server

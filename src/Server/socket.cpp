@@ -9,7 +9,6 @@ void Server::setSocket(Config server_conf)
     ft_error_exit(1, strerror(errno));
   }
   m_socket.serv_addr.sin_family = AF_INET;
-
   m_socket.serv_addr.sin_port = htons(atoi(server[0].listen[0].c_str()));
   m_socket.serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 }
