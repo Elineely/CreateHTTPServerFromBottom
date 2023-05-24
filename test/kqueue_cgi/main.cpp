@@ -202,7 +202,7 @@ void executeChildProcess(t_kqueue &m_kqueue)
         else if (current_event.filter == EVFILT_TIMER)
         {
           std::cout << "=========⌛️ TIMER ⌛️=========" << std::endl;
-          int result = kill(current_event.ident, SIGINT);
+          int result = kill(current_event.ident, SIGTERM);
           std::cout << "kill result: " << result << std::endl;
           wait(NULL);
 
