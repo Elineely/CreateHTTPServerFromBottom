@@ -1,6 +1,10 @@
 #ifndef CGIHANDLER_HPP
 #define CGIHANDLER_HPP
 
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string>
+
 // CgiHandler virtual class
 class CgiHandler
 {
@@ -23,7 +27,7 @@ class CgiHandler
  private:
   CgiHandler(const CgiHandler& obj);
   CgiHandler& operator=(CgiHandler const& obj);
-}
+};
 
 
 // class GetCgiHandler
