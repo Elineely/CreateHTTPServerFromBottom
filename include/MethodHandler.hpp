@@ -9,8 +9,11 @@ class MethodHandler
 {
  protected:
   Request m_request_data;
-  Config m_config_data;
+  // config 전체 클래스가 필요해보이진 않아요.
+  // Config m_config_data;
   Response m_response_data;
+  t_server m_server_config;
+  std::string m_location_name;
   std::string m_body;
 
   MethodHandler(const MethodHandler& obj);
@@ -19,7 +22,8 @@ class MethodHandler
 
  public:
   MethodHandler(void);
-  MethodHandler(const Request& request_data, const Config& config_data);
+  MethodHandler(Request& request_data, Response& response_data,
+                t_server& server_config);
   virtual ~MethodHandler(void);
 };
 
@@ -29,43 +33,42 @@ class GetMethodHandler : public MethodHandler
  public:
   GetMethodHandler();
   GetMethodHandler(const GetMethodHandler& obj);
-  GetMethodHandler(const Request& request_data, const Config& config_data);
+  GetMethodHandler(Request& request_data, Response& response_data,
+                   t_server& server_config);
   virtual ~GetMethodHandler(void);
   GetMethodHandler& operator=(GetMethodHandler const& obj);
 
   void makeBody();
 
  private:
-  // GetMethodHandler(void);
+};
+class PostMethodHandler : public MethodHandler
+{
+ public:
+  PostMethodHandler();
+  PostMethodHandler(const PostMethodHandler& obj);
+  PostMethodHandler(Request& request_data, Response& response_data,
+                    t_server& server_config);
+  virtual ~PostMethodHandler(void);
+  PostMethodHandler& operator=(PostMethodHandler const& obj);
+
+  void makeBody();
+
+ private:
+};
+class DeleteMethodHandler : public MethodHandler
+{
+ public:
+  DeleteMethodHandler();
+  DeleteMethodHandler(const DeleteMethodHandler& obj);
+  DeleteMethodHandler(Request& request_data, Response& response_data,
+                      t_server& server_config);
+  virtual ~DeleteMethodHandler(void);
+  DeleteMethodHandler& operator=(DeleteMethodHandler const& obj);
+
+  void makeBody();
+
+ private:
 };
 
 #endif
-
-// class PostMethodHandler : public MethodHandler
-// {
-//  public:
-//   PostMethodHandler(void);
-//   PostMethodHandler(const PostMethodHandler& obj);
-//   PostMethodHandler(const Request& request_data, const Config& config_data);
-//   virtual ~PostMethodHandler(void);
-//   PostMethodHandler& operator=(PostMethodHandler const& obj);
-//   void generateResponse(void);
-
-//  private:
-//   PostMethodHandler(void);
-// };
-
-// class DeleteMethodHandler : public MethodHandler
-// {
-//  public:
-//   DeleteMethodHandler(void);
-//   DeleteMethodHandler(const DeleteMethodHandler& obj);
-//   DeleteMethodHandler(const Request& request_data, const Config&
-//   config_data); virtual ~DeleteMethodHandler(void); DeleteMethodHandler&
-//   operator=(DeleteMethodHandler const& obj);
-
-//   void generateResponse(void);
-
-//  private:
-//   DeleteMethodHandler(void);
-// };

@@ -2,72 +2,156 @@
 
 // Abstract MethodHandler
 MethodHandler::MethodHandler(void) {}
-
 MethodHandler::MethodHandler(const MethodHandler& obj)
 {
-  this->m_config_data = obj.m_config_data;
-  this->m_request_data = obj.m_request_data;
-  this->m_response_data = obj.m_response_data;
+  m_config_data = obj.m_config_data;
+  m_request_data = obj.m_request_data;
+  m_response_data = obj.m_response_data;
+  m_body = obj.m_body;
 }
-
-MethodHandler::MethodHandler(const Request& request_data,
-                             const Config& config_data)
+MethodHandler::MethodHandler(Request& request_data, Response& response_data,
+                             t_server& server_config)
 {
   m_request_data = request_data;
-  // m_config_data = config_data;
+  m_response_data = response_data;
+  m_server_config = server_config;
 }
-
 MethodHandler& MethodHandler::operator=(MethodHandler const& obj)
 {
   if (this != &obj)
   {
-    // this->m_config_data = obj.m_config_data;
-    this->m_request_data = obj.m_request_data;
-    this->m_response_data = obj.m_response_data;
+    m_server_config = obj.m_server_config;
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_body = obj.m_body;
   }
   return (*this);
 }
-
 MethodHandler::~MethodHandler(void) {}
 
-// GET
+// GetMethodHandler
 GetMethodHandler::GetMethodHandler(void) {}
-
 GetMethodHandler::GetMethodHandler(const GetMethodHandler& obj)
 {
-  // m_config_data = obj.m_config_data;
+  m_server_config = obj.m_server_config;
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
+  m_body = obj.m_body;
 }
-GetMethodHandler::GetMethodHandler(const Request& request_data,
-                                   const Config& config_data)
+GetMethodHandler::GetMethodHandler(Request& request_data,
+                                   Response& response_data,
+                                   t_server& server_config)
 {
   m_request_data = request_data;
-  m_config_data = config_data;
+  m_response_data = response_data;
+  m_server_config = server_config;
 }
-
 GetMethodHandler::~GetMethodHandler(void) {}
-
 GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
 {
   if (this != &obj)
   {
-    this->m_config_data = obj.m_config_data;
-    this->m_request_data = obj.m_request_data;
-    this->m_response_data = obj.m_response_data;
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_server_config = obj.m_server_config;
+    m_body = obj.m_body;
   }
   return (*this);
 }
+void GetMethodHandler::makeBody()
+{
+  if (m_server_config.locations[m_location_name].auto_index != "" &&
+      m_response_data.get_m_file_path() != "")
+  {
+    // auto index페이지 생성
+  }
+  else
+  {
+    // 일반 페이지 생성
+  }
+}
 
-void GetMethodHandler::makeBody() {}
+// PostMethodHandler
+PostMethodHandler::PostMethodHandler(void) {}
+PostMethodHandler::PostMethodHandler(const PostMethodHandler& obj)
+{
+  m_server_config = obj.m_server_config;
+  m_request_data = obj.m_request_data;
+  m_response_data = obj.m_response_data;
+  m_body = obj.m_body;
+}
+PostMethodHandler::PostMethodHandler(Request& request_data,
+                                     Response& response_data,
+                                     t_server& server_config)
+{
+  m_request_data = request_data;
+  m_response_data = response_data;
+  m_server_config = server_config;
+}
+PostMethodHandler::~PostMethodHandler(void) {}
+PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
+{
+  if (this != &obj)
+  {
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_server_config = obj.m_server_config;
+    m_body = obj.m_body;
+  }
+  return (*this);
+}
+void PostMethodHandler::makeBody()
+{
+  if (m_server_config.locations[m_location_name].auto_index != "" &&
+      m_response_data.get_m_file_path() != "")
+  {
+    // auto index페이지 생성
+  }
+  else
+  {
+    // 일반 페이지 생성
+  }
+}
 
-// // 추후 수정 필요하면 하기
-// int openFile(std::string root, std::string uri)
-// {
-//   int fd;
-//   // parser config char*로 받기?
-//   fd = open("/Users/hogkim/webserv/src/Handler/index.html",
-//             O_RDONLY);  //? 쓸수 있나??
-//   if (fd < 0) throw 404;
-//   return (fd);
-// }
+// DeleteMethodHandler
+DeleteMethodHandler::DeleteMethodHandler(void) {}
+DeleteMethodHandler::DeleteMethodHandler(const DeleteMethodHandler& obj)
+{
+  m_server_config = obj.m_server_config;
+  m_request_data = obj.m_request_data;
+  m_response_data = obj.m_response_data;
+  m_body = obj.m_body;
+}
+DeleteMethodHandler::DeleteMethodHandler(Request& request_data,
+                                         Response& response_data,
+                                         t_server& server_config)
+{
+  m_request_data = request_data;
+  m_response_data = response_data;
+  m_server_config = server_config;
+}
+DeleteMethodHandler::~DeleteMethodHandler(void) {}
+DeleteMethodHandler& DeleteMethodHandler::operator=(
+    DeleteMethodHandler const& obj)
+{
+  if (this != &obj)
+  {
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_server_config = obj.m_server_config;
+    m_body = obj.m_body;
+  }
+  return (*this);
+}
+void DeleteMethodHandler::makeBody()
+{
+  if (m_server_config.locations[m_location_name].auto_index != "" &&
+      m_response_data.get_m_file_path() != "")
+  {
+    // auto index페이지 생성
+  }
+  else
+  {
+    // 일반 페이지 생성
+  }
+}
