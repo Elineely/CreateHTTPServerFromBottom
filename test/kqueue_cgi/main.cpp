@@ -4,11 +4,11 @@
 // socket header
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <sys/event.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <signal.h>
 
 #include <iostream>
 
@@ -21,10 +21,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
-
-#include <sstream>
-
 // Server Set value
 #define BUF_SIZE 1024
 #define MAX_EVENT_LIST_SIZE 8
@@ -38,6 +38,9 @@
 
 #define ERROR -1
 #define CHILD_PROCESS 0
+
+#define READ 0
+#define WRITE 1
 
 enum e_kqueue_event
 {
@@ -105,55 +108,118 @@ e_kqueue_event getEventStatus(struct kevent *current_event, int server_sock)
   return PROCESS_END;
 }
 
-void Server()
+void executeChildProcess(t_kqueue &m_kqueue)
 {
-  t_kqueue m_kqueue;
-  int current_events;
-  struct kevent *current_event;
-  struct timespec timeout;
+  pid_t pid;
   int pipe_fd[2];
+  int current_events;
+  struct kevent current_event;
 
-  m_kqueue.kq = kqueue();
-  timeout.tv_sec = 2;
-  timeout.tv_nsec = 0;
-  int pid = fork();
-  // 자식 process
+  if (pipe(pipe_fd) == ERROR)
+  {
+    std::cerr << "pipe error" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  pid = fork();
+  if (pid == ERROR)
+  {
+    std::cerr << "fork error" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  // 자식 프로세스
   if (pid == CHILD_PROCESS)
   {
-    std::cout << "Child sleeps" << std::endl;
-    sleep(5);
-    std::cout << "Child wakes up" << std::endl;
-    exit(0);
+    close(pipe_fd[READ]);
+
+    if (dup2(pipe_fd[WRITE], STDOUT_FILENO) == ERROR)
+    {
+      std::cerr << "redirecting stdout error" << std::endl;
+      return exit(EXIT_FAILURE);
+    }
+
+    char *cgi_bin_path = "./php-cgi"; // TODO: php-cgi 는 joonhan 맥북 기준으로 가져왔음. 나중에 파일 따로 가져올 것
+    char *const argv[] = {cgi_bin_path, "index.php", NULL};
+    char *const envp[] = {NULL};
+
+    if (execve(cgi_bin_path, argv, envp) == ERROR)
+    {
+      std::cerr << "executing cgi error" << std::endl;
+      exit(EXIT_FAILURE);
+    }
   }
-  AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_PROC, EV_ADD,
-                       NOTE_EXIT, 0, NULL);
-  current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0], 1,
-                          m_kqueue.event_list, 1, &timeout);
-  if (current_events == -1)
-  {
-    std::cout << "kevent() error" << strerror(errno) << std::endl;
-  }
-  else if (current_events == 0)
-  {
-    std::cout << "Timeout!" << std::endl;
-    kill(pid, SIGTERM);
-  }
+  // 부모 프로세스
   else
   {
-    for (int i = 0; i < current_events; ++i)
-    {
-      current_event = &m_kqueue.event_list[i];
+    close(pipe_fd[WRITE]);
 
-      if (current_event->filter == EVFILT_PROC)
+    // Set up the event structure
+    AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_TIMER,
+                         EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10, NULL);
+    AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_PROC, EV_ADD,
+                         NOTE_EXIT, 0, NULL);
+
+    while (1)
+    {
+      current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0],
+                              m_kqueue.change_list.size(), m_kqueue.event_list,
+                              MAX_EVENT_LIST_SIZE, NULL);
+      m_kqueue.change_list.clear();
+      if (current_events == -1)
       {
-        if (current_event->fflags == NOTE_EXIT)
+        std::cout << "kevent() error: " << strerror(errno) << std::endl;
+      }
+
+      for (int i = 0; i < current_events; ++i)
+      {
+        current_event = m_kqueue.event_list[i];
+        std::cout << current_event.ident << std::endl;
+
+        if (current_event.filter == EVFILT_PROC)
         {
-          std::cout << "find exit child process" << std::endl;
+          std::cout << "=========✅ PROC ✅=========" << std::endl;
+
+          char buffer[4096];
+          std::string output;
+          ssize_t bytes_read;
+          while (true)
+          {
+            bytes_read = read(pipe_fd[READ], buffer, sizeof(buffer));
+            if (bytes_read <= 0)
+            {
+              break;
+            }
+            output.append(buffer, bytes_read);
+          }
+          std::cout << "👇 output is 👇" << std::endl;
+          std::cout << output << std::endl;
+          close(pipe_fd[READ]);
+          wait(NULL);
+
+          AddEventToChangeList(m_kqueue.change_list, current_event.ident,
+                               EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+        }
+        else if (current_event.filter == EVFILT_TIMER)
+        {
+          std::cout << "=========⌛️ TIMER ⌛️=========" << std::endl;
+          int result = kill(current_event.ident, SIGINT);
+          std::cout << "kill result: " << result << std::endl;
+          wait(NULL);
+
+          AddEventToChangeList(m_kqueue.change_list, current_event.ident,
+                               EVFILT_PROC, EV_DELETE, 0, 0, NULL);
         }
       }
     }
   }
-  return;
+}
+
+void Server()
+{
+  t_kqueue m_kqueue;
+
+  m_kqueue.kq = kqueue();
+  executeChildProcess(m_kqueue);
 }
 
 int main(int argc, char **argv)

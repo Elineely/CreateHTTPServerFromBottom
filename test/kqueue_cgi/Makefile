@@ -1,22 +1,10 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: kipark <kipark@student.42seoul.kr>         +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/23 15:47:49 by kipark           ###   ########seoul.kr   #
-#                                                                              #
-# **************************************************************************** #
-
 NAME 					:= kqueue_cgi
 
 INCLUDE					:=	-I./include/
 
 SRC_MAIN				:=	main.cpp
 
-SRC_FILES				:=	$(SRC_MAIN)	
+SRC_FILES				:=	$(SRC_MAIN)
 SRCS					:=	$(SRC_FILES)
 
 OBJ_DIR					:=	obj/
