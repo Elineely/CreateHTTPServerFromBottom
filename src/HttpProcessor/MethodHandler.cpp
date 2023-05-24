@@ -1,10 +1,12 @@
 #include "MethodHandler.hpp"
 
-// Abstract MethodHandler
+#include <fstream>
+#include <sstream>
+
 MethodHandler::MethodHandler(void) {}
 MethodHandler::MethodHandler(const MethodHandler& obj)
 {
-  m_config_data = obj.m_config_data;
+  m_server_config = obj.m_server_config;
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
   m_body = obj.m_body;
@@ -60,14 +62,20 @@ GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
 }
 void GetMethodHandler::makeBody()
 {
-  if (m_server_config.locations[m_location_name].auto_index != "" &&
-      m_response_data.get_m_file_path() != "")
+  if (m_response_data.get_m_file_path() == "") throw NOT_FOUND_404;
+  if (m_server_config.locations[m_location_name].auto_index != "")
   {
     // auto index페이지 생성
   }
-  else
+  else  // 일반 페이지 생성
   {
-    // 일반 페이지 생성
+    std::ifstream target_file_stream(m_response_data.get_m_file_path());
+    std::stringstream buffer;
+
+    if (!target_file_stream.is_open()) throw NOT_FOUND_404;
+    buffer << target_file_stream.rdbuf();
+    m_body = buffer.str();
+    target_file_stream.close();
   }
 }
 
@@ -102,15 +110,31 @@ PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
 }
 void PostMethodHandler::makeBody()
 {
-  if (m_server_config.locations[m_location_name].auto_index != "" &&
-      m_response_data.get_m_file_path() != "")
+  std::ifstream target_file_stream(m_response_data.get_m_file_path());
+  std::stringstream buffer;
+
+  if (!target_file_stream.is_open())
   {
-    // auto index페이지 생성
+    std::ofstream new_file_stream(m_response_data.get_m_file_path());
+    if (!new_file_stream) throw "Failed to create the file.";
+    // new_file_stream << m_request_data.body;
+    new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
+    new_file_stream.close();
   }
   else
   {
-    // 일반 페이지 생성
+    std::ofstream append_stream(m_response_data.get_m_file_path(),
+                                std::ios::app);
+    std::stringstream content_stream;
+    // 파일스트림 실패시 어떤 에러코드를 줄지 모르겠음
+    if (!append_stream) throw "Failed to open the file for appending.";
+    content_stream.write(&m_request_data.body[0], m_request_data.body.size());
+    append_stream << content_stream.str();
+    append_stream.close();
   }
+  buffer << target_file_stream.rdbuf();
+  m_body = buffer.str();
+  target_file_stream.close();
 }
 
 // DeleteMethodHandler
@@ -145,13 +169,14 @@ DeleteMethodHandler& DeleteMethodHandler::operator=(
 }
 void DeleteMethodHandler::makeBody()
 {
-  if (m_server_config.locations[m_location_name].auto_index != "" &&
-      m_response_data.get_m_file_path() != "")
-  {
-    // auto index페이지 생성
-  }
+  std::ifstream target_file_stream(m_response_data.get_m_file_path());
+
+  if (!target_file_stream.is_open())
+    throw NOT_FOUND_404;
   else
   {
-    // 일반 페이지 생성
+    target_file_stream.close();
+    // 삭제 실패시 오류코드
+    if (remove(m_response_data.get_m_file_path().c_str())) throw 500;
   }
 }
