@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <signal.h>
 
 #include <iostream>
 
@@ -109,35 +110,46 @@ void Server()
   t_kqueue m_kqueue;
   int current_events;
   struct kevent *current_event;
+  struct timespec timeout;
   int pipe_fd[2];
 
   m_kqueue.kq = kqueue();
+  timeout.tv_sec = 2;
+  timeout.tv_nsec = 0;
   int pid = fork();
   // 자식 process
   if (pid == CHILD_PROCESS)
   {
     std::cout << "Child sleeps" << std::endl;
-    sleep(1);
+    sleep(5);
     std::cout << "Child wakes up" << std::endl;
     exit(0);
   }
   AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_PROC, EV_ADD,
                        NOTE_EXIT, 0, NULL);
   current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0], 1,
-                          m_kqueue.event_list, 1, NULL);
+                          m_kqueue.event_list, 1, &timeout);
   if (current_events == -1)
   {
     std::cout << "kevent() error" << strerror(errno) << std::endl;
   }
-  for (int i = 0; i < current_events; ++i)
+  else if (current_events == 0)
   {
-    current_event = &m_kqueue.event_list[i];
-
-    if (current_event->filter == EVFILT_PROC)
+    std::cout << "Timeout!" << std::endl;
+    kill(pid, SIGTERM);
+  }
+  else
+  {
+    for (int i = 0; i < current_events; ++i)
     {
-      if (current_event->fflags == NOTE_EXIT)
+      current_event = &m_kqueue.event_list[i];
+
+      if (current_event->filter == EVFILT_PROC)
       {
-        std::cout << "find exit child process" << std::endl;
+        if (current_event->fflags == NOTE_EXIT)
+        {
+          std::cout << "find exit child process" << std::endl;
+        }
       }
     }
   }
