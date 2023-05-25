@@ -71,4 +71,34 @@ class DeleteMethodHandler : public MethodHandler
  private:
 };
 
+class PutMethodHandler : public MethodHandler
+{
+ public:
+  PutMethodHandler();
+  PutMethodHandler(const PutMethodHandler& obj);
+  PutMethodHandler(Request& request_data, Response& response_data,
+                   t_server& server_config);
+  virtual ~PutMethodHandler(void);
+  PutMethodHandler& operator=(PutMethodHandler const& obj);
+
+  void makeBody();
+
+ private:
+};
+
+class HeadMethodHandler : public MethodHandler
+{
+ public:
+  HeadMethodHandler();
+  HeadMethodHandler(const HeadMethodHandler& obj);
+  HeadMethodHandler(Request& request_data, Response& response_data,
+                      t_server& server_config);
+  virtual ~HeadMethodHandler(void);
+  HeadMethodHandler& operator=(HeadMethodHandler const& obj);
+
+  void makeBody();
+
+ private:
+};
+
 #endif
