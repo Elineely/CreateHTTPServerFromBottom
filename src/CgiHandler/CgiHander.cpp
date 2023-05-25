@@ -101,7 +101,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
     close(to_parent_fds[WRITE]);
 
     char buffer[4096]; // 크기,,?
-    std::string content;
+    std::vector<char> content_vector;
     ssize_t bytes_read;
 
     while (true) // 조건문 수정?
@@ -111,7 +111,10 @@ void GetCgiHandler::outsourceCgiRequest(void)
       {
         break ;
       }
-      content.append(buffer, bytes_read);
+      for (int i = 0; i < bytes_read; ++i)
+      {
+        content_vector.push_back(buffer[i]);
+      }
     }
     close(to_parent_fds[READ]);
 
@@ -237,7 +240,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
     close(to_child_fds[WRITE]); //child가 읽는 파이프에 EOF 신호
 
     char buffer[4096]; // 크기
-    std::string content;
+    std::vector<char> content_vector;
     ssize_t bytes_read;
 
     while (true) // 조건문 수정?
@@ -247,7 +250,10 @@ void PostCgiHandler::outsourceCgiRequest(void)
       {
         break ;
       }
-      content.append(buffer, bytes_read);
+      for (int i = 0; i < bytes_read; ++i)
+      {
+        content_vector.push_back(buffer[i]);
+      }
     }
     close(to_parent_fds[READ]);
 
