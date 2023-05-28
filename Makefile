@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: surlee <surlee@student.42.seoul.kr>        +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/04/18 14:16:51 by kipark            #+#    #+#              #
-#    Updated: 2023/05/22 19:45:28 by surlee           ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 NAME 					:= cute_webserv
 
 INCLUDE					:=	-I./include/
@@ -25,11 +13,11 @@ SRC_CONFIG_FILES		:=	Config.cpp	\
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
 
-SRC_RESPONSE_DIR		:= Response/
-SRC_RESPONSE_FILES		:= Response.cpp
+# SRC_RESPONSE_DIR		:= Response/
+# SRC_RESPONSE_FILES		:= Response.cpp
 
-SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
-SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
+# SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
+# SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
 
 SRC_SERVER_DIR			:=	Server/
 SRC_SERVER_FILES		:=	Server.cpp 	\
@@ -63,11 +51,11 @@ OBJ_DIR				:=	obj/
 OBJS				:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
 ifdef DEBUG_MODE
-	CFLAGS					:=	$(CFLAGS) -g
+	CXXFLAGS					:=	$(CXXFLAGS) -g3
 endif
 
 ifdef D_SANI
-	CFLAGS					:=	$(CFLAGS) -g -fsanitize=address
+	CXXFLAGS					:=	$(CXXFLAGS) -g3 -fsanitize=address
 endif
 
 .PHONY : all

@@ -27,11 +27,14 @@
 
 #include <sstream>
 
+// kill function
+#include <signal.h>
+
 // Paser header
 #include "Config.hpp"
 #include "Parser.hpp"
 
-// Server Set value
+// Server 세팅
 #define BUF_SIZE 1024
 #define MAX_EVENT_LIST_SIZE 8
 
@@ -48,9 +51,13 @@ enum e_kqueue_event
   SERVER_WRITE,
   SERVER_ERROR,
   CLIENT_READ,
-  CLIENT_WRTIE,
+  CLIENT_WRITE,
   CLIENT_ERROR,
-  PROCESS_END
+  CGI_PROCESS_END,
+  CGI_PROCESS_TIMEOUT,
+  SERVER_EOF,
+  CLIENT_EOF,
+  NOTHING,
 };
 
 struct t_socket
@@ -66,7 +73,17 @@ struct t_kqueue
   std::vector<struct kevent> change_list;
   std::map<int, std::string> socket_clients;
 };
+struct t_response_write
+{
+  char *message;
+  ssize_t length;
+  ssize_t offset;
 
+  t_response_write(char *message, ssize_t length)
+      : message(message), length(length), offset(0)
+  {
+  }
+};
 class Server
 {
  private:
