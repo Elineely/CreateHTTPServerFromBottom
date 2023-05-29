@@ -158,6 +158,7 @@ Server::Server(Config server_conf)
         {
           Parser *parser = static_cast<Parser *>(current_event->udata);
           char buff[BUF_SIZE];
+          std::memset(buff, 0, BUF_SIZE);
           int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
           parser->readBuffer(buff);
           if (parser->get_validation_phase() != COMPLETE)
