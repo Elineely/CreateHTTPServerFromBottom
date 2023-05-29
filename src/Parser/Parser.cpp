@@ -17,7 +17,8 @@ Parser::Parser(const std::string& max_body_size)
   size_t value;
 
   iss >> value;
-  m_max_body_size = value * 1048576; // Binary 기준으로 변환
+  m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
+  std::cout << max_body_size << " size_t :" << m_max_body_size << std::endl;
 }
 
 // Destructor
@@ -53,7 +54,7 @@ ValidationStatus Parser::get_validation_phase(void)
 void Parser::parseFirstLine(void)
 {
   // \r\n 은 제외하고 input 에 저장
-  std::string input(m_pool.total_line, m_pool.prev_offset,
+  std::string input(m_pool.total_line, 0,
                     m_pool.offset - m_pool.prev_offset - 2);
   std::string method;
   std::string uri;
@@ -62,6 +63,8 @@ void Parser::parseFirstLine(void)
   size_t idx2;
 
   // 1. HTTP Method 탐색
+  std::cout << m_pool.total_line << std::endl;
+  std::cout << "input : " << input << std::endl;
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
   std::cout << "Method is: " << method << std::endl;
@@ -231,7 +234,7 @@ void Parser::parseBody(void)
   }
 
   m_data.validation_phase = COMPLETE;
-  
+
   // TODO: 디버깅용 출력문. 나중에 삭제하기
   std::cout << "Body:";
   for (std::vector<char>::iterator it = m_data.body.begin();

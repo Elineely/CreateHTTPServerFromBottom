@@ -11,7 +11,9 @@ struct RequestPool
   size_t offset;
 
   // Default Constructor
-  RequestPool(void) : total_line(NULL) {}
+  RequestPool(void) : total_line(NULL), line_len(0), prev_offset(0), offset(0)
+  {
+  }
 
   // Destructor
   ~RequestPool(void)
