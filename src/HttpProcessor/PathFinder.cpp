@@ -62,8 +62,8 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
     setAutoIndex(current_location.auto_index, response_data);
     return;
   }
-  std::size_t pos = locationBlock.find_last_of("/");
-  if (pos == 0)  // '/a'처럼 location 블록이름만 들어온 경우
+  std::size_t pos_last = locationBlock.find_last_of("/");
+  if (pos_last == 0)  // '/a'처럼 location 블록이름만 들어온 경우
   {
     temp_location = server_data.locations.find(locationBlock);
     if (temp_location == server_data.locations.end())
@@ -89,7 +89,7 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
         locationBlock.substr(0, locationBlock.find("/", 1));
     temp_location = server_data.locations.find(location_key);
     if (temp_location == server_data.locations.end())
-    {  //"/??(location에 없음)/b/c/d" 경우
+    {  // "/??(location에 없음)/b/c/d" 경우
       response_data.path_exist = false;
       response_data.file_exist = false;
       response_data.auto_index = false;
@@ -102,6 +102,12 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
     {
       setRoot(entire_path, response_data);
       setIndex(current_location.index, response_data);
+      setAutoIndex(current_location.auto_index, response_data);
+    }
+    else
+    {  //"/a/b/c/d/e(파일)" 경우
+      setRoot(entire_path.substr(0, pos_last), response_data);
+      setIndex(entire_path.substr(pos_last + 1), response_data);
       setAutoIndex(current_location.auto_index, response_data);
     }
   }
