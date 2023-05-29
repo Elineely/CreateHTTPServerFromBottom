@@ -18,6 +18,8 @@ struct t_location
   std::string index;
   std::string ourcgi_pass;
   std::string ourcgi_index;
+  std::string uploaded_path;
+  std::string accepted_method;
 };
 
 struct t_server

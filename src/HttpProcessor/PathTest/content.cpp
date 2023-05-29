@@ -55,6 +55,8 @@ t_location Config::get_location_expend(std::ifstream &config_file,
   temp_location.root = temp_location_map["root"];
   temp_location.ourcgi_pass = temp_location_map["ourcgi_pass"];
   temp_location.ourcgi_index = temp_location_map["ourcgi_index"];
+  temp_location.ourcgi_index = temp_location_map["uploaded_path"];
+  temp_location.ourcgi_index = temp_location_map["accepted_method"];
 
   return temp_location;
 }
@@ -100,7 +102,6 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.listen = temp_conf["listen"];
   server.max_body_size = temp_conf["max_body_size"];
   server.max_header_size = temp_conf["max_header_size"];
-  server.locations = temp_locations;
 
   return server;
 }
