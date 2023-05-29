@@ -27,6 +27,9 @@
 
 #include <sstream>
 
+// kill function
+#include <signal.h>
+
 // Paser header
 #include "Config.hpp"
 #include "Parser.hpp"
@@ -50,9 +53,11 @@ enum e_kqueue_event
   CLIENT_READ,
   CLIENT_WRITE,
   CLIENT_ERROR,
-  PROCESS_END,
+  CGI_PROCESS_END,
+  CGI_PROCESS_TIMEOUT,
   SERVER_EOF,
-  CLIENT_EOF
+  CLIENT_EOF,
+  NOTHING,
 };
 
 struct t_socket

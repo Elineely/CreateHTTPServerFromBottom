@@ -18,7 +18,7 @@ class Parser
 {
  public:
   // Canonical Form
-  Parser(void);
+  Parser(const std::string& max_body_size);
   Parser(const Parser& src);
   virtual ~Parser(void);
   Parser& operator=(Parser const& rhs);
@@ -28,9 +28,12 @@ class Parser
   ValidationStatus get_validation_phase(void);
 
  private:
+  Parser(void);
+
   // Member Variables
   struct Request m_data;
   struct RequestPool m_pool;
+  size_t m_max_body_size;
 
   // Member Functions
   void saveBufferInPool(char* buf);

@@ -48,28 +48,36 @@ e_kqueue_event getEventStatus(struct kevent *current_event, int server_sock)
     else
       return CLIENT_ERROR;
   }
-  else if (current_event->flags == EV_EOF)
+  if (current_event->flags == EV_EOF)
   {
     if (current_event->ident == server_sock)
       return SERVER_EOF;
     else
       return CLIENT_EOF;
   }
-  else if (current_event->filter == EVFILT_READ)
+  if (current_event->filter == EVFILT_READ)
   {
     if (current_event->ident == server_sock)
       return SERVER_READ;
     else
       return CLIENT_READ;
   }
-  else if (current_event->filter == EVFILT_WRITE)
+  if (current_event->filter == EVFILT_WRITE)
   {
     if (current_event->ident == server_sock)
       return SERVER_WRITE;
     else
       return CLIENT_WRITE;
   }
-  return PROCESS_END;
+  if (current_event->filter == EVFILT_PROC)
+  {
+    return CGI_PROCESS_END;
+  }
+  if (current_event->filter == EVFILT_TIMER)
+  {
+    return CGI_PROCESS_TIMEOUT;
+  }
+  return NOTHING;
 }
 
 Server::Server(Config server_conf)
@@ -127,7 +135,11 @@ Server::Server(Config server_conf)
             continue;
           }
           std::cout << "새로운 클라이언트가 연결 되었습니다." << std::endl;
-          Parser *parser = new Parser();  // TODO: delete 하는 부분 추가하기
+
+          // TODO: max_body_size 는 server block 마다 다를텐데 어떻게 동적으로 설정?
+          std::string max_body_size =
+              server_conf.get_m_server_conf()[0].max_body_size[0];
+          Parser *parser = new Parser(max_body_size);  // TODO: delete 하는 부분 추가하기
           fcntl(client_sock, F_SETFL, O_NONBLOCK);
           AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                                EV_ADD | EV_ENABLE, 0, 0, parser);
@@ -144,17 +156,45 @@ Server::Server(Config server_conf)
 
         case CLIENT_READ:
         {
-          // Parser *parser = static_cast<Parser *>(current_event->udata);
+          Parser *parser = static_cast<Parser *>(current_event->udata);
           char buff[BUF_SIZE];
+          std::memset(buff, 0, BUF_SIZE);
           int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-          // parser->readBuffer(buff);
-          // if (parser->get_validation_phase() != COMPLETE)
-          // {
-          //   continue;
-          // }
+          parser->readBuffer(buff);
+          if (parser->get_validation_phase() != COMPLETE)
+          {
+            continue;
+          }
 
           // getttpMessage
           char *message = getHttpMessage();
+
+          // if (response.cgi == true)
+          // {
+          //  coutinue;
+          // }
+          // else
+          // {
+          t_response_write *response =
+              new t_response_write(message, ft_strlen(message));
+          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
+                               EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+                               response);
+          // }
+          // }
+        }
+        break;
+
+        case CGI_PROCESS_END:  // cgi
+        {
+          std::cout << "CGI_PROCESS_END" << std::endl;
+
+          wait(NULL);
+          // pipe close
+          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
+                               EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+
+          char *message = getHttpMessage();  // 인자로 response 전달
 
           t_response_write *response =
               new t_response_write(message, ft_strlen(message));
@@ -164,11 +204,23 @@ Server::Server(Config server_conf)
         }
         break;
 
-        case PROCESS_END:  // cgi
+        case CGI_PROCESS_TIMEOUT:  // cgi
         {
-          std::cout << "process end" << std::endl;
-          // pipe 겂 == response body
-          // char *message = response.messageGe(cgi_body);
+          std::cout << "=======⌛️ CGI_PROCESS_TIMEOUT ⌛️=======" << std::endl;
+          int result = kill(current_event->ident, SIGTERM);
+          // pipe close
+          std::cout << "kill status: " << result << std::endl;
+          wait(NULL);
+          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
+                               EVFILT_PROC, EV_DELETE, 0, 0, NULL);
+
+          char *message = getHttpMessage();  // 인자로 response 전달
+
+          t_response_write *response =
+              new t_response_write(message, ft_strlen(message));
+          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
+                               EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+                               response);
         }
         break;
 

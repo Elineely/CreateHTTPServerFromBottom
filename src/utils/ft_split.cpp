@@ -7,7 +7,7 @@ std::vector<std::string> ft_split(const std::string &str, char delimiter,
   std::stringstream ss(str);
   std::vector<std::string> vec;
 
-  std::cout << "header: " << str << std::cout;
+  // std::cout << "header: " << str << std::cout;
   for (int curr = 0; curr < count; curr += 1)
   {
     if (std::getline(ss, buf, delimiter))
