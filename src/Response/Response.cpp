@@ -5,6 +5,8 @@
 
 Response::Response()
 {
+  m_file_name = "";
+  m_file_exist = false;
   m_file_path = "";
   m_body = "";
   m_status_code = NO_PROBLEM;
@@ -12,10 +14,12 @@ Response::Response()
   m_config = Config();
   m_cgi_flag = false;
   m_cgi_bin_path = NULL;
-  m_cgi_params = NULL;
+  // m_cgi_params = NULL;
 }
 Response::Response(Request& request_data, Config& config_data)
 {
+  m_file_name = "";
+  m_file_exist = false;
   m_file_path = "";
   m_body = "";
   m_status_code = NO_PROBLEM;
@@ -23,10 +27,12 @@ Response::Response(Request& request_data, Config& config_data)
   m_config = config_data;
   m_cgi_flag = false;
   m_cgi_bin_path = NULL;
-  m_cgi_params = NULL;
+  // m_cgi_params = NULL;
 }
 Response::Response(const Response& obj)
 {
+  m_file_name = obj.m_file_name;
+  m_file_exist = obj.m_file_exist;
   m_file_path = obj.m_file_path;
   m_body = obj.m_body;
   m_status_code = obj.m_status_code;
@@ -34,12 +40,14 @@ Response::Response(const Response& obj)
   m_config = obj.m_config;
   m_cgi_flag = obj.m_cgi_flag;
   m_cgi_bin_path = obj.m_cgi_bin_path;
-  m_cgi_params = obj.m_cgi_params;
+  // m_cgi_params = obj.m_cgi_params;
 }
 Response& Response::operator=(Response const& obj)
 {
   if (this != &obj)
   {
+    m_file_name = obj.m_file_name;
+    m_file_exist = obj.m_file_exist;
     m_file_path = obj.m_file_path;
     m_body = obj.m_body;
     m_status_code = obj.m_status_code;
@@ -47,7 +55,7 @@ Response& Response::operator=(Response const& obj)
     m_config = obj.m_config;
     m_cgi_flag = obj.m_cgi_flag;
     m_cgi_bin_path = obj.m_cgi_bin_path;
-    m_cgi_params = obj.m_cgi_params;
+    // m_cgi_params = obj.m_cgi_params;
   }
   return (*this);
 }
@@ -55,8 +63,8 @@ Response::~Response()
 {
   delete m_cgi_bin_path;
   // i를 어디까지 하고 삭제할지 생각해봐야할듯?
-  for (int i = 0; i < 3; ++i) delete m_cgi_params[i];
-  delete m_cgi_params;
+  // for (int i = 0; i < 3; ++i) delete m_cgi_params[i];
+  // delete m_cgi_params;
 };
 std::string getMIME(std::string target_file)
 {
@@ -205,6 +213,8 @@ const char* Response::generateResponseMessage()
   return (m_response_message.c_str());
 }
 
+std::string Response::get_m_file_name() { return (m_file_name); }
+bool Response::get_m_file_exist() { return (m_file_exist); }
 std::string Response::get_m_file_path() { return (m_file_path); }
 std::string Response::get_m_body() { return (m_body); }
 StatusCode Response::get_m_status_code() { return (m_status_code); }
@@ -212,9 +222,11 @@ Request Response::get_m_request() { return (m_request); }
 Config Response::get_m_config() { return (m_config); }
 bool Response::get_m_cgi_flag() { return (m_cgi_flag); }
 char* Response::get_m_cgi_bin_path() { return (m_cgi_bin_path); }
-char** Response::get_m_cgi_params() { return (m_cgi_params); }
+// char** Response::get_m_cgi_params() { return (m_cgi_params); }
 std::string Response::get_m_response_message() { return (m_response_message); }
 
+void Response::set_m_file_name(const std::string obj) { m_file_name = obj; }
+void Response::set_m_file_exist(const bool obj) { m_file_exist = obj; }
 void Response::set_m_file_path(const std::string obj) { m_file_path = obj; }
 void Response::set_m_body(const std::string obj) { m_body = obj; }
 void Response::set_m_status_code(const StatusCode obj) { m_status_code = obj; }
@@ -231,7 +243,7 @@ void Response::set_m_cgi_bin_path(const char* obj)
   m_cgi_bin_path[len] = 0;
 }
 // 이중배열 편하게 복사하는방법은?
-void Response::set_m_cgi_params(const char** obj) {}
+// void Response::set_m_cgi_params(const char** obj) {}
 void Response::set_m_response_message(const std::string obj)
 {
   m_response_message = obj;

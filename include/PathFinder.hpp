@@ -1,6 +1,7 @@
 #ifndef PATHFINDER_HPP
 #define PATHFINDER_HPP
 
+#include <dirent.h>
 #include <unistd.h>
 
 #include "Response.hpp"
@@ -10,9 +11,14 @@ class PathFinder
  private:
   PathFinder();
   bool checkExist(const std::string& path_or_file);
+  bool is_directory(const std::string& path);
+  void setRoot(std::string root, Response& response_data);
+  void setIndex(std::string index, Response& response_data);
+  void setAutoIndex(std::string auto_index, Response& response_data);
 
  public:
-  PathFinder(Request requset_data, t_server server_data, Response &response_data);
+  PathFinder(Request requset_data, t_server server_data,
+             Response& response_data);
   ~PathFinder();
 };
 
