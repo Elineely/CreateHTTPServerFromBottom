@@ -1,5 +1,6 @@
 #include "CgiHandler.hpp"
 
+#define SUCCESS 0
 #define ERROR -1
 
 #define READ 0
@@ -46,46 +47,36 @@ GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
   return (*this);
 }
 
-//static functions
+//member functions
 
-static int pipeAndFork(int (*to_parent_fds)[2], pid_t* pid)
+int GetCgiHandler::pipeAndFork()
 {
-  if (pipe(*to_parent_fds) == ERROR)
+  if (pipe(m_to_parent_fds) == ERROR)
   {
     return (ERROR);
   }
 
-  *pid = fork();
-  if (*pid == ERROR)
+  m_pid = fork();
+  if (m_pid == ERROR)
   {
+    close(m_to_parent_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
     return (ERROR);
   }
 
   return (0);
 }
 
-//member functions
-
-void GetCgiHandler::outsourceCgiRequest(void)
+int GetCgiHandler::executeCgi()
 {
-  int to_parent_fds[2];
-  pid_t pid;
+    close(m_to_parent_fds[READ]);
 
-  if (pipeAndFork(&to_parent_fds, &pid) == ERROR)
-  {
-    // return (error);
-  }
-
-// child process
-  if (pid == CHILD_PROCESS)
-  {
-    close(to_parent_fds[READ]);
-
-    if (dup2(to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
+    if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
     {
-      // throw (error);
+      close(m_to_parent_fds[WRITE]);
+      return (ERROR);
     }
-    close(to_parent_fds[WRITE]);
+    close(m_to_parent_fds[WRITE]);
 
     char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
     char* const argv[] = {cgi_bin_path, "index.php", NULL}; // t_location {ourcgi_index}
@@ -93,34 +84,55 @@ void GetCgiHandler::outsourceCgiRequest(void)
 
     if (execve(cgi_bin_path, argv, envp) == ERROR)
     {
+      return (ERROR);
+    }
+
+  return (SUCCESS);
+}
+
+void GetCgiHandler::getDataFromCgi()
+{
+  close(m_to_parent_fds[WRITE]);
+
+  char buffer[4096]; // 크기
+  ssize_t bytes_read;
+
+  while (true) // 조건문 수정?
+  {
+    bytes_read = read(m_to_parent_fds[READ], buffer, sizeof(buffer));
+    if (bytes_read <= 0)
+    {
+      break ;
+    }
+    for (int i = 0; i < bytes_read; ++i)
+    {
+      m_content_vector.push_back(buffer[i]);
+    }
+  }
+  close(m_to_parent_fds[READ]);
+}
+
+void GetCgiHandler::outsourceCgiRequest(void)
+{
+  if (pipeAndFork() == ERROR)
+  {
+    // throw (error);
+  }
+
+  if (m_pid == CHILD_PROCESS)
+  {
+    if (executeCgi() == ERROR)
+    {
       // throw (error);
     }
   }
 
-// parent process
-    close(to_parent_fds[WRITE]);
+  getDataFromCgi();
 
-    char buffer[4096]; // 크기,,?
-    std::vector<char> content_vector;
-    ssize_t bytes_read;
-
-    while (true) // 조건문 수정?
-    {
-      bytes_read = read(to_parent_fds[READ], buffer, sizeof(buffer));
-      if (bytes_read <= 0)
-      {
-        break ;
-      }
-      for (int i = 0; i < bytes_read; ++i)
-      {
-        content_vector.push_back(buffer[i]);
-      }
-    }
-    close(to_parent_fds[READ]);
-
+  // kqueue() 처리 필요
     int status;
 
-    waitpid(pid, &status, 0);
+    waitpid(m_pid, &status, 0);
     // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
     if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
     {
@@ -156,110 +168,128 @@ PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
   return (*this);
 }
 
-//static functions
-
-static int pipe2AndFork(int (*to_child_fds)[2], int (*to_parent_fds)[2], pid_t* pid)
-{
-  if (pipe(*to_child_fds) == ERROR)
-  {
-    return (ERROR);
-  }
-
-  if (pipe(*to_parent_fds) == ERROR)
-  {
-    return (ERROR);
-  }
-
-  *pid = fork();
-  if (*pid == ERROR)
-  {
-    return (ERROR);
-  }
-
-  return (0);
-}
-
 //member functions
 
-void PostCgiHandler::outsourceCgiRequest(void)
+int PostCgiHandler::pipeAndFork()
 {
-  int to_child_fds[2];
-  int to_parent_fds[2];
-  pid_t pid;
-
-  if (pipe2AndFork(&to_child_fds, &to_parent_fds, &pid) == ERROR)
+  if (pipe(m_to_child_fds) == ERROR)
   {
-    // return (error);
+    return (ERROR);
   }
 
-// child process
-  if (pid == CHILD_PROCESS)
+  if (pipe(m_to_parent_fds) == ERROR)
   {
-    close(to_parent_fds[READ]);
-    close(to_child_fds[WRITE]);
+    close(m_to_child_fds[READ]);
+    close(m_to_child_fds[WRITE]);
+    return (ERROR);
+  }
+
+  m_pid = fork();
+  if (m_pid == ERROR)
+  {
+    close(m_to_child_fds[READ]);
+    close(m_to_child_fds[WRITE]);
+    close(m_to_parent_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    return (ERROR);
+  }
+
+  return (SUCCESS);
+}
+
+int PostCgiHandler::executeCgi()
+{
+  close(m_to_parent_fds[READ]);
+  close(m_to_child_fds[WRITE]);
 
 // 부모 프로세스로부터 받은 데이터를 cgi에 표준 입력으로 넘겨주는 dup2
-    if (dup2(to_child_fds[READ], STDIN_FILENO) == ERROR)
-    {
-      // throw (error);
-    }
-    close(to_child_fds[READ]);
+  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == ERROR)
+  {
+    close(m_to_child_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    // return (error);
+  }
+  close(m_to_child_fds[READ]);
 
 // cgi의 표준 출력 반환값을 부모 프로세스에 넘겨주는 dup2
-    if (dup2(to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
-    {
-      // throw (error);
-    }
-    close(to_parent_fds[WRITE]);
+  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
+  {
+    close(m_to_parent_fds[WRITE]);
+    // return (error);
+  }
+  close(m_to_parent_fds[WRITE]);
 
 // 클라이언트의 요청을 처리할 CGI 스크립트를 선택해야 함
 // multiple CGI를 구현할 경우, 요청에 어떤 CGI가 필요한지 결정해야 함
-    char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
-    char* const argv[] = {cgi_bin_path, "index.php", NULL}; // t_location {ourcgi_index}
-    char* const envp[] = {NULL};
+  char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
+  char* const argv[] = {cgi_bin_path, "index.php", NULL}; // t_location {ourcgi_index}
+  char* const envp[] = {NULL};
 
-    if (execve(cgi_bin_path, argv, envp) == ERROR)
-    {
-      // throw (error);
-    }
-  }
-
-// parent process
-    close(to_parent_fds[WRITE]);
-    close(to_child_fds[READ]);
-
-  if (request.content_length == 0 | request.body == NULL)
+  if (execve(cgi_bin_path, argv, envp) == ERROR)
   {
+    // throw (error);
+  }
+}
+
+void PostCgiHandler::getDataFromCgi()
+{
+  close(m_to_parent_fds[WRITE]);
+  close(m_to_child_fds[READ]);
+
+  if (request_data.content_length == 0 | request.body == NULL)
+  {
+    close(m_to_parent_fds[READ]);
+    close(m_to_child_fds[WRITE]);
     // throw?
   }
 
-    if (write(to_child_fds[WRITE], request.body, sizeof(request.body)) == ERROR)
+  if (write(m_to_child_fds[WRITE], request.body, sizeof(request.body)) == ERROR)
+  {
+    close(m_to_parent_fds[READ]);
+    close(m_to_child_fds[WRITE]);
+    // throw error;
+  }
+  close(m_to_child_fds[WRITE]); //child가 읽는 파이프에 EOF 신호
+
+  char buffer[4096]; // 크기
+  ssize_t bytes_read;
+
+  while (true) // 조건문 수정?
+  {
+    bytes_read = read(m_to_parent_fds[READ], buffer, sizeof(buffer));
+    if (bytes_read <= 0)
+    {
+      break ;
+    }
+    for (int i = 0; i < bytes_read; ++i)
+    {
+      m_content_vector.push_back(buffer[i]);
+    }
+  }
+  close(m_to_parent_fds[READ]);
+}
+
+void PostCgiHandler::outsourceCgiRequest(void)
+{
+  if (pipeAndFork() == ERROR)
+  {
+    // throw (error);
+  }
+
+  if (m_pid == CHILD_PROCESS)
+  {
+    if (executeCgi() == ERROR)
     {
       // throw error;
     }
-    close(to_child_fds[WRITE]); //child가 읽는 파이프에 EOF 신호
+  }
 
-    char buffer[4096]; // 크기
-    std::vector<char> content_vector;
-    ssize_t bytes_read;
+  getDataFromCgi();
 
-    while (true) // 조건문 수정?
-    {
-      bytes_read = read(to_parent_fds[READ], buffer, sizeof(buffer));
-      if (bytes_read <= 0)
-      {
-        break ;
-      }
-      for (int i = 0; i < bytes_read; ++i)
-      {
-        content_vector.push_back(buffer[i]);
-      }
-    }
-    close(to_parent_fds[READ]);
-
+  // kqueue()의 영역
     int status;
 
-    waitpid(pid, &status, 0);
+    waitpid(m_pid, &status, 0);
     // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
     if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
     {
@@ -294,99 +324,25 @@ DeleteCgiHandler& DeleteCgiHandler::operator=(DeleteCgiHandler const& obj)
   return (*this);
 }
 
-//static functions
-
-static int pipe2AndFork(int (*to_child_fds)[2], int (*to_parent_fds)[2], pid_t* pid)
-{
-  if (pipe(*to_child_fds) == ERROR)
-  {
-    return (ERROR);
-  }
-
-  if (pipe(*to_parent_fds) == ERROR)
-  {
-    return (ERROR);
-  }
-
-  *pid = fork();
-  if (*pid == ERROR)
-  {
-    return (ERROR);
-  }
-
-  return (0);
-}
-
 //member functions
 
 void DeleteCgiHandler::outsourceCgiRequest(void)
 {
 // 메소드 실행 전에 SERVER_PROTOCOL 확인???????????????????
 
-//   int to_child_fds[2];
-//   int to_parent_fds[2];
-//   pid_t pid;
-
-//   if (pipe2AndFork(&to_child_fds, &to_parent_fds, &pid) == ERROR)
+//   if (pipeAndFork() == ERROR)
 //   {
 //     // return (error);
 //   }
 
-// // child process
 //   if (pid == CHILD_PROCESS)
 //   {
-//     close(to_parent_fds[READ]);
-//     close(to_child_fds[WRITE]);
-
-// // 부모 프로세스로부터 받은 데이터를 cgi에 표준 입력으로 넘겨주는 dup2
-//     if (dup2(to_child_fds[READ], STDIN_FILENO) == ERROR)
-//     {
-//       // throw (error);
-//     }
-//     close(to_child_fds[READ]);
-
-//     if (dup2(to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
-//     {
-//       // throw (error);
-//     }
-//     close(to_parent_fds[WRITE]);
-
-//     char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
-//     char* const argv[] = {cgi_bin_path, "index.php", NULL}; // t_location {ourcgi_index}
-//     char* const envp[] = {NULL};
-
-//     if (execve(cgi_bin_path, argv, envp) == ERROR)
-//     {
-//       // throw (error);
-//     }
+//      executeCgi();
 //   }
 
-// // parent process
-//     close(to_parent_fds[WRITE]);
-//     close(to_child_fds[READ]);
+//  getDataFromCgi();
 
-//     // request의 body만 넘기는 거면, 세 번째 인자는 CONTENT_LENGTH 쓰면 됨
-//     if (write(to_child_fds[WRITE], /* request_data */ , sizeof()) == ERROR)
-//     {
-//       // throw error;
-//     }
-//     close(to_child_fds[WRITE]); //child가 읽는 파이프에 EOF 신호
-
-//     char buffer[4096]; // 크기
-//     std::string content;
-//     ssize_t bytes_read;
-
-//     while (true) // 조건문 수정?
-//     {
-//       bytes_read = read(to_parent_fds[READ], buffer, sizeof(buffer));
-//       if (bytes_read <= 0)
-//       {
-//         break ;
-//       }
-//       content.append(buffer, bytes_read);
-//     }
-//     close(to_parent_fds[READ]);
-
+// kqueue()
 //     int status;
 
 //     waitpid(pid, &status, 0);

@@ -34,15 +34,11 @@ int main()
     close(to_child_fds[WRITE]);
 
     if (dup2(to_child_fds[READ], STDIN_FILENO) == ERROR)
-    {
-      // throw (error);
-    }
+    { /* throw (error); */ }
     close(to_child_fds[READ]);
 
     if (dup2(to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
-    {
-      // throw (error);
-    }
+    { /* throw (error); */ }
     close(to_parent_fds[WRITE]);
 
     char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
@@ -50,9 +46,7 @@ int main()
     char* const envp[] = {NULL};
 
     if (execve(cgi_bin_path, argv, envp) == ERROR)
-    {
-      // throw (error);
-    }
+    { /* throw (error); */ }
   }
 
 // parent process
@@ -95,9 +89,7 @@ int main()
       // MethodHandler에 데이터 넘겨주기
     }
     else
-    {
-      // throw (error);
-    }
+    { /* throw (error); */ }
 
 	return (0);
 }
