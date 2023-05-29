@@ -12,14 +12,15 @@
 
 struct Response
 {
+  bool auto_index;
+  std::string file_name;
   std::string file_path;
+  bool file_exist;
+  bool path_exist;
   std::vector<char> body;
-  StatusCode status_code;
+  std::vector<char> response_message;
   bool cgi_flag;
   char* cgi_bin_path;
-  char** cgi_params;
-  // 리스폰스 메세지를 vector로 해도 괜찮을까?
-  std::vector<char> response_message;
   int pipe_fd;
 };
 
@@ -28,6 +29,11 @@ class ResponseGenerator
  private:
   Request m_request;
   Response m_response;
+  std::string m_target_file;
+
+  void appendStrToResponse_message(std::string str);
+  void appendStrToBody(std::string str);
+  std::string statusCodeToString();
 
   // for genearte Start Line
   void generateVersion();
@@ -36,6 +42,8 @@ class ResponseGenerator
   // for generate Headers
   void generateContentType();
   void generateContentLength();
+  // for generate error body
+  void generateErrorBody();
   // for generate Response Message
   void setStartLine();
   void setHeaders();

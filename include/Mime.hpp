@@ -15,7 +15,7 @@ class Mime
 
  public:
   Mime();
-  std::string getMime(std::string target_file);
+  static std::string getMime(std::string target_file);
 };
 
 #endif

@@ -1,31 +1,45 @@
 #include "MethodHandler.hpp"
 
+#include <cstdio>
 #include <fstream>
 #include <sstream>
+
+void MethodHandler::fileToBody(std::string target_file)
+{
+  std::ifstream file(target_file, std::ios::binary);
+  if (!file.is_open()) throw INTERNAL_SERVER_ERROR_500;
+
+  // Determine the file size, resize the vector
+  file.seekg(0, std::ios::end);
+  std::streampos file_size = file.tellg();
+  file.seekg(0, std::ios::beg);
+  std::vector<char> buffer(file_size);
+
+  // Read the file contents into the vector
+  file.read(&buffer[0], file_size);
+  file.close();
+
+  // contents of buffer into body
+  m_response_data.body = buffer;
+}
 
 MethodHandler::MethodHandler(void) {}
 MethodHandler::MethodHandler(const MethodHandler& obj)
 {
-  m_server_config = obj.m_server_config;
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
-  m_body = obj.m_body;
 }
-MethodHandler::MethodHandler(Request& request_data, Response& response_data,
-                             t_server& server_config)
+MethodHandler::MethodHandler(Request& request_data, Response& response_data)
 {
   m_request_data = request_data;
   m_response_data = response_data;
-  m_server_config = server_config;
 }
 MethodHandler& MethodHandler::operator=(MethodHandler const& obj)
 {
   if (this != &obj)
   {
-    m_server_config = obj.m_server_config;
     m_request_data = obj.m_request_data;
     m_response_data = obj.m_response_data;
-    m_body = obj.m_body;
   }
   return (*this);
 }
@@ -35,18 +49,14 @@ MethodHandler::~MethodHandler(void) {}
 GetMethodHandler::GetMethodHandler(void) {}
 GetMethodHandler::GetMethodHandler(const GetMethodHandler& obj)
 {
-  m_server_config = obj.m_server_config;
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
-  m_body = obj.m_body;
 }
 GetMethodHandler::GetMethodHandler(Request& request_data,
-                                   Response& response_data,
-                                   t_server& server_config)
+                                   Response& response_data)
 {
   m_request_data = request_data;
   m_response_data = response_data;
-  m_server_config = server_config;
 }
 GetMethodHandler::~GetMethodHandler(void) {}
 GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
@@ -55,46 +65,32 @@ GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
   {
     m_request_data = obj.m_request_data;
     m_response_data = obj.m_response_data;
-    m_server_config = obj.m_server_config;
-    m_body = obj.m_body;
   }
   return (*this);
 }
-void GetMethodHandler::makeBody()
+void GetMethodHandler::methodRun()
 {
-  if (m_response_data.get_m_file_path() == "") throw NOT_FOUND_404;
-  if (m_server_config.locations[m_location_name].auto_index != "")
+  if (!m_response_data.file_exist) throw NOT_FOUND_404;
+  if (m_response_data.auto_index == true)
   {
     // auto index페이지 생성
   }
   else  // 일반 페이지 생성
-  {
-    std::ifstream target_file_stream(m_response_data.get_m_file_path());
-    std::stringstream buffer;
-
-    if (!target_file_stream.is_open()) throw NOT_FOUND_404;
-    buffer << target_file_stream.rdbuf();
-    m_body = buffer.str();
-    target_file_stream.close();
-  }
+    fileToBody(m_response_data.file_path + m_response_data.file_name);
 }
 
 // PostMethodHandler
 PostMethodHandler::PostMethodHandler(void) {}
 PostMethodHandler::PostMethodHandler(const PostMethodHandler& obj)
 {
-  m_server_config = obj.m_server_config;
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
-  m_body = obj.m_body;
 }
 PostMethodHandler::PostMethodHandler(Request& request_data,
-                                     Response& response_data,
-                                     t_server& server_config)
+                                     Response& response_data)
 {
   m_request_data = request_data;
   m_response_data = response_data;
-  m_server_config = server_config;
 }
 PostMethodHandler::~PostMethodHandler(void) {}
 PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
@@ -103,56 +99,38 @@ PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
   {
     m_request_data = obj.m_request_data;
     m_response_data = obj.m_response_data;
-    m_server_config = obj.m_server_config;
-    m_body = obj.m_body;
   }
   return (*this);
 }
-void PostMethodHandler::makeBody()
+void PostMethodHandler::methodRun()
 {
-  std::ifstream target_file_stream(m_response_data.get_m_file_path());
-  std::stringstream buffer;
+  std::string target_file(m_response_data.file_path +
+                          m_response_data.file_name);
 
-  if (!target_file_stream.is_open())
+  // delete the target file
+  if (m_response_data.file_exist == true)
   {
-    std::ofstream new_file_stream(m_response_data.get_m_file_path());
-    if (!new_file_stream) throw "Failed to create the file.";
-    // new_file_stream << m_request_data.body;
-    new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
-    new_file_stream.close();
+    // error deleting file
+    if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
   }
-  else
-  {
-    std::ofstream append_stream(m_response_data.get_m_file_path(),
-                                std::ios::app);
-    std::stringstream content_stream;
-    // 파일스트림 실패시 어떤 에러코드를 줄지 모르겠음
-    if (!append_stream) throw "Failed to open the file for appending.";
-    content_stream.write(&m_request_data.body[0], m_request_data.body.size());
-    append_stream << content_stream.str();
-    append_stream.close();
-  }
-  buffer << target_file_stream.rdbuf();
-  m_body = buffer.str();
-  target_file_stream.close();
+  std::ofstream new_file_stream(target_file, std::ios::binary);
+  if (!new_file_stream) throw INTERNAL_SERVER_ERROR_500;
+  new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
+  new_file_stream.close();
 }
 
 // DeleteMethodHandler
 DeleteMethodHandler::DeleteMethodHandler(void) {}
 DeleteMethodHandler::DeleteMethodHandler(const DeleteMethodHandler& obj)
 {
-  m_server_config = obj.m_server_config;
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
-  m_body = obj.m_body;
 }
 DeleteMethodHandler::DeleteMethodHandler(Request& request_data,
-                                         Response& response_data,
-                                         t_server& server_config)
+                                         Response& response_data)
 {
   m_request_data = request_data;
   m_response_data = response_data;
-  m_server_config = server_config;
 }
 DeleteMethodHandler::~DeleteMethodHandler(void) {}
 DeleteMethodHandler& DeleteMethodHandler::operator=(
@@ -162,21 +140,65 @@ DeleteMethodHandler& DeleteMethodHandler::operator=(
   {
     m_request_data = obj.m_request_data;
     m_response_data = obj.m_response_data;
-    m_server_config = obj.m_server_config;
-    m_body = obj.m_body;
   }
   return (*this);
 }
-void DeleteMethodHandler::makeBody()
+void DeleteMethodHandler::methodRun()
 {
-  std::ifstream target_file_stream(m_response_data.get_m_file_path());
+  std::string target_file(m_response_data.file_path +
+                          m_response_data.file_name);
 
-  if (!target_file_stream.is_open())
-    throw NOT_FOUND_404;
+  if (m_response_data.file_exist == true)
+  {
+    // error deleting file
+    if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
+  }
+}
+
+// PutMethodHandler
+PutMethodHandler::PutMethodHandler(void) {}
+PutMethodHandler::PutMethodHandler(const PutMethodHandler& obj)
+{
+  m_request_data = obj.m_request_data;
+  m_response_data = obj.m_response_data;
+}
+PutMethodHandler::PutMethodHandler(Request& request_data,
+                                   Response& response_data)
+{
+  m_request_data = request_data;
+  m_response_data = response_data;
+}
+PutMethodHandler::~PutMethodHandler(void) {}
+PutMethodHandler& PutMethodHandler::operator=(PutMethodHandler const& obj)
+{
+  if (this != &obj)
+  {
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+  }
+  return (*this);
+}
+void PutMethodHandler::methodRun()
+{
+  std::string target_file(m_response_data.file_path +
+                          m_response_data.file_name);
+
+  if (m_response_data.file_exist == false)
+  {
+    std::ofstream new_file_stream(target_file,
+                                  std::ios::app | std::ios::binary);
+    if (!new_file_stream) throw INTERNAL_SERVER_ERROR_500;
+    new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
+    new_file_stream.close();
+  }
   else
   {
-    target_file_stream.close();
-    // 삭제 실패시 오류코드
-    if (remove(m_response_data.get_m_file_path().c_str())) throw 500;
+    std::ofstream append_stream(target_file, std::ios::app);
+    std::stringstream content_stream;
+    // 파일스트림 실패시 어떤 에러코드를 줄지 모르겠음
+    if (!append_stream) throw INTERNAL_SERVER_ERROR_500;
+    content_stream.write(&m_request_data.body[0], m_request_data.body.size());
+    append_stream << content_stream.str();
+    append_stream.close();
   }
 }

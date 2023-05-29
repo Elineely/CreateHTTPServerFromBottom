@@ -3,27 +3,23 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
-#include "Response.hpp"
+#include "ResponseGenerator.hpp"
 
 class MethodHandler
 {
  protected:
   Request m_request_data;
-  // config 전체 클래스가 필요해보이진 않아요.
-  // Config m_config_data;
   Response m_response_data;
-  t_server m_server_config;
-  std::string m_location_name;
-  std::string m_body;
 
+  MethodHandler(void);
   MethodHandler(const MethodHandler& obj);
   MethodHandler& operator=(MethodHandler const& obj);
-  virtual void makeBody() = 0;
+  virtual void methodRun() = 0;
+
+  void fileToBody(std::string target_file);
 
  public:
-  MethodHandler(void);
-  MethodHandler(Request& request_data, Response& response_data,
-                t_server& server_config);
+  MethodHandler(Request& request_data, Response& response_data);
   virtual ~MethodHandler(void);
 };
 
@@ -33,40 +29,39 @@ class GetMethodHandler : public MethodHandler
  public:
   GetMethodHandler();
   GetMethodHandler(const GetMethodHandler& obj);
-  GetMethodHandler(Request& request_data, Response& response_data,
-                   t_server& server_config);
+  GetMethodHandler(Request& request_data, Response& response_data);
   virtual ~GetMethodHandler(void);
   GetMethodHandler& operator=(GetMethodHandler const& obj);
 
-  void makeBody();
+  void methodRun();
 
  private:
 };
+
 class PostMethodHandler : public MethodHandler
 {
  public:
   PostMethodHandler();
   PostMethodHandler(const PostMethodHandler& obj);
-  PostMethodHandler(Request& request_data, Response& response_data,
-                    t_server& server_config);
+  PostMethodHandler(Request& request_data, Response& response_data);
   virtual ~PostMethodHandler(void);
   PostMethodHandler& operator=(PostMethodHandler const& obj);
 
-  void makeBody();
+  void methodRun();
 
  private:
 };
+
 class DeleteMethodHandler : public MethodHandler
 {
  public:
   DeleteMethodHandler();
   DeleteMethodHandler(const DeleteMethodHandler& obj);
-  DeleteMethodHandler(Request& request_data, Response& response_data,
-                      t_server& server_config);
+  DeleteMethodHandler(Request& request_data, Response& response_data);
   virtual ~DeleteMethodHandler(void);
   DeleteMethodHandler& operator=(DeleteMethodHandler const& obj);
 
-  void makeBody();
+  void methodRun();
 
  private:
 };
@@ -76,12 +71,11 @@ class PutMethodHandler : public MethodHandler
  public:
   PutMethodHandler();
   PutMethodHandler(const PutMethodHandler& obj);
-  PutMethodHandler(Request& request_data, Response& response_data,
-                   t_server& server_config);
+  PutMethodHandler(Request& request_data, Response& response_data);
   virtual ~PutMethodHandler(void);
   PutMethodHandler& operator=(PutMethodHandler const& obj);
 
-  void makeBody();
+  void methodRun();
 
  private:
 };
@@ -91,12 +85,11 @@ class HeadMethodHandler : public MethodHandler
  public:
   HeadMethodHandler();
   HeadMethodHandler(const HeadMethodHandler& obj);
-  HeadMethodHandler(Request& request_data, Response& response_data,
-                      t_server& server_config);
+  HeadMethodHandler(Request& request_data, Response& response_data);
   virtual ~HeadMethodHandler(void);
   HeadMethodHandler& operator=(HeadMethodHandler const& obj);
 
-  void makeBody();
+  void methodRun();
 
  private:
 };
