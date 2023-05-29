@@ -6,7 +6,7 @@ PathFinder::PathFinder() {}
 
 PathFinder::~PathFinder() {}
 
-bool is_directory(const std::string& path)
+bool PathFinder::is_directory(const std::string& path)
 {
   DIR* dir = opendir(path.c_str());
   if (dir)
@@ -15,6 +15,16 @@ bool is_directory(const std::string& path)
     return true;
   }
   return false;
+}
+
+bool PathFinder::checkExist(const std::string& path_or_file)
+{
+  return (access(path_or_file.c_str(), F_OK) == 0);
+}
+
+void PathFinder::setMethod(std::string method, Response& response_data)
+{
+  response_data.accepted_method = method;
 }
 
 void PathFinder::setRoot(std::string root, Response& response_data)
@@ -47,6 +57,32 @@ void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
   }
 }
 
+bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
+                        Response& response_data)
+{
+  //   std::size_t pos_last = locationBlock.find_last_of(".");
+  if (locationBlock.substr(locationBlock.find_last_of(".")) == ".php")
+  {
+    response_data.cgi_flag = true;
+    t_location current_location = server_data.locations.find(".php")->second;
+    response_data.cgi_bin_path = current_location.ourcgi_pass;
+    response_data.uploaded_path = current_location.uploaded_path;
+    setMethod(current_location.accepted_method, response_data);
+    return true;
+  }
+  return false;
+}
+
+void PathFinder::setBasic(std::string method, std::string root,
+                          std::string index, std::string auto_index,
+                          Response& response_data)
+{
+  setMethod(method, response_data);
+  setRoot(root, response_data);
+  setIndex(index, response_data);
+  setAutoIndex(auto_index, response_data);
+}
+
 PathFinder::PathFinder(Request requset_data, t_server server_data,
                        Response& response_data)
 {
@@ -57,9 +93,13 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
   if (locationBlock == "/" || locationBlock == "")  // default block
   {
     current_location = server_data.locations.find("/")->second;
-    setRoot(current_location.root, response_data);
-    setIndex(current_location.index, response_data);
-    setAutoIndex(current_location.auto_index, response_data);
+    setBasic(current_location.accepted_method, current_location.root,
+             current_location.index, current_location.auto_index,
+             response_data);
+    return;
+  }
+  if (setCgi(locationBlock, server_data, response_data))
+  {
     return;
   }
   std::size_t pos_last = locationBlock.find_last_of("/");
@@ -76,9 +116,9 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
     else
     {
       current_location = temp_location->second;
-      setRoot(current_location.root, response_data);
-      setIndex(current_location.index, response_data);
-      setAutoIndex(current_location.auto_index, response_data);
+      setBasic(current_location.accepted_method, current_location.root,
+               current_location.index, current_location.auto_index,
+               response_data);
     }
   }
   else
@@ -101,20 +141,16 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
     std::string entire_path = current_location.root + rest_of_uri;
     if (is_directory(entire_path))  //"a/b/c/d(디렉토리)"
     {
-      setRoot(entire_path, response_data);
-      setIndex(current_location.index, response_data);
-      setAutoIndex(current_location.auto_index, response_data);
+      setBasic(current_location.accepted_method, entire_path,
+               current_location.index, current_location.auto_index,
+               response_data);
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
-      setRoot(entire_path.substr(0, pos_last), response_data);
-      setIndex(entire_path.substr(pos_last + 1), response_data);
-      setAutoIndex(current_location.auto_index, response_data);
+      setBasic(current_location.accepted_method,
+               entire_path.substr(0, pos_last),
+               entire_path.substr(pos_last + 1), current_location.auto_index,
+               response_data);
     }
   }
-}
-
-bool PathFinder::checkExist(const std::string& path_or_file)
-{
-  return (access(path_or_file.c_str(), F_OK) == 0);
 }

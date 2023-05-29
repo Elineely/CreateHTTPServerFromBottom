@@ -4,7 +4,6 @@
 #include "./utils.hpp"
 
 using namespace std;
-
 int main(void)
 {
   Config a("./server.conf", "./server_content.conf");

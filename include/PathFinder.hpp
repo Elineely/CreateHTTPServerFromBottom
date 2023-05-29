@@ -15,6 +15,11 @@ class PathFinder
   void setRoot(std::string root, Response& response_data);
   void setIndex(std::string index, Response& response_data);
   void setAutoIndex(std::string auto_index, Response& response_data);
+  bool setCgi(std::string locationBlock, t_server server_data,
+              Response& response_data);
+  void setMethod(std::string method, Response& response_data);
+  void setBasic(std::string method, std::string root, std::string index,
+                std::string auto_index, Response& response_data);
 
  public:
   PathFinder(Request requset_data, t_server server_data,
