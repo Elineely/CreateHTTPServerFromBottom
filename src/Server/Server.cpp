@@ -135,7 +135,11 @@ Server::Server(Config server_conf)
             continue;
           }
           std::cout << "새로운 클라이언트가 연결 되었습니다." << std::endl;
-          Parser *parser = new Parser();  // TODO: delete 하는 부분 추가하기
+
+          // TODO: max_body_size 는 server block 마다 다를텐데 어떻게 동적으로 설정?
+          std::string max_body_size =
+              server_conf.get_m_server_conf()[0].max_body_size[0];
+          Parser *parser = new Parser(max_body_size);  // TODO: delete 하는 부분 추가하기
           fcntl(client_sock, F_SETFL, O_NONBLOCK);
           AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                                EV_ADD | EV_ENABLE, 0, 0, parser);
@@ -154,6 +158,7 @@ Server::Server(Config server_conf)
         {
           Parser *parser = static_cast<Parser *>(current_event->udata);
           char buff[BUF_SIZE];
+          std::memset(buff, 0, BUF_SIZE);
           int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
           parser->readBuffer(buff);
           if (parser->get_validation_phase() != COMPLETE)
