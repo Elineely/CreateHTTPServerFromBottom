@@ -33,7 +33,7 @@ class Parser
   // Member Variables
   struct Request m_data;
   struct RequestPool m_pool;
-  long long m_max_body_size;
+  size_t m_max_body_size;
 
   // Member Functions
   void saveBufferInPool(char* buf);

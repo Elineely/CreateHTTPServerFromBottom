@@ -13,12 +13,11 @@ Parser::Parser(void) {}
 // Constructor
 Parser::Parser(const std::string& max_body_size)
 {
-  size_t idx;
+  std::istringstream iss(max_body_size);
+  size_t value;
 
-  idx = max_body_size.find_first_of("M");
-  std::string str_value(max_body_size, 0, idx);
-  long long ll_max_body_size = std::stoll(str_value);
-  m_max_body_size = ll_max_body_size;
+  iss >> value;
+  m_max_body_size = value * 1048576; // Binary 기준으로 변환
 }
 
 // Destructor
@@ -336,6 +335,7 @@ void Parser::readBuffer(char* buf)
           {
             parseChunkedBody();
           }
+          if (m_data.body.size() )
 
         default:
           break;
