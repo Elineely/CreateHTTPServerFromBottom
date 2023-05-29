@@ -39,32 +39,42 @@ char *getHttpMessage()
 
 void disconnect_socket(int socket) { close(socket); }
 
-e_kqueue_event getEventStatus(struct kevent *current_event, int server_sock)
+int is_server_sock(std::vector<t_multi_server> servers, int sock)
+{
+  for (int i = 0; i < servers.size(); ++i)
+  {
+    if (servers[i].server_sock == sock) return 1;
+  }
+  return 0;
+}
+
+e_kqueue_event getEventStatus(struct kevent *current_event,
+                              std::vector<t_multi_server> &servers)
 {
   if (current_event->flags == EV_ERROR)
   {
-    if (current_event->ident == server_sock)
+    if (is_server_sock(servers, current_event->ident))
       return SERVER_ERROR;
     else
       return CLIENT_ERROR;
   }
   if (current_event->flags == EV_EOF)
   {
-    if (current_event->ident == server_sock)
+    if (is_server_sock(servers, current_event->ident))
       return SERVER_EOF;
     else
       return CLIENT_EOF;
   }
   if (current_event->filter == EVFILT_READ)
   {
-    if (current_event->ident == server_sock)
+    if (is_server_sock(servers, current_event->ident))
       return SERVER_READ;
     else
       return CLIENT_READ;
   }
   if (current_event->filter == EVFILT_WRITE)
   {
-    if (current_event->ident == server_sock)
+    if (is_server_sock(servers, current_event->ident))
       return SERVER_WRITE;
     else
       return CLIENT_WRITE;
@@ -82,13 +92,16 @@ e_kqueue_event getEventStatus(struct kevent *current_event, int server_sock)
 
 Server::Server(Config server_conf)
 {
-  setSocket(server_conf);
+  setServers(server_conf, servers);
+  std::cout << "success Server Set" << std::endl;
+
+  setSocket(server_conf, servers);
   std::cout << "success Socket" << std::endl;
 
-  startBind(m_socket.server_sock, (const struct sockaddr *)&m_socket.serv_addr);
+  startBind(servers);
   std::cout << "success bind" << std::endl;
 
-  startListen(m_socket.server_sock, BACK_LOG);
+  startListen(servers, BACK_LOG);
   std::cout << "success listen" << std::endl;
 
   m_kqueue.kq = getKqueue();
@@ -100,9 +113,12 @@ Server::Server(Config server_conf)
   e_kqueue_event event_status;
   struct kevent *current_event;
   struct sockaddr_in client_addr;
-  AddEventToChangeList(m_kqueue.change_list, m_socket.server_sock, EVFILT_READ,
-                       EV_ADD | EV_ENABLE, 0, 0, NULL);
-
+  for (int i = 0; i < servers.size(); ++i)
+  {
+    AddEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0,
+                         &servers[i].config);
+  }
   int kevent_count = 0;
   while (1)
   {
@@ -119,7 +135,7 @@ Server::Server(Config server_conf)
     {
       current_event = &m_kqueue.event_list[i];
 
-      event_status = getEventStatus(current_event, m_socket.server_sock);
+      event_status = getEventStatus(current_event, servers);
       switch (event_status)
       {
         case SERVER_READ:
@@ -127,7 +143,7 @@ Server::Server(Config server_conf)
           std::cout << "--- in SERVER_READ" << std::endl;
 
           client_sock =
-              accept(m_socket.server_sock, (struct sockaddr *)&client_addr,
+              accept(current_event->ident, (struct sockaddr *)&client_addr,
                      reinterpret_cast<socklen_t *>(&client_addr_size));
           if (client_sock == -1)
           {
@@ -135,7 +151,11 @@ Server::Server(Config server_conf)
             continue;
           }
           std::cout << "새로운 클라이언트가 연결 되었습니다." << std::endl;
-          Parser *parser = new Parser();  // TODO: delete 하는 부분 추가하기
+
+          std::string max_body_size =
+              static_cast<t_server *>(current_event->udata)->max_body_size[0];
+          // TODO: delete 하는 부분 추가하기
+          Parser *parser = new Parser(max_body_size);
           fcntl(client_sock, F_SETFL, O_NONBLOCK);
           AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                                EV_ADD | EV_ENABLE, 0, 0, parser);
@@ -154,6 +174,7 @@ Server::Server(Config server_conf)
         {
           Parser *parser = static_cast<Parser *>(current_event->udata);
           char buff[BUF_SIZE];
+          std::memset(buff, 0, BUF_SIZE);
           int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
           parser->readBuffer(buff);
           if (parser->get_validation_phase() != COMPLETE)
@@ -269,8 +290,11 @@ Server::Server(Config server_conf)
       }
     }
   }
-  shutdown(m_socket.server_sock, SHUT_RDWR);
-  close(m_socket.server_sock);
+  for (int i = 0; i < servers.size(); ++i)
+  {
+    shutdown(servers[i].server_sock, SHUT_RDWR);
+    close(servers[i].server_sock);
+  }
   return;
 }
 

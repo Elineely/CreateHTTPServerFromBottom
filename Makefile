@@ -24,7 +24,8 @@ SRC_SERVER_FILES		:=	Server.cpp 	\
 							socket.cpp	\
 							listen.cpp	\
 							bind.cpp	\
-							kqueue.cpp
+							kqueue.cpp	\
+							setServers.cpp
 
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\
@@ -70,7 +71,8 @@ fclean : clean
 	rm -f $(NAME)
 
 .PHONY : re
-re : fclean all
+re : fclean
+	make -j4 all
 
 .PHONY : debug
 debug : fclean

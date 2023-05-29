@@ -10,6 +10,17 @@
 // Default Constructor
 Parser::Parser(void) {}
 
+// Constructor
+Parser::Parser(const std::string& max_body_size)
+{
+  std::istringstream iss(max_body_size);
+  size_t value;
+
+  iss >> value;
+  m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
+  std::cout << max_body_size << " size_t :" << m_max_body_size << std::endl;
+}
+
 // Destructor
 Parser::~Parser(void) {}
 
@@ -43,7 +54,7 @@ ValidationStatus Parser::get_validation_phase(void)
 void Parser::parseFirstLine(void)
 {
   // \r\n 은 제외하고 input 에 저장
-  std::string input(m_pool.total_line, m_pool.prev_offset,
+  std::string input(m_pool.total_line, 0,
                     m_pool.offset - m_pool.prev_offset - 2);
   std::string method;
   std::string uri;
@@ -52,6 +63,8 @@ void Parser::parseFirstLine(void)
   size_t idx2;
 
   // 1. HTTP Method 탐색
+  std::cout << m_pool.total_line << std::endl;
+  std::cout << "input : " << input << std::endl;
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
   std::cout << "Method is: " << method << std::endl;
@@ -210,6 +223,9 @@ void Parser::parseBody(void)
     m_data.body.push_back(*(m_pool.total_line + idx));
   }
 
+  std::cout << "content_length: " << content_length << std::endl;
+  std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
+
   if (static_cast<size_t>(content_length) != m_data.body.size())
   {
     m_data.status = BAD_REQUEST_400;
@@ -317,6 +333,7 @@ void Parser::readBuffer(char* buf)
           parseHeaders();
           break;
         case ON_BODY:
+          std::cout << "on_body" << std::endl;
           if (m_data.headers.find("content-length") != m_data.headers.end())
           {
             parseBody();
@@ -325,12 +342,18 @@ void Parser::readBuffer(char* buf)
           {
             parseChunkedBody();
           }
-
+          std::cout << "body size: " << m_data.body.size() << std::endl;
+          std::cout << "m_max_body_size: " << m_max_body_size << std::endl;
+          if (m_data.body.size() > m_max_body_size)
+          {
+            m_data.status = BAD_REQUEST_400;
+            throw std::invalid_argument("Exceed max body size.");
+          }
         default:
           break;
       }
 
-      if (findNewlineInPool() == false)
+      if (findNewlineInPool() == false && m_data.validation_phase == COMPLETE)
       {
         break;
       }
