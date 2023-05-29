@@ -59,13 +59,6 @@ enum e_kqueue_event
   CLIENT_EOF,
   NOTHING,
 };
-
-struct t_socket
-{
-  int server_sock;
-  struct sockaddr_in serv_addr;
-};
-
 struct t_kqueue
 {
   int kq;
@@ -73,6 +66,15 @@ struct t_kqueue
   std::vector<struct kevent> change_list;
   std::map<int, std::string> socket_clients;
 };
+
+struct t_multi_server
+{
+  int server_sock;
+  int server_port;
+  struct sockaddr_in serv_addr;
+  t_server config;
+};
+
 struct t_response_write
 {
   char *message;
@@ -87,7 +89,7 @@ struct t_response_write
 class Server
 {
  private:
-  t_socket m_socket;
+  std::vector<t_multi_server> servers;
   t_kqueue m_kqueue;
   Config server;
   Server();
@@ -99,9 +101,10 @@ class Server
   Server &operator=(const Server &a);
 
   int getKqueue();
-  void setSocket(Config server_conf);
-  void startBind(int server_sock, const struct sockaddr *server_addr);
-  void startListen(int server_sock, int back_log);
+  void setSocket(Config server_conf, std::vector<t_multi_server> &servers);
+  void setServers(Config server_conf, std::vector<t_multi_server> &servers);
+  void startBind(std::vector<t_multi_server> &servers);
+  void startListen(std::vector<t_multi_server> &servers, int back_log);
 };
 
 #endif
