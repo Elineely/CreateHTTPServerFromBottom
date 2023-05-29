@@ -10,6 +10,17 @@
 // Default Constructor
 Parser::Parser(void) {}
 
+// Constructor
+Parser::Parser(const std::string& max_body_size)
+{
+  size_t idx;
+
+  idx = max_body_size.find_first_of("M");
+  std::string str_value(max_body_size, 0, idx);
+  long long ll_max_body_size = std::stoll(str_value);
+  m_max_body_size = ll_max_body_size;
+}
+
 // Destructor
 Parser::~Parser(void) {}
 
