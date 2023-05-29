@@ -31,9 +31,14 @@ class ResponseGenerator
   Response m_response;
   std::string m_target_file;
 
+  std::string m_cgi_content_type;
+  std::vector<char> m_cgi_body;
+
   void appendStrToResponse_message(std::string str);
   void appendStrToBody(std::string str);
   std::string statusCodeToString();
+
+  void cgiDataProcess();
 
   // for genearte Start Line
   void generateVersion();
