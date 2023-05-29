@@ -70,7 +70,8 @@ fclean : clean
 	rm -f $(NAME)
 
 .PHONY : re
-re : fclean all
+re : fclean
+	make -j4 all
 
 .PHONY : debug
 debug : fclean

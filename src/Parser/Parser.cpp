@@ -10,6 +10,16 @@
 // Default Constructor
 Parser::Parser(void) {}
 
+// Constructor
+Parser::Parser(const std::string& max_body_size)
+{
+  std::istringstream iss(max_body_size);
+  size_t value;
+
+  iss >> value;
+  m_max_body_size = value * 1048576; // Binary 기준으로 변환
+}
+
 // Destructor
 Parser::~Parser(void) {}
 
@@ -210,6 +220,9 @@ void Parser::parseBody(void)
     m_data.body.push_back(*(m_pool.total_line + idx));
   }
 
+  std::cout << "content_length: " << content_length << std::endl;
+  std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
+
   if (static_cast<size_t>(content_length) != m_data.body.size())
   {
     m_data.status = BAD_REQUEST_400;
@@ -218,7 +231,7 @@ void Parser::parseBody(void)
   }
 
   m_data.validation_phase = COMPLETE;
-
+  
   // TODO: 디버깅용 출력문. 나중에 삭제하기
   std::cout << "Body:";
   for (std::vector<char>::iterator it = m_data.body.begin();
@@ -317,6 +330,7 @@ void Parser::readBuffer(char* buf)
           parseHeaders();
           break;
         case ON_BODY:
+          std::cout << "on_body" << std::endl;
           if (m_data.headers.find("content-length") != m_data.headers.end())
           {
             parseBody();
@@ -325,12 +339,18 @@ void Parser::readBuffer(char* buf)
           {
             parseChunkedBody();
           }
-
+          std::cout << "body size: " << m_data.body.size() << std::endl;
+          std::cout << "m_max_body_size: " << m_max_body_size << std::endl;
+          if (m_data.body.size() > m_max_body_size)
+          {
+            m_data.status = BAD_REQUEST_400;
+            throw std::invalid_argument("Exceed max body size.");
+          }
         default:
           break;
       }
 
-      if (findNewlineInPool() == false)
+      if (findNewlineInPool() == false && m_data.validation_phase == COMPLETE)
       {
         break;
       }
