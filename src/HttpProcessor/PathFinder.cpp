@@ -68,6 +68,7 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
     temp_location = server_data.locations.find(locationBlock);
     if (temp_location == server_data.locations.end())
     {
+      // '/파일이름'으로 들어온 경우 후에 처리를 원하면 이 블록에서 로직 추가
       response_data.path_exist = false;
       response_data.file_exist = false;
       response_data.auto_index = false;
