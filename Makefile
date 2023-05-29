@@ -13,8 +13,8 @@ SRC_CONFIG_FILES		:=	Config.cpp	\
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
 
-# SRC_RESPONSE_DIR		:= Response/
-# SRC_RESPONSE_FILES		:= Response.cpp
+SRC_RESPONSE_GENERATOR_DIR		:= ResponseGenerator/
+SRC_RESPONSE_GENERATOR_FILES		:= ResponseGenerator.cpp
 
 # SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
 # SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
@@ -43,7 +43,7 @@ SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
 							$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
 							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
-							$(addprefix $(SRC_RESPONSE_DIR), $(SRC_RESPONSE_FILES))	\
+							$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
 							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES))
 SRCS				:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
