@@ -18,6 +18,9 @@ class CgiHandler
   int m_to_parent_fds[2];
   pid_t m_pid;
 
+  // 시스템 환경변수 + 서버 환경변수 붙여주는 함수 - 서버 연결되면 설정 및 값 채워질까?
+  // 사용자 설정 환경변수 추가하는 함수
+
   std::vector<char> m_content_vector;
 
  public:

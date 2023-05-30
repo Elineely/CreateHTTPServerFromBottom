@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define ERROR -1
 
@@ -10,22 +11,16 @@
 
 #define CHILD_PROCESS 0
 
-int main()
+int main(int argc, char** argv, char** env)
 {
 
   int to_child_fds[2];
   int to_parent_fds[2];
   pid_t pid;
 
-  if (pipe(to_parent_fds) == ERROR)
-  { /* return (ERROR); */ }
-
-  if (pipe(to_child_fds) == ERROR)
-  { /* return (ERROR); */ }
-
+  pipe(to_parent_fds);
+  pipe(to_child_fds);
   pid = fork();
-  if (pid == ERROR)
-  { /* return (ERROR); */ }
 
 // child process
   if (pid == CHILD_PROCESS)
@@ -33,20 +28,18 @@ int main()
     close(to_parent_fds[READ]);
     close(to_child_fds[WRITE]);
 
-    if (dup2(to_child_fds[READ], STDIN_FILENO) == ERROR)
-    { /* throw (error); */ }
+    dup2(to_child_fds[READ], STDIN_FILENO);
     close(to_child_fds[READ]);
 
-    if (dup2(to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
-    { /* throw (error); */ }
+    dup2(to_parent_fds[WRITE], STDOUT_FILENO);
     close(to_parent_fds[WRITE]);
 
-    char* cgi_bin_path = "./php-cgi"; // t_location {ourcgi_pass}
+    char* cgi_bin_path = "./test_python.py"; // t_location {ourcgi_pass}
     char* const argv[] = {cgi_bin_path, "index.php", NULL}; // t_location {ourcgi_index}
-    char* const envp[] = {NULL};
+    // char* const envp[] = {"REQUEST_METHOD=GET", NULL};
 
-    if (execve(cgi_bin_path, argv, envp) == ERROR)
-    { /* throw (error); */ }
+    if (execve(cgi_bin_path, argv, env) == ERROR)
+    { std::cout << "execve error" << std::endl; return -1; }
   }
 
 // parent process
@@ -80,10 +73,19 @@ int main()
     }
     close(to_parent_fds[READ]);
 
+    std::cout << "////////////In parent process, print content_vector//////////" << std::endl;
+    for (int i = 0; i < content_vector.size(); ++i)
+      std::cout << content_vector[i];
+
     int status;
 
     waitpid(pid, &status, 0);
     // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
+
+    // std::cout << "status : " << status << std::endl;
+    // std::cout << "WIFEXITED(status) : " << WIFEXITED(status) << std::endl;
+    // std::cout << "WEXITSTATUS(status) : " << WEXITSTATUS(status) << std::endl;
+
     if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
     {
       // MethodHandler에 데이터 넘겨주기
@@ -93,6 +95,3 @@ int main()
 
 	return (0);
 }
-
-//member functions
-
