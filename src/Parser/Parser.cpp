@@ -18,7 +18,6 @@ Parser::Parser(const std::string& max_body_size)
 
   iss >> value;
   m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
-  std::cout << max_body_size << " size_t :" << m_max_body_size << std::endl;
 }
 
 // Destructor
@@ -63,11 +62,9 @@ void Parser::parseFirstLine(void)
   size_t idx2;
 
   // 1. HTTP Method 탐색
-  std::cout << m_pool.total_line << std::endl;
-  std::cout << "input : " << input << std::endl;
+  std::cout << "first line: " << input << std::endl;
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
-  std::cout << "Method is: " << method << std::endl;
   if (method != "GET" && method != "POST" && method != "DELETE")
   {
     m_data.status = BAD_REQUEST_400;
@@ -179,7 +176,6 @@ void Parser::parseHeaders(void)
     size_t idx2;
 
     idx1 = input.find_first_of(':', 0);
-    std::cout << "input is: " << input << std::endl;
     if (idx1 == std::string::npos)
     {
       m_data.status = BAD_REQUEST_400;
@@ -324,12 +320,8 @@ void Parser::readBuffer(char* buf)
       {
         case READY:
           parseFirstLine();
-          std::cout << m_data.method << std::endl;
-          std::cout << m_data.uri << std::endl;
-          std::cout << m_data.http_version << std::endl;
           break;
         case ON_HEADER:
-          std::cout << "on_header" << std::endl;
           parseHeaders();
           break;
         case ON_BODY:
