@@ -1,6 +1,8 @@
 #include "/Users/surinlee/Desktop/42/5circle/our_webserv/include/PathFinder.hpp"
 // #include "../../include/PathFinder.hpp"
-// #include "PathFinder.hpp"
+// #include "./PathFinder.hpp"
+
+#include <iostream>
 
 PathFinder::PathFinder() {}
 
@@ -83,15 +85,16 @@ void PathFinder::setBasic(std::string method, std::string root,
   setAutoIndex(auto_index, response_data);
 }
 
-PathFinder::PathFinder(Request requset_data, t_server server_data,
+PathFinder::PathFinder(Request request_data, t_server server_data,
                        Response& response_data)
 {
-  std::string locationBlock = requset_data.uri;
+  std::cout << "request : " << request_data.uri << std::endl;
+  std::string locationBlock = request_data.uri;
   t_location current_location;
   std::map<std::string, t_location>::iterator temp_location;
-
   if (locationBlock == "/" || locationBlock == "")  // default block
   {
+    std::cout << "in block" << std::endl;
     current_location = server_data.locations.find("/")->second;
     setBasic(current_location.accepted_method, current_location.root,
              current_location.index, current_location.auto_index,
@@ -108,7 +111,8 @@ PathFinder::PathFinder(Request requset_data, t_server server_data,
     temp_location = server_data.locations.find(locationBlock);
     if (temp_location == server_data.locations.end())
     {
-      // '/파일이름'으로 들어온 경우 후에 처리를 원하면 이 블록에서 로직 추가
+      // 들어온 블록이름이 location에 존재하지 않음.
+      //  '/파일이름'으로 들어온 경우 후에 처리를 원하면 이 블록에서 로직 추가
       response_data.path_exist = false;
       response_data.file_exist = false;
       response_data.auto_index = false;
