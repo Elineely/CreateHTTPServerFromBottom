@@ -24,6 +24,25 @@ CgiHandler& CgiHandler::operator=(CgiHandler const& obj)
   return (*this);
 }
 
+void CgiHandler::setCgiEnv()
+{
+  // 값이 없는 경우는 빈 값으로 표시되면 생략하는 것과 같은 효과
+
+  m_env_list.push_back("AUTH_TYPE=");
+  
+  if (m_request_data.body.size() != 0)
+    m_env_list.push_back("CONTENT_LENGTH=" + m_request_data.headers["content-length"]);
+
+  // 헤더에 설정되어 있지 않으면 무슨 값이더라
+  m_env_list.push_back("CONTENT_TYPE=" + m_request_data.headers["content-type"]);
+
+  m_env_list.push_back("GATEWAY_INTERFACE=CGI/1.1");
+
+  std::string cgi_bin_path(m_response_data.get_m_cgi_bin_path());
+  m_env_list.push_back("PATH_INFO=" + cgi_bin_path);
+
+
+}
 
 /* //////////////////////////////////////////////////////// */
 //GetCgiHandler class

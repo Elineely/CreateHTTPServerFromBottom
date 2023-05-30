@@ -6,20 +6,25 @@
 #include <string>
 #include <vector>
 
+#include "Request.hpp"
+#include "Response.hpp"
+
 // CgiHandler virtual class
 class CgiHandler
 {
  protected:
-  // Request m_request_data;
+  Request m_request_data;
   // struct t_server m_server_data;
-  // Response m_response_data;
+  Response m_response_data;
+
+  // 시스템 환경변수(필요한가?) + 서버 환경변수 붙여주는 함수
+  // 사용자 설정 환경변수 추가하는 함수
+  std::vector<std::string> m_env_list;
 
   int m_to_child_fds[2];
   int m_to_parent_fds[2];
   pid_t m_pid;
 
-  // 시스템 환경변수 + 서버 환경변수 붙여주는 함수 - 서버 연결되면 설정 및 값 채워질까?
-  // 사용자 설정 환경변수 추가하는 함수
 
   std::vector<char> m_content_vector;
 
@@ -27,6 +32,8 @@ class CgiHandler
   CgiHandler(void);
   CgiHandler(/* ??? */);
   virtual ~CgiHandler(void);
+
+  void setCgiEnv();
 
   virtual int pipeAndFork() = 0;
   virtual int executeCgi() = 0;
