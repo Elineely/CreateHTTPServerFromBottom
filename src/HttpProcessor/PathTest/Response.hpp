@@ -17,16 +17,15 @@ struct Response
   bool file_exist;
   std::string file_path;
   bool path_exist;
-  std::string save_path;
-  std::vector<char> body;
+  // std::vector<char> body;
   StatusCode status_code;
   bool cgi_flag;
   std::string cgi_bin_path;
   std::string uploaded_path;
-  // char** cgi_params;
-  // 리스폰스 메세지를 vector로 해도 괜찮을까?
-  std::vector<char> response_message;
+  // std::vector<char> response_message;
   int pipe_fd;
+
+  // ~Response(){};
 };
 
 class ResponseGenerator

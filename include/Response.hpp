@@ -12,12 +12,13 @@
 struct Response
 {
   std::string accepted_method;
+  bool redirection_exist;
+  std::string rediretion_location;
   bool auto_index;
   std::string file_name;
   bool file_exist;
   std::string file_path;
   bool path_exist;
-  std::string save_path;
   std::vector<char> body;
   StatusCode status_code;
   bool cgi_flag;

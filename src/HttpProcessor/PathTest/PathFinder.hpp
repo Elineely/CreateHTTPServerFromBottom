@@ -20,9 +20,12 @@ class PathFinder
   void setMethod(std::string method, Response& response_data);
   void setBasic(std::string method, std::string root, std::string index,
                 std::string auto_index, Response& response_data);
+  void test_print_location(t_location c);
+  void test_print_basics(Response c);
+
 
  public:
-  PathFinder(Request requset_data, t_server server_data,
+  PathFinder(Request& requset_data, t_server& server_data,
              Response& response_data);
   ~PathFinder();
 };
