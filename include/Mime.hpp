@@ -7,15 +7,14 @@
 class Mime
 {
  private:
-  static std::map<std::string, std::string> m_mime_map;
-
-  Mime(const Mime& obj);
-  Mime& operator=(Mime const& obj);
-  ~Mime();
+  std::map<std::string, std::string> m_mime_map;
 
  public:
   Mime();
-  static std::string getMime(std::string target_file);
+  Mime(const Mime& obj);
+  Mime& operator=(Mime const& obj);
+  ~Mime();
+  std::string getMime(std::string target_file);
 };
 
 #endif

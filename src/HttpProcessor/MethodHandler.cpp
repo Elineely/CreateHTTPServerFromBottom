@@ -23,6 +23,9 @@ void MethodHandler::fileToBody(std::string target_file)
   m_response_data.body = buffer;
 }
 
+Request MethodHandler::get_m_request_data() { return (m_request_data); }
+Response MethodHandler::get_m_response_data() { return (m_response_data); }
+
 MethodHandler::MethodHandler(void) {}
 MethodHandler::MethodHandler(const MethodHandler& obj)
 {

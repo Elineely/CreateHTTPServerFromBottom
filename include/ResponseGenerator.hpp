@@ -12,15 +12,20 @@
 
 struct Response
 {
+  std::string accepted_method;
+  bool redirection_exist;
+  std::string rediretion_location;
   bool auto_index;
   std::string file_name;
-  std::string file_path;
   bool file_exist;
+  std::string file_path;
   bool path_exist;
   std::vector<char> body;
-  std::vector<char> response_message;
+  StatusCode status_code;
   bool cgi_flag;
-  char* cgi_bin_path;
+  std::string cgi_bin_path;
+  std::string uploaded_path;
+  std::vector<char> response_message;
   int pipe_fd;
 };
 
@@ -29,6 +34,8 @@ class ResponseGenerator
  private:
   Request m_request;
   Response m_response;
+  Mime mime;
+  StatusStr status_str;
   std::string m_target_file;
 
   std::string m_cgi_content_type;
@@ -47,23 +54,27 @@ class ResponseGenerator
   // for generate Headers
   void generateContentType();
   void generateContentLength();
+  void generateServer();
+  void generateLocation();
+  void generateDate();
   // for generate error body
   void generateErrorBody();
   // for generate Response Message
   void setStartLine();
   void setHeaders();
   void setBody();
-  void setErrorBody();
 
  public:
   ResponseGenerator();
-  ResponseGenerator(Request& request_data, Response& response_data);
   ResponseGenerator(const ResponseGenerator& obj);
+  ResponseGenerator(Request& request_data, Response& response_data);
   ~ResponseGenerator();
   ResponseGenerator& operator=(const ResponseGenerator& obj);
 
-  const char* generateErrorResponseMessage();
-  const char* generateResponseMessage();
+  std::vector<char> generateErrorResponseMessage();
+  std::vector<char> generateResponseMessage();
 };
+// Mime ResponseGenerator::mime;
+// StatusStr ResponseGenerator::status_str;
 
 #endif

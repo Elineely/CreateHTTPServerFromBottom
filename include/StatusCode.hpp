@@ -25,15 +25,14 @@ enum StatusCode
 class StatusStr
 {
  private:
-  static std::map<int, std::string> m_str_map;
-
-  StatusStr(const StatusStr& obj);
-  StatusStr& operator=(StatusStr const& obj);
-  ~StatusStr();
+  std::map<int, std::string> m_str_map;
 
  public:
   StatusStr();
-  static std::string getStatusStr(StatusCode code);
+  StatusStr(const StatusStr& obj);
+  StatusStr& operator=(StatusStr const& obj);
+  ~StatusStr();
+  std::string getStatusStr(StatusCode code);
 };
 
 #endif

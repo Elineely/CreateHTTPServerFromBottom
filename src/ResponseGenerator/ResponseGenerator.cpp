@@ -1,5 +1,6 @@
 #include "ResponseGenerator.hpp"
 
+#include <ctime>
 #include <fstream>
 #include <string>
 
@@ -46,7 +47,7 @@ void ResponseGenerator::cgiDataProcess()
   // generate content-type header in case of cgi
   std::string::size_type content_type_begin;
   std::string::size_type content_type_end;
-  content_type_begin = cgi_data.find("Content-type: ");
+  content_type_begin = cgi_data.find("Content-Type: ");
   content_type_end = cgi_data.find("\r\n", content_type_begin);
   if (content_type_begin != std::string::npos &&
       content_type_end != std::string::npos)
@@ -107,7 +108,6 @@ void ResponseGenerator::generateReasonPhrase()
 
   appendStrToResponse_message(" ");
   appendStrToResponse_message(reason_map[m_request.status]);
-  appendStrToResponse_message("\r\n");
 }
 
 void ResponseGenerator::generateContentType()
@@ -116,8 +116,8 @@ void ResponseGenerator::generateContentType()
     appendStrToResponse_message(m_cgi_content_type);
   else
   {
-    appendStrToResponse_message("Content-Type: ");
-    appendStrToResponse_message(Mime::getMime(m_target_file));
+    appendStrToResponse_message("Content-Type:");
+    appendStrToResponse_message(mime.getMime(m_target_file));
     appendStrToResponse_message("\r\n");
   }
 }
@@ -133,8 +133,49 @@ void ResponseGenerator::generateContentLength()
     ss << m_response.body.size();
   body_length = ss.str();
 
-  appendStrToResponse_message("Content-Length: ");
+  appendStrToResponse_message("Content-length:");
   appendStrToResponse_message(body_length);
+  appendStrToResponse_message("\r\n");
+}
+
+void ResponseGenerator::generateServer()
+{
+  appendStrToResponse_message("Server:");
+  //   appendStrToResponse_message("Cute_webserv/1.0 (");
+  //   std::string my_os;
+  // #if defined(_WIN32)
+  //   my_os = "Windows";
+  // #elif defined(__linux__)
+  //   my_os = "Linux";
+  // #elif defined(__APPLE__) && defined(__MACH__)
+  //   my_os = "Mac OS";
+  // #elif defined(__FreeBSD__)
+  //   my_os = "FreeBSD";
+  // #else
+  //   my_os = "Unknown OS";
+  // #endif
+  //   appendStrToResponse_message(my_os);
+  //   appendStrToResponse_message(")");
+  appendStrToResponse_message("Linux Web Server");
+  appendStrToResponse_message("\r\n");
+}
+void ResponseGenerator::generateDate()
+{
+  std::time_t currentTime = std::time(nullptr);
+  std::tm* timeInfo = std::gmtime(&currentTime);
+
+  char buffer[80];
+  std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);
+
+  appendStrToResponse_message("Date: ");
+  appendStrToResponse_message(buffer);
+  appendStrToResponse_message("\r\n");
+}
+void ResponseGenerator::generateLocation()
+{
+  if (m_response.redirection_exist == false) return;
+  appendStrToResponse_message("Location: ");
+  appendStrToResponse_message(m_response.rediretion_location);
   appendStrToResponse_message("\r\n");
 }
 
@@ -143,14 +184,14 @@ void ResponseGenerator::generateErrorBody()
   appendStrToBody("<html>\r\n<head><title>");
   appendStrToBody(statusCodeToString());
   appendStrToBody(" ");
-  appendStrToBody(StatusStr::getStatusStr(m_request.status));
+  appendStrToBody(status_str.getStatusStr(m_request.status));
   appendStrToBody(" ");
   appendStrToBody("</title></head>\r\n");
   appendStrToBody("<body>\r\n");
   appendStrToBody("<center><h1>");
   appendStrToBody(statusCodeToString());
   appendStrToBody(" ");
-  appendStrToBody(StatusStr::getStatusStr(m_request.status));
+  appendStrToBody(status_str.getStatusStr(m_request.status));
   appendStrToBody("</h1></center>\r\n");
 }
 
@@ -163,12 +204,12 @@ void ResponseGenerator::setStartLine()
 }
 void ResponseGenerator::setHeaders()
 {
-  generateContentType();
+  generateServer();
+  generateDate();
   generateContentLength();
+  generateContentType();
   // headerConnection();
-  // headerServer();
-  // headerLocation();
-  // headerDate();
+  // generateLocation();
   appendStrToResponse_message("\r\n");
 }
 void ResponseGenerator::setBody()
@@ -181,22 +222,25 @@ void ResponseGenerator::setBody()
     m_response.response_message.insert(m_response.response_message.end(),
                                        m_response.body.begin(),
                                        m_response.body.end());
+  // m_response.response_message.push_back('\0');
 }
 
-const char* ResponseGenerator::generateErrorResponseMessage()
+std::vector<char> ResponseGenerator::generateErrorResponseMessage()
 {
   setStartLine();
   generateErrorBody();
   setHeaders();
   setBody();
+
+  return (m_response.response_message);
 }
 
-const char* ResponseGenerator::generateResponseMessage()
+std::vector<char> ResponseGenerator::generateResponseMessage()
 {
   cgiDataProcess();
   setStartLine();
   setHeaders();
   setBody();
 
-  return (&m_response.response_message[0]);
+  return (m_response.response_message);
 }

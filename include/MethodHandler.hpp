@@ -14,12 +14,16 @@ class MethodHandler
   MethodHandler(void);
   MethodHandler(const MethodHandler& obj);
   MethodHandler& operator=(MethodHandler const& obj);
-  virtual void methodRun() = 0;
 
   void fileToBody(std::string target_file);
 
  public:
+  Request get_m_request_data();
+  Response get_m_response_data();
+
   MethodHandler(Request& request_data, Response& response_data);
+
+  virtual void methodRun() = 0;
   virtual ~MethodHandler(void);
 };
 
@@ -34,8 +38,6 @@ class GetMethodHandler : public MethodHandler
   GetMethodHandler& operator=(GetMethodHandler const& obj);
 
   void methodRun();
-
- private:
 };
 
 class PostMethodHandler : public MethodHandler
@@ -48,8 +50,6 @@ class PostMethodHandler : public MethodHandler
   PostMethodHandler& operator=(PostMethodHandler const& obj);
 
   void methodRun();
-
- private:
 };
 
 class DeleteMethodHandler : public MethodHandler
@@ -62,8 +62,6 @@ class DeleteMethodHandler : public MethodHandler
   DeleteMethodHandler& operator=(DeleteMethodHandler const& obj);
 
   void methodRun();
-
- private:
 };
 
 class PutMethodHandler : public MethodHandler
@@ -76,8 +74,6 @@ class PutMethodHandler : public MethodHandler
   PutMethodHandler& operator=(PutMethodHandler const& obj);
 
   void methodRun();
-
- private:
 };
 
 class HeadMethodHandler : public MethodHandler
@@ -90,8 +86,6 @@ class HeadMethodHandler : public MethodHandler
   HeadMethodHandler& operator=(HeadMethodHandler const& obj);
 
   void methodRun();
-
- private:
 };
 
 #endif
