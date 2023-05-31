@@ -11,13 +11,14 @@
 Parser::Parser(void) {}
 
 // Constructor
-Parser::Parser(const std::string& max_body_size)
+Parser::Parser(const std::string& max_body_size, int client_fd)
 {
   std::istringstream iss(max_body_size);
   size_t value;
 
   iss >> value;
   m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
+  m_client_fd = client_fd;
 }
 
 // Destructor
@@ -62,7 +63,7 @@ void Parser::parseFirstLine(void)
   size_t idx2;
 
   // 1. HTTP Method 탐색
-  std::cout << "first line: " << input << std::endl;
+  // std::cout << "first line: " << input << std::endl;
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
   if (method != "GET" && method != "POST" && method != "DELETE")
@@ -198,7 +199,7 @@ void Parser::parseHeaders(void)
 
     value = ft_strtrim(input.substr(idx1 + 1, (idx2 - idx1 - 1)));
     m_data.headers[key] = value;
-    std::cout << "key:" << key << "/ value:" << value << std::endl;
+    // std::cout << "key:" << key << "/ value:" << value << std::endl;
   } while (findNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
 }
 
@@ -219,8 +220,8 @@ void Parser::parseBody(void)
     m_data.body.push_back(*(m_pool.total_line + idx));
   }
 
-  std::cout << "content_length: " << content_length << std::endl;
-  std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
+  // std::cout << "content_length: " << content_length << std::endl;
+  // std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
 
   if (static_cast<size_t>(content_length) != m_data.body.size())
   {
@@ -232,13 +233,13 @@ void Parser::parseBody(void)
   m_data.validation_phase = COMPLETE;
 
   // TODO: 디버깅용 출력문. 나중에 삭제하기
-  std::cout << "Body:";
-  for (std::vector<char>::iterator it = m_data.body.begin();
-       it != m_data.body.end(); it++)
-  {
-    std::cout << *it;
-  }
-  std::cout << std::endl;
+  // std::cout << "Body:";
+  // for (std::vector<char>::iterator it = m_data.body.begin();
+  //      it != m_data.body.end(); it++)
+  // {
+  //   std::cout << *it;
+  // }
+  // std::cout << std::endl;
 }
 
 void Parser::parseChunkedBody(void)
@@ -256,7 +257,7 @@ void Parser::parseChunkedBody(void)
     std::string str_chunk_size(body_curr,
                                static_cast<size_t>(find - body_curr));
     long long chunk_size = std::stoll(str_chunk_size);
-    std::cout << "chunk_size:" << chunk_size << std::endl;
+    // std::cout << "chunk_size:" << chunk_size << std::endl;
     if (str_chunk_size != "0" && chunk_size <= 0)
     {
       m_data.status = BAD_REQUEST_400;
@@ -281,13 +282,13 @@ void Parser::parseChunkedBody(void)
     }
 
     // TODO: 디버깅용 출력문. 나중에 삭제하기
-    for (std::vector<char>::iterator it = m_data.body.begin();
-         it != m_data.body.end(); it++)
-    {
-      std::cout << *it;
-    }
+    // for (std::vector<char>::iterator it = m_data.body.begin();
+    //      it != m_data.body.end(); it++)
+    // {
+    //   std::cout << *it;
+    // }
 
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     m_pool.prev_offset = next_newline - m_pool.total_line + 2;
     m_pool.offset = m_pool.prev_offset;
@@ -325,7 +326,7 @@ void Parser::readBuffer(char* buf)
           parseHeaders();
           break;
         case ON_BODY:
-          std::cout << "on_body" << std::endl;
+          // std::cout << "on_body" << std::endl;
           if (m_data.headers.find("content-length") != m_data.headers.end())
           {
             parseBody();
@@ -334,8 +335,8 @@ void Parser::readBuffer(char* buf)
           {
             parseChunkedBody();
           }
-          std::cout << "body size: " << m_data.body.size() << std::endl;
-          std::cout << "m_max_body_size: " << m_max_body_size << std::endl;
+          // std::cout << "body size: " << m_data.body.size() << std::endl;
+          // std::cout << "m_max_body_size: " << m_max_body_size << std::endl;
           if (m_data.body.size() > m_max_body_size)
           {
             m_data.status = BAD_REQUEST_400;
@@ -353,6 +354,11 @@ void Parser::readBuffer(char* buf)
   }
   catch (std::exception& e)
   {
-    std::cout << e.what() << std::endl;
+    std::cerr << e.what() << std::endl;
   }
+}
+
+int Parser::get_m_client_fd(void)
+{
+  return m_client_fd;
 }
