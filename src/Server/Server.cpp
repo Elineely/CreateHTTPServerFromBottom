@@ -6,11 +6,12 @@
 
 struct CustomUdata
 {
-  int *m_pipe_fd;
+  int m_pipe_read_fd;
   int m_client_sock;
+  std::string result;
 
-  CustomUdata(int *pipe_fd, int client_sock)
-      : m_pipe_fd(pipe_fd), m_client_sock(client_sock)
+  CustomUdata(int pipe_read_fd, int client_sock)
+      : m_pipe_read_fd(pipe_read_fd), m_client_sock(client_sock)
   {
   }
 };
@@ -21,17 +22,19 @@ enum
   WRITE
 };
 
-void AddEventToChangeList(std::vector<struct kevent> &change_list,
-                          uintptr_t ident, /* identifier for this event */
-                          int16_t filter,  /* filter for event */
-                          uint16_t flags,  /* general flags */
-                          uint32_t fflags, /* filter-specific flags */
-                          intptr_t data,   /* filter-specific data */
-                          void *udata)
+void Server::AddEventToChangeList(
+    e_event_type fd_type, std::vector<struct kevent> &change_list,
+    uintptr_t ident, /* identifier for this event */
+    int16_t filter,  /* filter for event */
+    uint16_t flags,  /* general flags */
+    uint32_t fflags, /* filter-specific flags */
+    intptr_t data,   /* filter-specific data */
+    void *udata)
 {
   struct kevent temp_event;
 
   EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
+  m_event_fd_list.insert(std::pair<int, e_event_type>(ident, fd_type));
   change_list.push_back(temp_event);
 }
 
@@ -58,7 +61,210 @@ char *getHttpMessage()
   return return_buff;
 }
 
-void disconnect_socket(int socket) { close(socket); }
+void Server::serverReadEvent(struct kevent *current_event)
+{
+  std::cout << "🖥  SERVER READ EVENT  🖥" << std::endl;
+  int client_sock;
+  int client_addr_size;
+  struct sockaddr_in client_addr;
+
+  client_sock = accept(current_event->ident, (struct sockaddr *)&client_addr,
+                       reinterpret_cast<socklen_t *>(&client_addr_size));
+  if (client_sock == -1)
+  {
+    ft_error(1, strerror(errno));
+    return;
+  }
+  std::cout << "🏃 Client ID: " << client_sock << " is connected. 🏃"
+            << std::endl;
+
+  std::string max_body_size =
+      static_cast<t_server *>(current_event->udata)->max_body_size[0];
+  // TODO: delete 하는 부분 추가하기
+  Parser *parser = new Parser(max_body_size, client_sock);
+  fcntl(client_sock, F_SETFL, O_NONBLOCK);
+  AddEventToChangeList(CLIENT, m_kqueue.change_list, client_sock, EVFILT_READ,
+                       EV_ADD | EV_ENABLE, 0, 0, parser);
+  m_kqueue.socket_clients[client_sock] = "";
+}
+
+void Server::pipeReadEvent(struct kevent *current_event)
+{
+  std::cout << "💧 PIPE READ EVENT 💧" << std::endl;
+  std::cout << "current_event->ident: " << current_event->ident << std::endl;
+
+  char buf[BUF_SIZE];
+  std::memset(buf, 0, BUF_SIZE);
+  CustomUdata *udata = static_cast<CustomUdata *>(current_event->udata);
+  std::cout << "udata->m_client_sock: " << udata->m_client_sock << std::endl;
+  // sleep(100);
+
+  ssize_t read_byte = read(udata->m_pipe_read_fd, buf, BUF_SIZE);
+  if (read_byte > 0)
+  {
+    udata->result.append(buf);
+    return;
+  }
+  wait(NULL);
+  if (current_event->flags & EV_EOF)
+  {
+    std::cout << "💩 PIPE EOF EVENT 💩" << std::endl;
+    close(udata->m_pipe_read_fd);
+
+    // char *message = getHttpMessage();  // 인자로 response 전달
+    const char *message = udata->result.c_str();
+    // std::cout << "🚀 message  🚀" << std::endl;
+    // std::cout << message << std::endl;
+
+    t_response_write *response =
+        new t_response_write(message, ft_strlen(message));
+    AddEventToChangeList(CLIENT, m_kqueue.change_list, udata->m_client_sock,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+  }
+
+  // if (read(udata->m_pipe_read_fd, buf, BUF_SIZE) < 0)
+  // {
+  //   std::cerr << "Read error " << strerror(errno) << std::endl;
+  //   exit(EXIT_FAILURE);
+  // }
+  // std::cout << "FROM PYTHON: " << buf << std::endl;
+  // std::cout << "read result: " << read(udata->m_pipe_read_fd, buf, BUF_SIZE)
+  //           << std::endl;
+  // waitpid(current_event->ident, 0, 0);
+
+  // close(udata->m_pipe_read_fd + 1);
+
+  // udata->result.append(buf);
+  // AddEventToChangeList(PIPE, m_kqueue.change_list, current_event->ident,
+  //                      EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+
+  // char *message = getHttpMessage();  // 인자로 response 전달
+
+  // t_response_write *response =
+  //     new t_response_write(message, ft_strlen(message));
+  // AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
+  //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+}
+
+void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
+{
+  std::cout << "⌛️ CGI PROCESS TIMEOUT EVENT ⌛️" << std::endl;
+  int result = kill(current_event->ident, SIGTERM);
+  // pipe close
+  waitpid(current_event->ident, NULL, 0);
+  // AddEventToChangeList(PROCESS, m_kqueue.change_list, current_event->ident,
+  //                      EVFILT_PROC, EV_DELETE, 0, 0, NULL);
+
+  char *message = getHttpMessage();  // 인자로 response 전달
+
+  t_response_write *response =
+      new t_response_write(message, ft_strlen(message));
+  AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
+                       EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+}
+
+void Server::serverErrorEvent(struct kevent *current_event)
+{
+  std::cout << "server socket error" << std::endl;
+  disconnect_socket(current_event->ident);
+}
+
+void Server::clientWriteEvent(struct kevent *current_event)
+{
+  std::cout << "✅ CLIENT WRITE EVENT ✅" << std::endl;
+
+  t_response_write *response;
+  response = static_cast<t_response_write *>(current_event->udata);
+
+  int send_byte = 0;
+  send_byte = send(current_event->ident, response->message + response->offset,
+                   response->length - response->offset, 0);
+  response->offset += send_byte;
+  if (response->length > response->offset)
+  {
+    return;
+  }
+  AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
+                       EVFILT_WRITE, EV_DELETE, 0, 0, response);
+  // free(response);
+}
+
+void Server::clientReadEvent(struct kevent *current_event)
+{
+  std::cout << "📖 CLIENT_READ EVENT 📖" << std::endl;
+  if (current_event->flags == EV_EOF)
+  {
+    std::cerr << "closing" << std::endl;
+    disconnect_socket(current_event->ident);
+    return;
+  }
+
+  Parser *parser = static_cast<Parser *>(current_event->udata);
+
+  char buff[BUF_SIZE];
+  std::memset(buff, 0, BUF_SIZE);
+  int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
+  parser->readBuffer(buff);
+  if (parser->get_validation_phase() != COMPLETE)
+  {
+    return;
+  }
+
+  pid_t pid;
+  int pipe_fd[2];
+  char buf[BUF_SIZE];
+
+  pipe(pipe_fd);
+  // fcntl(pipe_fd[READ], F_SETFL, O_NONBLOCK); // TODO: 테스터기 돌릴 때 생존
+  // 여부를 확인하기
+  pid = fork();
+  char *argv[] = {"/usr/bin/python3", "./hello.py", NULL};
+  char *envp[] = {NULL};
+  if (pid == CHILD_PROCESS)
+  {
+    close(pipe_fd[READ]);
+    dup2(pipe_fd[WRITE], STDOUT_FILENO);
+    char *script_path = "/usr/bin/python3";
+    if (execve(script_path, argv, envp) == ERROR)
+    {
+      std::cerr << "execve error: " << strerror(errno) << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    close(pipe_fd[WRITE]);
+    CustomUdata *udata = new CustomUdata(pipe_fd[READ], current_event->ident);
+    // udata->m_pipe_fd[WRITE] = -1;
+    // Set up the event structure
+
+    // pipe_fd[READ] 를  EV_EOF 로 이벤트로 등록
+    // AddEventToChangeList(PROCESS, m_kqueue.change_list, pid, EVFILT_TIMER,
+    //                      EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10, udata);
+    AddEventToChangeList(PIPE, m_kqueue.change_list, pipe_fd[READ], EVFILT_READ,
+                         EV_ADD | EV_ENABLE, 0, 0, udata);
+    // delete current_event->udata;
+  }
+
+  // getttpMessage
+  // char *message = getHttpMessage();
+
+  // if (response.cgi == true)
+  // {
+  //  coutinue;
+  // }
+  // else
+  // {
+  // t_response_write *response =
+  //     new t_response_write(message, ft_strlen(message));
+  // AddEventToChangeList(m_kqueue.change_list, current_event->ident,
+  //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+  //                      response);
+  // }
+  // }
+}
+
+void Server::disconnect_socket(int socket) { close(socket); }
 
 int is_server_sock(std::vector<t_multi_server> servers, int sock)
 {
@@ -70,40 +276,38 @@ int is_server_sock(std::vector<t_multi_server> servers, int sock)
 }
 
 e_kqueue_event getEventStatus(struct kevent *current_event,
-                              std::vector<t_multi_server> &servers)
+                              std::map<int, e_event_type> &m_event_fd_list)
 {
-  if (current_event->flags == EV_ERROR)
+  std::map<int, e_event_type>::iterator it;
+
+  it = m_event_fd_list.find(current_event->ident);
+  if (it == m_event_fd_list.end()) return NOTHING;
+
+  e_event_type fd_type = it->second;
+  if (current_event->flags & EV_ERROR)
   {
-    if (is_server_sock(servers, current_event->ident))
+    if (fd_type == SERVER)
       return SERVER_ERROR;
-    else
+    else if (fd_type == CLIENT)
       return CLIENT_ERROR;
-  }
-  if (current_event->flags == EV_EOF)
-  {
-    if (is_server_sock(servers, current_event->ident))
-      return SERVER_EOF;
-    else
-      return CLIENT_EOF;
   }
   if (current_event->filter == EVFILT_READ)
   {
-    if (is_server_sock(servers, current_event->ident))
+    if (fd_type == SERVER)
       return SERVER_READ;
-    else
+    else if (fd_type == CLIENT)
       return CLIENT_READ;
+    else if (fd_type == PIPE)
+      return PIPE_READ;
   }
   if (current_event->filter == EVFILT_WRITE)
   {
-    if (is_server_sock(servers, current_event->ident))
+    if (fd_type == SERVER)
       return SERVER_WRITE;
-    else
+    else if (fd_type == CLIENT)
       return CLIENT_WRITE;
   }
-  if (current_event->filter == EVFILT_PROC)
-  {
-    return CGI_PROCESS_END;
-  }
+
   if (current_event->filter == EVFILT_TIMER)
   {
     return CGI_PROCESS_TIMEOUT;
@@ -136,7 +340,7 @@ Server::Server(Config server_conf)
   struct sockaddr_in client_addr;
   for (int i = 0; i < servers.size(); ++i)
   {
-    AddEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
+    AddEventToChangeList(SERVER, m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0,
                          &servers[i].config);
   }
@@ -156,201 +360,48 @@ Server::Server(Config server_conf)
     {
       current_event = &m_kqueue.event_list[i];
 
-      event_status = getEventStatus(current_event, servers);
+      event_status = getEventStatus(current_event, m_event_fd_list);
       switch (event_status)
       {
         case SERVER_READ:
         {
-          std::cout << "--- in SERVER_READ" << std::endl;
-          client_sock =
-              accept(current_event->ident, (struct sockaddr *)&client_addr,
-                     reinterpret_cast<socklen_t *>(&client_addr_size));
-          if (client_sock == -1)
-          {
-            ft_error(1, strerror(errno));
-            continue;
-          }
-          std::cout << "Client ID: " << client_sock << " is connected."
-                    << std::endl;
-
-          std::string max_body_size =
-              static_cast<t_server *>(current_event->udata)->max_body_size[0];
-          // TODO: delete 하는 부분 추가하기
-          Parser *parser = new Parser(max_body_size);
-          fcntl(client_sock, F_SETFL, O_NONBLOCK);
-          AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
-                               EV_ADD | EV_ENABLE, 0, 0, parser);
-          m_kqueue.socket_clients[client_sock] = "";
+          serverReadEvent(current_event);
         }
         break;
 
         case SERVER_ERROR:
         {
-          std::cout << "server socket error" << std::endl;
-          disconnect_socket(current_event->ident);
+          serverErrorEvent(current_event);
         }
         break;
 
         case CLIENT_READ:
         {
-          if (current_event->flags == EV_EOF)
-          {
-            std::cerr << "closing" << std::endl;
-            disconnect_socket(current_event->ident);
-            continue;
-          }
-
-          std::cout << "📖 CLIENT_READ 📖" << std::endl;
-          Parser *parser = static_cast<Parser *>(current_event->udata);
-          // sleep(1);0
-
-          char buff[BUF_SIZE];
-          std::memset(buff, 0, BUF_SIZE);
-          int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-          parser->readBuffer(buff);
-          if (parser->get_validation_phase() != COMPLETE)
-          {
-            continue;
-          }
-
-          pid_t pid;
-          int pipe_fd[2];
-          char buf[BUF_SIZE];
-
-          pipe(pipe_fd);
-          pid = fork();
-          if (pid == CHILD_PROCESS)
-          {
-            close(pipe_fd[READ]);
-            dup2(pipe_fd[WRITE], STDOUT_FILENO);
-            char *script_path = "./hello.py";
-            if (execve(script_path, NULL, NULL) == ERROR)
-            {
-              std::cerr << "execve error: " << strerror(errno) << std::endl;
-              exit(EXIT_FAILURE);
-            }
-            exit(EXIT_SUCCESS);
-          }
-          else
-          {
-            // close(pipe_fd[WRITE]);
-
-            CustomUdata *udata = new CustomUdata(pipe_fd, current_event->ident);
-            // udata->m_pipe_fd[WRITE] = -1;
-            // Set up the event structure
-
-            // pipe_fd[READ] 를  EV_EOF 로 이벤트로 등록
-            // AddEventToChangeList(m_kqueue.change_list, pipe_fd[READ],
-            // EVFILT_TIMER,
-            //                      EV_ADD | EV_ONESHOT, NOTE_SECONDS, 0, NULL);
-            AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_TIMER,
-                                 EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10, udata);
-            AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_PROC, EV_ADD,
-                                 NOTE_EXIT, 0, udata);
-            // delete current_event->udata;
-          }
-
-          // getttpMessage
-          // char *message = getHttpMessage();
-
-          // if (response.cgi == true)
-          // {
-          //  coutinue;
-          // }
-          // else
-          // {
-          // t_response_write *response =
-          //     new t_response_write(message, ft_strlen(message));
-          // AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-          //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-          //                      response);
-          // }
-          // }
+          clientReadEvent(current_event);
         }
         break;
 
-        case CGI_PROCESS_END:  // cgi
+        case PIPE_READ:
         {
-          std::cout << "CGI_PROCESS_END" << std::endl;
-
-          std::string result;
-          char buf[BUF_SIZE];
-          std::memset(buf, 0, BUF_SIZE);
-          CustomUdata *udata = static_cast<CustomUdata *>(current_event->udata);
-          // if (udata->m_pipe_fd[READ] == -1)
-          // {
-          //   continue;
-          // }
-          waitpid(current_event->ident, NULL, 0);
-          while (read(udata->m_pipe_fd[READ], buf, BUF_SIZE) > 0)
-          {
-            result.append(buf);
-          }
-          // pipe close
-
-          // std::cout << close(udata->m_pipe_fd[READ]) << " ---------------"
-          //           << udata->m_pipe_fd[READ] << std::endl;
-          // udata->m_pipe_fd[READ] = -1;
-          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-                               EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-          // char *message = getHttpMessage();  // 인자로 response 전달
-          const char *message = result.c_str();
-
-          std::cout << "🚀 CGI MESSAGE 🚀" << std::endl;
-          std::cout << message << std::endl;
-
-          t_response_write *response =
-              new t_response_write(message, ft_strlen(message));
-          AddEventToChangeList(m_kqueue.change_list, udata->m_client_sock,
-                               EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-                               response);
+          pipeReadEvent(current_event);
         }
         break;
+
+          // case PIPE_EOF:  // cgi end
+          // {
+          //   pipeEOFevent(current_event);
+          // }
+          // break;
 
         case CGI_PROCESS_TIMEOUT:  // cgi
         {
-          std::cout << "=======⌛️ CGI_PROCESS_TIMEOUT ⌛️=======" << std::endl;
-          int result = kill(current_event->ident, SIGTERM);
-          // pipe close
-          std::cout << "kill status: " << result << std::endl;
-          waitpid(current_event->ident, NULL, 0);
-          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-                               EVFILT_PROC, EV_DELETE, 0, 0, NULL);
-
-          char *message = getHttpMessage();  // 인자로 response 전달
-
-          t_response_write *response =
-              new t_response_write(message, ft_strlen(message));
-          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-                               EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-                               response);
+          cgiProcessTimeoutEvent(current_event);
         }
         break;
 
         case CLIENT_WRITE:
         {
-          t_response_write *response;
-          response = static_cast<t_response_write *>(current_event->udata);
-
-          std::cout << "✅ CLIENT WRITE ✅" << std::endl;
-          std::cout << response->message << std::endl;
-
-          int send_byte = 0;
-          send_byte =
-              send(current_event->ident, response->message + response->offset,
-                   response->length - response->offset, 0);
-          response->offset += send_byte;
-          std::cerr << strerror(errno) << std::endl;
-          std::cout << "server end byte to fd : " << current_event->ident
-                    << "  send_byte : " << send_byte << std::endl;
-          if (response->length > response->offset)
-          {
-            continue;
-          }
-          std::cout << "send END" << std::endl;
-          AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-                               EVFILT_WRITE, EV_DELETE, 0, 0, response);
-          free(response);
+          clientWriteEvent(current_event);
         }
         break;
 
@@ -375,7 +426,7 @@ Server::Server(Config server_conf)
 
         default:
         {
-          std::cout << "status == " << event_status << std::endl;
+          std::cout << "deafult status == " << event_status << std::endl;
         }
         break;
       }
