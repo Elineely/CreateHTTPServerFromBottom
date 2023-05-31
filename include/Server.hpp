@@ -45,6 +45,14 @@
 #define DEFAULT_SERVER_FILE "./server.conf"
 #define SERVER_CONTENT_FILE "./server_content.conf"
 
+enum e_event_type
+{
+  SERVER = 0,
+  CLIENT,
+  PIPE,
+  PROCESS,
+};
+
 enum e_kqueue_event
 {
   SERVER_READ = 0,
@@ -53,11 +61,13 @@ enum e_kqueue_event
   CLIENT_READ,
   CLIENT_WRITE,
   CLIENT_ERROR,
-  CGI_PROCESS_END,
+  // CGI_PROCESS_END,
   CGI_PROCESS_TIMEOUT,
   SERVER_EOF,
   CLIENT_EOF,
-  NOTHING,
+  PIPE_READ,
+  PIPE_EOF,
+  NOTHING
 };
 struct t_kqueue
 {
@@ -90,6 +100,7 @@ class Server
 {
  private:
   std::vector<t_multi_server> servers;
+  std::map<int, e_event_type> m_event_fd_list;
   t_kqueue m_kqueue;
   Config server;
   Server();
@@ -101,10 +112,26 @@ class Server
   Server &operator=(const Server &a);
 
   int getKqueue();
+  void AddEventToChangeList(e_event_type fd_type,
+                            std::vector<struct kevent> &change_list,
+                            uintptr_t ident, int16_t filter, uint16_t flags,
+                            uint32_t fflags, intptr_t data, void *udata);
   void setSocket(Config server_conf, std::vector<t_multi_server> &servers);
   void setServers(Config server_conf, std::vector<t_multi_server> &servers);
   void startBind(std::vector<t_multi_server> &servers);
   void startListen(std::vector<t_multi_server> &servers, int back_log);
+
+  void clientWriteEvent(struct kevent *current_event);
+  void clientReadEvent(struct kevent *current_event);
+
+  void serverReadEvent(struct kevent *current_event);
+  void serverErrorEvent(struct kevent *current_event);
+
+  void pipeReadEvent(struct kevent *current_event);
+  void pipeEOFevent(struct kevent *current_event);
+  void cgiProcessTimeoutEvent(struct kevent *current_event);
+
+  void disconnect_socket(int socket);
 };
 
 #endif
