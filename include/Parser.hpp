@@ -8,6 +8,8 @@
 #include "Request.hpp"
 #include "RequestPool.hpp"
 
+#define MB_TO_BYTE 1048576
+
 enum KeyValuePair
 {
   KEY = 0,
