@@ -27,8 +27,6 @@ print(os.getenv('SHELL'))
 print(os.getenv('REQUEST_METHOD'))
 # /////////////////////////////////////////////
 
-# file_path와 file_name이 들어옴
-# 파일 
 
 # save_path = os.getenv("SAVED_PATH")
 
@@ -72,5 +70,5 @@ print(os.getenv('REQUEST_METHOD'))
 # exit()
 
 
-# print ("\n***********Test for python CGI************\n")
+print ("\n***********Test for python CGI************\n")
 
