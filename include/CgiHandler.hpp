@@ -37,7 +37,7 @@ class CgiHandler
   Response m_response_data;
 
   std::vector<std::string> m_env_list;
-  const char** m_env_list_parameter;
+  std::vector<const char*> m_env_list_parameter;
 
   int m_to_child_fds[2];
   int m_to_parent_fds[2];
@@ -115,30 +115,5 @@ class PostCgiHandler : public CgiHandler
   virtual int executeCgi();
   virtual void getDataFromCgi();
 };
-
-
-// /////////////////////////////////////////////////////////////
-// class DeleteCgiHandler
-// class DeleteCgiHandler : public CgiHandler
-// {
-//  public:
-//   DeleteCgiHandler(/* ??? */);
-//   DeleteCgiHandler(const DeleteCgiHandler& obj);
-//   DeleteCgiHandler& operator=(DeleteCgiHandler const& obj);
-//   virtual ~DeleteCgiHandler(void);
-
-//   virtual int pipeAndFork();
-//   virtual int executeCgi();
-//   virtual void getDataFromCgi();
-
-//   virtual void outsourceCgiRequest(void);
-
-// // 실행 전에 server_protocol이 HTTP/1.1 이상인지 확인해야 함
-
-// // 바디 내용이 삭제되면, content_length도 반영되어야 함
-
-//  private:
-//   DeleteCgiHandler(void);
-// };
 
 #endif

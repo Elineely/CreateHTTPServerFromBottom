@@ -34,8 +34,12 @@ CgiHandler::~CgiHandler() {}
 
 void CgiHandler::setCgiEnv()
 {
-  // --------------------------------------
-m_response_data.cgi_bin_path = std::string("test_python.py");
+  // -------------------------------------- for test
+m_response_data.cgi_bin_path = std::string("post_python.py");
+m_request_data.body.push_back('a');
+m_request_data.body.push_back('b');
+m_request_data.body.push_back('c');
+m_request_data.body.push_back('\0');
 // ----------------------------------------
 
   // 값이 없는 경우는 빈 값으로 표시되면 생략하는 것과 같은 효과
@@ -100,7 +104,7 @@ m_response_data.cgi_bin_path = std::string("test_python.py");
 
   for (int i = 0; i < m_env_list.size(); ++i)
   {
-    m_env_list_parameter[i] = m_env_list[i].c_str();
+    m_env_list_parameter.push_back(m_env_list[i].c_str());
   }
 }
 
@@ -159,7 +163,7 @@ int GetCgiHandler::executeCgi()
 
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
-  const char** envp = m_env_list_parameter;
+  const char** envp = &m_env_list_parameter[0];
 
   if (execve(cgi_bin_path, const_cast<char *const *>(argv), const_cast<char *const *>(envp)) == ERROR)
   {
@@ -204,6 +208,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
     {
       // throw (error);
     }
+    return ;
   }
 
   getDataFromCgi();
@@ -281,6 +286,11 @@ int PostCgiHandler::executeCgi()
   close(m_to_parent_fds[READ]);
   close(m_to_child_fds[WRITE]);
 
+// -------------------------------------------test
+// char buf[3];
+// read(m_to_child_fds[READ], buf, sizeof(buf));
+// std::cout << "executeCgi : " << buf << std::endl;
+
 // 부모 프로세스로부터 받은 데이터를 cgi에 표준 입력으로 넘겨주는 dup2
   if (dup2(m_to_child_fds[READ], STDIN_FILENO) == ERROR)
   {
@@ -298,11 +308,9 @@ int PostCgiHandler::executeCgi()
   }
   close(m_to_parent_fds[WRITE]);
 
-// 클라이언트의 요청을 처리할 CGI 스크립트를 선택해야 함
-// multiple CGI를 구현할 경우, 요청에 어떤 CGI가 필요한지 결정해야 함
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
-  const char** envp = m_env_list_parameter;
+  const char** envp = &m_env_list_parameter[0];
 
   if (execve(cgi_bin_path, const_cast<char *const *>(argv), const_cast<char *const *>(envp)) == ERROR)
   {
@@ -316,15 +324,12 @@ void PostCgiHandler::getDataFromCgi()
   close(m_to_parent_fds[WRITE]);
   close(m_to_child_fds[READ]);
 
-  int temp_body_size = m_request_data.body.size() + 1;
-  char temp_body[temp_body_size];
-  for (int i = 0; i < m_request_data.body.size(); ++i)
-  {
-    temp_body[i] = m_request_data.body[i];
-  }
-  temp_body[temp_body_size] = '\0';
+// ----------------test
+// std::cout << "getDataFromCgi : " << std::endl;
+// write(1, &m_request_data.body[0], sizeof(char) * m_request_data.body.size());
+// std::cout << std::endl;
 
-  if (write(m_to_child_fds[WRITE], temp_body, sizeof(temp_body)) == ERROR)
+  if (write(m_to_child_fds[WRITE], &m_request_data.body[0], sizeof(char) * m_request_data.body.size()) == ERROR)
   {
     close(m_to_parent_fds[READ]);
     close(m_to_child_fds[WRITE]);
@@ -363,6 +368,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
     {
       // throw error;
     }
+    return ;
   }
 
   getDataFromCgi();
@@ -381,22 +387,3 @@ void PostCgiHandler::outsourceCgiRequest(void)
       // throw (error);
     }
   }
-
-
-/* //////////////////////////////////////////////////////// */
-//DeleteCgiHandler class
-/* //////////////////////////////////////////////////////// */
-
-// DeleteCgiHandler::DeleteCgiHandler() {}
-// DeleteCgiHandler::~DeleteCgiHandler() {}
-// DeleteCgiHandler::DeleteCgiHandler(/* ??? */)
-// {}
-// DeleteCgiHandler::DeleteCgiHandler(const DeleteCgiHandler& obj)
-// {}
-// DeleteCgiHandler& DeleteCgiHandler::operator=(DeleteCgiHandler const& obj)
-// {
-//   if (this != &obj)
-//   {
-//   }
-//   return (*this);
-// }
