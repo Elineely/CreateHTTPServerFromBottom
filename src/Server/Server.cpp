@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+#include "beforeHttpProcessor.hpp"
+
 #define ERROR -1
 
 #define CHILD_PROCESS 0
@@ -38,7 +40,7 @@ void Server::AddEventToChangeList(
   change_list.push_back(temp_event);
 }
 
-char *getHttpMessage()
+char *getHttpMessages()
 {
   char *return_buff = (char *)malloc(1000000);
   int file_length;
@@ -155,12 +157,12 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   // AddEventToChangeList(PROCESS, m_kqueue.change_list, current_event->ident,
   //                      EVFILT_PROC, EV_DELETE, 0, 0, NULL);
 
-  char *message = getHttpMessage();  // 인자로 response 전달
+  // char *message = getHttpMessage();  // 인자로 response 전달
 
-  t_response_write *response =
-      new t_response_write(message, ft_strlen(message));
-  AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
-                       EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+  // t_response_write *response =
+  //     new t_response_write(message, ft_strlen(message));
+  // AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
+  //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
 }
 
 void Server::serverErrorEvent(struct kevent *current_event)

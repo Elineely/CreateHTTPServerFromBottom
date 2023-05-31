@@ -10,14 +10,20 @@ SRC_CONFIG_FILES		:=	Config.cpp	\
 							print.cpp	\
 							content.cpp
 
+SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
+# SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp \
+																MethodHandler.cpp
+SRC_HTTPPROCESSOR_FILES		:=	MethodHandler.cpp
+
+
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
 
-# SRC_RESPONSE_DIR		:= Response/
-# SRC_RESPONSE_FILES		:= Response.cpp
+SRC_RESPONSE_GENERATOR_DIR		:= ResponseGenerator/
+SRC_RESPONSE_GENERATOR_FILES		:=	Mime.cpp \
+																		ResponseGenerator.cpp \
+																		StatusCode.cpp
 
-# SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
-# SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp
 
 SRC_SERVER_DIR			:=	Server/
 SRC_SERVER_FILES		:=	Server.cpp 	\
@@ -38,14 +44,18 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_error.cpp			\
 							ft_process_print.cpp
 
+SRC_TEMP_DIR := temp/
+SRC_TEMP_FILES := beforeHttpProcessor.cpp
+
 SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
 							$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
 							$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
 							$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
 							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
-							$(addprefix $(SRC_RESPONSE_DIR), $(SRC_RESPONSE_FILES))	\
-							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES))
+							$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
+							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
+							$(addprefix $(SRC_TEMP_DIR), $(SRC_TEMP_FILES))
 SRCS				:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
 OBJ_DIR				:=	obj/
