@@ -20,7 +20,7 @@ class Parser
 {
  public:
   // Canonical Form
-  Parser(const std::string& max_body_size);
+  Parser(const std::string& max_body_size, int client_fd);
   Parser(const Parser& src);
   virtual ~Parser(void);
   Parser& operator=(Parser const& rhs);
@@ -28,6 +28,7 @@ class Parser
   // Member Functions
   void readBuffer(char* buf);
   ValidationStatus get_validation_phase(void);
+  int get_m_client_fd(void);
 
  private:
   Parser(void);
@@ -36,6 +37,7 @@ class Parser
   struct Request m_data;
   struct RequestPool m_pool;
   size_t m_max_body_size;
+  int m_client_fd;
 
   // Member Functions
   void saveBufferInPool(char* buf);
