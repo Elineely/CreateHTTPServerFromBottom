@@ -1,5 +1,8 @@
 #include "Server.hpp"
 
+// httpProcessor가 완성되기 전 테스트용
+#include "beforeHttpProcessor.hpp"
+
 void AddEventToChangeList(std::vector<struct kevent> &change_list,
                           uintptr_t ident, /* identifier for this event */
                           int16_t filter,  /* filter for event */
@@ -12,29 +15,6 @@ void AddEventToChangeList(std::vector<struct kevent> &change_list,
 
   EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
   change_list.push_back(temp_event);
-}
-
-char *getHttpMessage()
-{
-  char *return_buff = (char *)malloc(1000000);
-  int file_length;
-  std::string file_buff;
-  std::ifstream test_file("./test_message");
-  std::string line;
-
-  while (getline(test_file, line))
-  {
-    file_buff.append(line);
-  }
-  test_file.close();
-  file_length = ft_strlen(file_buff.c_str());
-  sprintf(return_buff,
-          "HTTP/1.1 200 OK\r\nServer:Linux Web Server \r\nDate: Wed, "
-          "03 May "
-          "2023 05:53:31 GM \r\nContent-length:%d\r\n"
-          "Content-Type:text/plain\r\n\r\n%s",
-          file_length, file_buff.c_str());
-  return return_buff;
 }
 
 void disconnect_socket(int socket) { close(socket); }
@@ -183,8 +163,7 @@ Server::Server(Config server_conf)
           }
 
           // getttpMessage
-          char *message = getHttpMessage();
-
+          std::vector<char> message = getHttpMessage();
           // if (response.cgi == true)
           // {
           //  coutinue;
@@ -192,7 +171,7 @@ Server::Server(Config server_conf)
           // else
           // {
           t_response_write *response =
-              new t_response_write(message, ft_strlen(message));
+              new t_response_write(&message[0], message.size());
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
                                response);
@@ -210,10 +189,11 @@ Server::Server(Config server_conf)
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
 
-          char *message = getHttpMessage();  // 인자로 response 전달
+          std::vector<char> message = getHttpMessage();
+          // 인자로 response 전달
 
           t_response_write *response =
-              new t_response_write(message, ft_strlen(message));
+              new t_response_write(&message[0], message.size());
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
                                response);
@@ -230,10 +210,9 @@ Server::Server(Config server_conf)
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_PROC, EV_DELETE, 0, 0, NULL);
 
-          char *message = getHttpMessage();  // 인자로 response 전달
-
+          std::vector<char> message = getHttpMessage();  // 인자로 response 전달
           t_response_write *response =
-              new t_response_write(message, ft_strlen(message));
+              new t_response_write(&message[0], message.size());
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
                                response);
@@ -242,6 +221,7 @@ Server::Server(Config server_conf)
 
         case CLIENT_WRITE:
         {
+          std::cout << "write " << std::endl;
           t_response_write *response;
           response = static_cast<t_response_write *>(current_event->udata);
 
@@ -251,13 +231,14 @@ Server::Server(Config server_conf)
                    response->length - response->offset, 0);
           response->offset += send_byte;
           std::cout << "server end byte to fd : " << current_event->ident
-                    << "  send_byte : " << send_byte << std::endl;
+                    << "  send_byte : " << send_byte
+                    << " legnth : " << response->length
+                    << "offset  : " << response->offset << std::endl;
           if (response->length > response->offset)
           {
             continue;
           }
           std::cout << "send END" << std::endl;
-          free(response);
           AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                                EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
         }
