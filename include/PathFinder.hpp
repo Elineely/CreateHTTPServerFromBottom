@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include <unistd.h>
 
-#include "Response.hpp"
+#include "ResponseGenerator.hpp"
 
 class PathFinder
 {
