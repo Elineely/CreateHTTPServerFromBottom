@@ -46,31 +46,27 @@ m_request_data.body.push_back('\0');
 
   // 우리 뭐 인증 뭐 씁니까? 클라이언트가 요청하는 거 아니면 필요 없긴 함
   // ex) AUTH_TYPE=Basic, AUTH_TYPE=Digest ..
-  m_env_list.push_back("AUTH_TYPE=");
+  // m_env_list.push_back("AUTH_TYPE=");
   m_env_list.push_back("GATEWAY_INTERFACE=CGI/1.1");
   // host name이나 network address 주소.
   // hostname이 여러 개일 경우, 요청문의 호스트 헤더 필드를 골라오면 됨
   // m_server_data.server_name 하면, 여러 개 중에 선택해야 하는 문제,, 요청문의 헤더 정보?
   // 맥 자체의 ip주소를 가져오는 방법,,
-  m_env_list.push_back("SERVER_NAME=" + SERVER_NAME);
-  m_env_list.push_back("SERVER_PORT=" + SERVER_PORT);
+  // m_env_list.push_back("SERVER_NAME=" + SERVER_NAME);
+  // m_env_list.push_back("SERVER_PORT=" + SERVER_PORT);
   m_env_list.push_back("SERVER_PROTOCOL=HTTP/1.1");
   m_env_list.push_back("SERVER_SOFTWARE=cute_webserv/1.0");
 
   // 클라이언트의 IP주소
-  m_env_list.push_back("REMOTE_ADDR=127.0.0.1");
+  // m_env_list.push_back("REMOTE_ADDR=127.0.0.1");
   // 클라이언트의 도메인 네임. 없으면 NULL이거나, REMOTE_ADDR의 값으로 대체
-  m_env_list.push_back("REMOTE_HOST=127.0.0.1");
+  // m_env_list.push_back("REMOTE_HOST=127.0.0.1");
   // 말 그대로 클라이언트에서 사용자 인증할 때 필요한 정보. AUTH_TYPE 설정되어 있으면 얘도 필요한 셈(우리 필요 없?)
   m_env_list.push_back("REMOTE_USER=");
   std::string aaa("POSTT");
   m_env_list.push_back("REQUEST_METHOD=" + aaa/* m_request_data.method */);
 
-  if (m_response_data.redirection_exist == true)
-  {
-    m_env_list.push_back("SCRIPT_NAME=" + m_response_data.redirection_location);
-  }
-  else if (m_response_data.cgi_bin_path == "")
+  if (m_response_data.cgi_bin_path == "")
   {
     m_env_list.push_back("SCRIPT_NAME=" + DEFAULT_CGI_SCRIPT);
   }
