@@ -55,6 +55,9 @@ t_location Config::get_location_expend(std::ifstream &config_file,
   temp_location.root = temp_location_map["root"];
   temp_location.ourcgi_pass = temp_location_map["ourcgi_pass"];
   temp_location.ourcgi_index = temp_location_map["ourcgi_index"];
+  temp_location.ourcgi_index = temp_location_map["uploaded_path"];
+  temp_location.ourcgi_index = temp_location_map["accepted_method"];
+  temp_location.ourcgi_index = temp_location_map["redirection"];
 
   return temp_location;
 }
