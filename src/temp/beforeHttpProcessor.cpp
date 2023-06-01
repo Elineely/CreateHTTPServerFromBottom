@@ -15,7 +15,7 @@ void fillRequest(Request &request_data)
 }
 void fillResponse(Response &response_data)
 {
-  response_data.auto_index = false;
+  response_data.auto_index = true;
   response_data.file_name = "a.txt";
   response_data.file_path = "./test/";
   response_data.file_exist = true;

@@ -1,8 +1,90 @@
 #include "MethodHandler.hpp"
 
+#include <dirent.h>
+#include <sys/stat.h>
+
+#include <algorithm>
 #include <cstdio>
+#include <ctime>
 #include <fstream>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
+
+std::string MethodHandler::generateDate(const std::time_t& timestamp)
+{
+  char buffer[25];
+  std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S",
+                std::localtime(&timestamp));
+  return buffer;
+}
+std::string MethodHandler::generateSize(const long long int& fileSize)
+{
+  std::stringstream ss;
+  ss << fileSize << " B";
+  return ss.str();
+}
+bool MethodHandler::fileInfoCompare(const FileInfo& fileInfo1,
+                                    const FileInfo& fileInfo2)
+{
+  return (fileInfo1.name < fileInfo2.name);
+}
+void MethodHandler::autoIndexToBody(std::string target_directory)
+{
+  std::vector<FileInfo> fileList;
+  DIR* dir;
+  struct dirent* entry;
+  dir = opendir(target_directory.c_str());
+  if (dir == NULL) throw 501;
+  entry = readdir(dir);
+  while (entry != NULL)
+  {
+    std::string file_name = entry->d_name;
+    struct stat file_stat;
+    std::string file_path = target_directory + file_name;
+    if (stat(file_path.c_str(), &file_stat) != -1)
+    {
+      FileInfo fileData;
+      fileData.name = file_name;
+      fileData.date = file_stat.st_mtime;
+      fileData.size = file_stat.st_size;
+      fileList.push_back(fileData);
+    }
+    entry = readdir(dir);
+  }
+  closedir(dir);
+  std::sort(fileList.begin(), fileList.end(), fileInfoCompare);
+  std::stringstream autoindex;
+  autoindex << "<html>\n"
+            << "\t<head>\n"
+            << "\t\t<style>\n"
+            << "\t\t\ttable { width: 70%; }\n"
+            << "\t\t\tth, td { text-align: left; }\n"
+            << "\t\t</style>\n"
+            << "\t</head>\n"
+            << "\t<body>\n"
+            << "\t\t<h1>Index of " << target_directory << "</h1>\n";
+  autoindex
+      << "\t\t<table>\n"
+      << "\t\t\t<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
+  for (std::vector<FileInfo>::iterator it = fileList.begin();
+       it != fileList.end(); ++it)
+  {
+    std::string date = generateDate((*it).date);
+    std::string size = generateSize((*it).size);
+    autoindex << "\t\t\t<tr><td><a href=\"" << (*it).name << "\">" << (*it).name
+              << "</a></td><td>" << date << "</td><td>" << size
+              << "</td></tr>\n";
+  }
+  autoindex << "\t\t</table>\n"
+            << "\t</body>\n"
+            << "</html>";
+  std::string autoindex_str;
+  autoindex_str = autoindex.str();
+  m_response_data.body.insert(m_response_data.body.end(), autoindex_str.begin(),
+                              autoindex_str.end());
+}
 
 void MethodHandler::fileToBody(std::string target_file)
 {
@@ -26,6 +108,7 @@ void MethodHandler::fileToBody(std::string target_file)
 Request MethodHandler::get_m_request_data() { return (m_request_data); }
 Response MethodHandler::get_m_response_data() { return (m_response_data); }
 
+// MethodHandler
 MethodHandler::MethodHandler(void) {}
 MethodHandler::MethodHandler(const MethodHandler& obj)
 {
@@ -76,9 +159,9 @@ void GetMethodHandler::methodRun()
   if (!m_response_data.file_exist) throw NOT_FOUND_404;
   if (m_response_data.auto_index == true)
   {
-    // auto index페이지 생성
+    autoIndexToBody(m_response_data.file_path);
   }
-  else  // 일반 페이지 생성
+  else
     fileToBody(m_response_data.file_path + m_response_data.file_name);
 }
 
