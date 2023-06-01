@@ -8,25 +8,6 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
-// #include "Response.hpp"
-struct Response
-{
-  std::string accepted_method;
-  bool redirection_exist;
-  std::string redirection_location;
-  bool auto_index;
-  std::string file_name;
-  bool file_exist;
-  std::string file_path;
-  bool path_exist;
-  std::vector<char> body;
-  StatusCode status_code;
-  bool cgi_flag;
-  std::string cgi_bin_path;
-  std::string uploaded_path;
-  std::vector<char> response_message;
-  int pipe_fd;
-};
 
 // CgiHandler virtual class
 class CgiHandler
@@ -38,13 +19,11 @@ class CgiHandler
   std::vector<std::string> m_env_list;
   std::vector<const char*> m_env_list_parameter;
 
+  std::vector<char> m_content_vector;
+
   int m_to_child_fds[2];
   int m_to_parent_fds[2];
   pid_t m_pid;
-
-  public : // -------------------- 출력 디버깅용 임시 위치
-  std::vector<char> m_content_vector;
-// -------------------------------------
 
  public:
   CgiHandler(void);
@@ -58,17 +37,6 @@ class CgiHandler
   virtual void getDataFromCgi() = 0;
 
   virtual void outsourceCgiRequest(void) = 0;
-
-// 멀티CGI
-  // 클라이언트로부터 들어오는 요청 -> 어떤 CGI 스크립트가 필요한지 결정하는 함수
-
-// CGI 스크립트 실행 시
-  // 서버가 인증을 요청하는 중이면, 스크립트 실행해서는 안 됨
-  // 우리 인증함? 요청되었는지 확인?
-
-// CGI의 출력값을 검증하는 함수 (CGI 입장에서 정상 출력 or 문제 발생)
-    // 정상 출력 or 위치 설정 잘못된 경우 or 권한 or 헤더 이상의 경우 -> 4개 분기
-    // CGI가 실패해도, 서버는 리스폰스의 책임이 있음
 
  private:
   CgiHandler(const CgiHandler& obj);
