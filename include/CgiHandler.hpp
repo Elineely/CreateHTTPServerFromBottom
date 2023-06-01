@@ -33,7 +33,6 @@ class CgiHandler
 {
  protected:
   Request m_request_data;
-  struct t_server m_server_data;
   Response m_response_data;
 
   std::vector<std::string> m_env_list;
@@ -43,7 +42,7 @@ class CgiHandler
   int m_to_parent_fds[2];
   pid_t m_pid;
 
-  public : ///////////////////--------------------
+  public : // -------------------- 출력 디버깅용 임시 위치
   std::vector<char> m_content_vector;
 // -------------------------------------
 

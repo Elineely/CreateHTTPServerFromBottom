@@ -15,7 +15,7 @@ cgi_obj = cgi.FieldStorage()
 # Get the values of the two numbers to add from the query string
 # if query string case
 # print(os.environ['QUERY_STRING'])
-
+aaa.py
 # else if post put case
 num1 = cgi_obj.getvalue('num1')
 num2 = cgi_obj.getvalue('num2')

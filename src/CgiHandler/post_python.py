@@ -23,10 +23,9 @@ cgitb.enable()
 # print('</body>')
 # print('</html>')
 
-print(os.getenv('SHELL'))
-print(os.getenv('REQUEST_METHOD'))
 # /////////////////////////////////////////////
 
+print()
 
 # save_path = os.getenv("SAVED_PATH")
 
