@@ -3,23 +3,27 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
-#include "Response.hpp"
+#include "ResponseGenerator.hpp"
 
 class MethodHandler
 {
  protected:
   Request m_request_data;
-  Config m_config_data;
   Response m_response_data;
-  std::string m_body;
 
+  MethodHandler(void);
   MethodHandler(const MethodHandler& obj);
   MethodHandler& operator=(MethodHandler const& obj);
-  virtual void makeBody() = 0;
+
+  void fileToBody(std::string target_file);
 
  public:
-  MethodHandler(void);
-  MethodHandler(const Request& request_data, const Config& config_data);
+  Request get_m_request_data();
+  Response get_m_response_data();
+
+  MethodHandler(Request& request_data, Response& response_data);
+
+  virtual void methodRun() = 0;
   virtual ~MethodHandler(void);
 };
 
@@ -29,43 +33,59 @@ class GetMethodHandler : public MethodHandler
  public:
   GetMethodHandler();
   GetMethodHandler(const GetMethodHandler& obj);
-  GetMethodHandler(const Request& request_data, const Config& config_data);
+  GetMethodHandler(Request& request_data, Response& response_data);
   virtual ~GetMethodHandler(void);
   GetMethodHandler& operator=(GetMethodHandler const& obj);
 
-  void makeBody();
+  void methodRun();
+};
 
- private:
-  // GetMethodHandler(void);
+class PostMethodHandler : public MethodHandler
+{
+ public:
+  PostMethodHandler();
+  PostMethodHandler(const PostMethodHandler& obj);
+  PostMethodHandler(Request& request_data, Response& response_data);
+  virtual ~PostMethodHandler(void);
+  PostMethodHandler& operator=(PostMethodHandler const& obj);
+
+  void methodRun();
+};
+
+class DeleteMethodHandler : public MethodHandler
+{
+ public:
+  DeleteMethodHandler();
+  DeleteMethodHandler(const DeleteMethodHandler& obj);
+  DeleteMethodHandler(Request& request_data, Response& response_data);
+  virtual ~DeleteMethodHandler(void);
+  DeleteMethodHandler& operator=(DeleteMethodHandler const& obj);
+
+  void methodRun();
+};
+
+class PutMethodHandler : public MethodHandler
+{
+ public:
+  PutMethodHandler();
+  PutMethodHandler(const PutMethodHandler& obj);
+  PutMethodHandler(Request& request_data, Response& response_data);
+  virtual ~PutMethodHandler(void);
+  PutMethodHandler& operator=(PutMethodHandler const& obj);
+
+  void methodRun();
+};
+
+class HeadMethodHandler : public MethodHandler
+{
+ public:
+  HeadMethodHandler();
+  HeadMethodHandler(const HeadMethodHandler& obj);
+  HeadMethodHandler(Request& request_data, Response& response_data);
+  virtual ~HeadMethodHandler(void);
+  HeadMethodHandler& operator=(HeadMethodHandler const& obj);
+
+  void methodRun();
 };
 
 #endif
-
-// class PostMethodHandler : public MethodHandler
-// {
-//  public:
-//   PostMethodHandler(void);
-//   PostMethodHandler(const PostMethodHandler& obj);
-//   PostMethodHandler(const Request& request_data, const Config& config_data);
-//   virtual ~PostMethodHandler(void);
-//   PostMethodHandler& operator=(PostMethodHandler const& obj);
-//   void generateResponse(void);
-
-//  private:
-//   PostMethodHandler(void);
-// };
-
-// class DeleteMethodHandler : public MethodHandler
-// {
-//  public:
-//   DeleteMethodHandler(void);
-//   DeleteMethodHandler(const DeleteMethodHandler& obj);
-//   DeleteMethodHandler(const Request& request_data, const Config&
-//   config_data); virtual ~DeleteMethodHandler(void); DeleteMethodHandler&
-//   operator=(DeleteMethodHandler const& obj);
-
-//   void generateResponse(void);
-
-//  private:
-//   DeleteMethodHandler(void);
-// };

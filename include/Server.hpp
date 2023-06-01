@@ -77,11 +77,11 @@ struct t_multi_server
 
 struct t_response_write
 {
-  char *message;
+  const char *message;
   ssize_t length;
   ssize_t offset;
 
-  t_response_write(char *message, ssize_t length)
+  t_response_write(const char *message, ssize_t length)
       : message(message), length(length), offset(0)
   {
   }
