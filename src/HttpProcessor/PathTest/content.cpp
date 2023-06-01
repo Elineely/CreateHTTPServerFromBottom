@@ -103,6 +103,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.listen = temp_conf["listen"];
   server.max_body_size = temp_conf["max_body_size"];
   server.max_header_size = temp_conf["max_header_size"];
+  server.locations = temp_locations;
 
   return server;
 }

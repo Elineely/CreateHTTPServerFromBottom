@@ -19,7 +19,7 @@ void print_location(t_location c)
   cout << "accepted_method : " << c.accepted_method << endl;
 }
 
-void print_basics(Response c)
+void print_basics(Response& c)
 {
   cout << "accepted : " << c.accepted_method << endl;
   cout << "auto : " << c.auto_index << endl;
@@ -70,36 +70,36 @@ void make_server(t_server& a, t_location& b, t_location& c, t_location& d)
 
 int main(void)
 {
-  // Config a("./server.conf", "./server_content.conf");
-  // a.showServerConf();
-  t_server a;
-  t_location ab;
-  t_location ac;
-  t_location ad;
-  make_server(a, ab, ac, ad);
+  Config a("./server.conf", "./server_content.conf");
+  a.showServerConf();
+  // t_server a;
+  // t_location ab;
+  // t_location ac;
+  // t_location ad;
+  // make_server(a, ab, ac, ad);
   Request b;
   Response c;
-  b.uri = "/";
+  // b.uri = "/";
   // b.uri = "/basics/index.py";
   // b.uri = "/admin";
   // b.uri = "/bdmin";
   // b.uri = "/admin/a/b/c/d";
   // b.uri = "/admin/b"; // file은 컨피그내 index b 사용
-  // b.uri = "/admin/b/a"; // file은 uri 내 a 사용
+  b.uri = "/admin/b/a";  // file은 uri 내 a 사용
   cout << "start!" << endl;
   cout << "location  : '" << b.uri << "'" << endl;
   // cout << "✅ listen ✅" << endl;
   // cout << a.get_m_server_conf()[0].listen[0] << endl;
 
   // print_location( a.get_m_server_conf()[0].locations.begin()->second);
-  // PathFinder finder(b, a.get_m_server_conf()[0], c);
+  PathFinder finder(b, a.get_m_server_conf()[0], c);
   // std::cout <<  c.body.size() << std::endl;
-  PathFinder finder(b, a, c);
+  // PathFinder finder(b, a, c);
   // std::cout << "BYE" << std::endl;
 
   std::cout << std::endl;
   // std::cout <<  c.response_message.size() << std::endl;
-  // print_basics(c);
+  print_basics(c);
   return (0);
   // cout << (a.get_m_server_conf())[0].locations.begin()->first << endl;
 }

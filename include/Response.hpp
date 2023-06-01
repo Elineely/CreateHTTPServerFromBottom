@@ -24,8 +24,6 @@ struct Response
   bool cgi_flag;
   std::string cgi_bin_path;
   std::string uploaded_path;
-  // char** cgi_params;
-  // 리스폰스 메세지를 vector로 해도 괜찮을까?
   std::vector<char> response_message;
   int pipe_fd;
 };

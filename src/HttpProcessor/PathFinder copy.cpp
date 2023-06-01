@@ -26,17 +26,17 @@ bool PathFinder::checkExist(const std::string& path_or_file)
   return (access(path_or_file.c_str(), F_OK) == 0);
 }
 
-void PathFinder::setMethod(std::string method, Response& response_data)
+void PathFinder::setMethod(std::string& method, Response& response_data)
 {
   response_data.accepted_method = method;
 }
 
-void PathFinder::setUpload(std::string upload, Response& response_data)
+void PathFinder::setUpload(std::string& upload, Response& response_data)
 {
   response_data.uploaded_path = upload;
 }
 
-void PathFinder::setRoot(std::string root, Response& response_data)
+void PathFinder::setRoot(std::string& root, Response& response_data)
 {
   if (checkExist(root))
   {
@@ -49,7 +49,7 @@ void PathFinder::setRoot(std::string root, Response& response_data)
   //   } //넣을까말까 고민중.. 초기화때 false가 있으면 필요없을 듯
 }
 
-void PathFinder::setIndex(std::string index, Response& response_data)
+void PathFinder::setIndex(std::string& index, Response& response_data)
 {
   // Post method의 경우, 요청받은 file이 존재하지 않더라도
   // 요청받은 파일 name을 기록할 필요가 있다.
@@ -60,7 +60,7 @@ void PathFinder::setIndex(std::string index, Response& response_data)
   }
 }
 
-void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
+void PathFinder::setAutoIndex(std::string& auto_index, Response& response_data)
 {
   if (auto_index == "on")
   {
@@ -68,7 +68,7 @@ void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
   }
 }
 
-bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
+bool PathFinder::setCgi(std::string& locationBlock, t_server server_data,
                         Response& response_data)
 {
   std::size_t pos_last = locationBlock.find_last_of(".");
@@ -120,9 +120,9 @@ void PathFinder::test_print_basics(Response& c)
   std::cout << "✅--------------------✅" << std::endl;
 }
 
-void PathFinder::setBasic(std::string method, std::string root,
-                          std::string index, std::string auto_index,
-                          std::string upload, Response& response_data)
+void PathFinder::setBasic(std::string& method, std::string& root,
+                          std::string& index, std::string& auto_index,
+                          std::string& upload, Response& response_data)
 {
   std::cout << "root : " << root << std::endl;
   std::cout << "index : " << index << std::endl;
@@ -133,16 +133,16 @@ void PathFinder::setBasic(std::string method, std::string root,
   setAutoIndex(auto_index, response_data);
 }
 
-PathFinder::PathFinder(Request request_data, t_server server_data,
+PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)
 {
-  std::string locationBlock;
+  std::string* locationBlock;
   t_location current_location;
 
-  locationBlock = request_data.uri;
+  locationBlock = &request_data.uri;
 
   std::map<std::string, t_location>::iterator temp_location;
-  if ((locationBlock) == "/" || (locationBlock) == "")  // default block
+  if ((*locationBlock) == "/" || (*locationBlock) == "")  // default block
   {
     current_location = server_data.locations.find("/")->second;
     setBasic(current_location.accepted_method, current_location.root,
@@ -150,14 +150,14 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
              current_location.uploaded_path, response_data);
     return;
   }
-  if (setCgi((locationBlock), server_data, response_data))
+  if (setCgi((*locationBlock), server_data, response_data))
   {
     return;
   }
-  std::size_t pos_last = (locationBlock).rfind("/");
+  std::size_t pos_last = (*locationBlock).rfind("/");
   if (pos_last == 0)  // '/a'처럼 location 블록이름만 들어온 경우
   {
-    temp_location = server_data.locations.find(locationBlock);
+    temp_location = server_data.locations.find(*locationBlock);
     if (temp_location == server_data.locations.end())
     {
       // 들어온 블록이름이 location에 존재하지 않음.
@@ -181,7 +181,7 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
      //   std::string path = "/a/b/c/d";
      // std::cout << "in this block" << std::endl;
     std::string location_key =
-        (locationBlock).substr(0, (locationBlock).find("/", 1));
+        (*locationBlock).substr(0, (*locationBlock).find("/", 1));
     temp_location = server_data.locations.find(location_key);
     if (temp_location == server_data.locations.end())
     {  // "/??(location에 없음)/b/c/d" 경우
@@ -192,7 +192,7 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
     }
     current_location = temp_location->second;
     std::string rest_of_uri =
-        (locationBlock).substr((locationBlock).find("/", 1));
+        (*locationBlock).substr((*locationBlock).find("/", 1));
     std::string entire_path = current_location.root + rest_of_uri;
     pos_last = entire_path.rfind("/");
     if (is_directory(entire_path))  //"a/b/c/d(존재하는 디렉토리)"
@@ -203,13 +203,10 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
-      std::cout << pos_last << std::endl;
-      std::cout << "entire : " << entire_path << std::endl;
       setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last),
                entire_path.substr(pos_last + 1), current_location.auto_index,
                current_location.uploaded_path, response_data);
-      test_print_basics(response_data);
     }
   }
 }
