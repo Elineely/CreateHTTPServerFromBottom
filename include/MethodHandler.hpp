@@ -5,6 +5,14 @@
 #include "Request.hpp"
 #include "ResponseGenerator.hpp"
 
+// generate auto_index
+struct FileInfo
+{
+  std::string name;
+  std::time_t date;
+  long long int size;
+};
+
 class MethodHandler
 {
  protected:
@@ -16,6 +24,13 @@ class MethodHandler
   MethodHandler& operator=(MethodHandler const& obj);
 
   void fileToBody(std::string target_file);
+
+  // for generate auto_index
+  std::string generateDate(const std::time_t& timestamp);
+  std::string generateSize(const long long int& fileSize);
+  static bool fileInfoCompare(const FileInfo& fileInfo1,
+                              const FileInfo& fileInfo2);
+  void autoIndexToBody(std::string target_directory);
 
  public:
   Request get_m_request_data();

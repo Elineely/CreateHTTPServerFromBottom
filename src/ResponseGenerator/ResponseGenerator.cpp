@@ -68,7 +68,10 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
 {
   m_request = request_data;
   m_response = response_data;
-  m_target_file = response_data.file_path + response_data.file_name;
+  if (response_data.auto_index == true)
+    m_target_file = "autoindex.html";
+  else
+    m_target_file = response_data.file_path + response_data.file_name;
 }
 ResponseGenerator::ResponseGenerator(const ResponseGenerator& obj)
 {
