@@ -10,10 +10,13 @@ struct CustomUdata
 {
   int m_pipe_read_fd;
   int m_client_sock;
+  pid_t m_child_pid;
   std::string result;
 
-  CustomUdata(int pipe_read_fd, int client_sock)
-      : m_pipe_read_fd(pipe_read_fd), m_client_sock(client_sock)
+  CustomUdata(int pipe_read_fd, int client_sock, pid_t pid)
+      : m_pipe_read_fd(pipe_read_fd),
+        m_client_sock(client_sock),
+        m_child_pid(pid)
   {
   }
 };
@@ -99,9 +102,9 @@ void Server::pipeReadEvent(struct kevent *current_event)
   std::memset(buf, 0, BUF_SIZE);
   CustomUdata *udata = static_cast<CustomUdata *>(current_event->udata);
   std::cout << "udata->m_client_sock: " << udata->m_client_sock << std::endl;
-  // sleep(100);
 
   ssize_t read_byte = read(udata->m_pipe_read_fd, buf, BUF_SIZE);
+  std::cout << "read result: " << read_byte << std::endl;
   if (read_byte > 0)
   {
     udata->result.append(buf);
@@ -115,54 +118,37 @@ void Server::pipeReadEvent(struct kevent *current_event)
 
     // char *message = getHttpMessage();  // 인자로 response 전달
     const char *message = udata->result.c_str();
-    // std::cout << "🚀 message  🚀" << std::endl;
-    // std::cout << message << std::endl;
 
     t_response_write *response =
         new t_response_write(message, ft_strlen(message));
     AddEventToChangeList(CLIENT, m_kqueue.change_list, udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+    AddEventToChangeList(PROCESS, m_kqueue.change_list, udata->m_child_pid,
+                         EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    m_event_fd_list.erase(udata->m_pipe_read_fd);
+    m_event_fd_list.erase(udata->m_child_pid);  // EVFILT_TIMER
   }
-
-  // if (read(udata->m_pipe_read_fd, buf, BUF_SIZE) < 0)
-  // {
-  //   std::cerr << "Read error " << strerror(errno) << std::endl;
-  //   exit(EXIT_FAILURE);
-  // }
-  // std::cout << "FROM PYTHON: " << buf << std::endl;
-  // std::cout << "read result: " << read(udata->m_pipe_read_fd, buf, BUF_SIZE)
-  //           << std::endl;
-  // waitpid(current_event->ident, 0, 0);
-
-  // close(udata->m_pipe_read_fd + 1);
-
-  // udata->result.append(buf);
-  // AddEventToChangeList(PIPE, m_kqueue.change_list, current_event->ident,
-  //                      EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-
-  // char *message = getHttpMessage();  // 인자로 response 전달
-
-  // t_response_write *response =
-  //     new t_response_write(message, ft_strlen(message));
-  // AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
-  //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
 }
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 {
   std::cout << "⌛️ CGI PROCESS TIMEOUT EVENT ⌛️" << std::endl;
-  int result = kill(current_event->ident, SIGTERM);
+  CustomUdata *udata = static_cast<CustomUdata *>(current_event->udata);
   // pipe close
+  close(udata->m_pipe_read_fd);
+  int result = kill(current_event->ident, SIGTERM);
   waitpid(current_event->ident, NULL, 0);
-  // AddEventToChangeList(PROCESS, m_kqueue.change_list, current_event->ident,
-  //                      EVFILT_PROC, EV_DELETE, 0, 0, NULL);
 
-  // char *message = getHttpMessage();  // 인자로 response 전달
+  char message[] =
+      "HTTP/1.1 200 OK\r\nContent-type: text/plain\r\nContent-length: "
+      "5\r\n\r\nhello";  // 인자로 response 전달
 
-  // t_response_write *response =
-  //     new t_response_write(message, ft_strlen(message));
-  // AddEventToChangeList(CLIENT, m_kqueue.change_list, current_event->ident,
-  //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+  t_response_write *response =
+      new t_response_write(message, ft_strlen(message));
+  AddEventToChangeList(CLIENT, m_kqueue.change_list, udata->m_client_sock,
+                       EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, response);
+  m_event_fd_list.erase(udata->m_pipe_read_fd);
+  m_event_fd_list.erase(udata->m_child_pid);
 }
 
 void Server::serverErrorEvent(struct kevent *current_event)
@@ -194,7 +180,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
 void Server::clientReadEvent(struct kevent *current_event)
 {
   std::cout << "📖 CLIENT_READ EVENT 📖" << std::endl;
-  if (current_event->flags == EV_EOF)
+  if (current_event->flags & EV_EOF)
   {
     std::cerr << "closing" << std::endl;
     disconnect_socket(current_event->ident);
@@ -217,8 +203,8 @@ void Server::clientReadEvent(struct kevent *current_event)
   char buf[BUF_SIZE];
 
   pipe(pipe_fd);
-  // fcntl(pipe_fd[READ], F_SETFL, O_NONBLOCK); // TODO: 테스터기 돌릴 때 생존
-  // 여부를 확인하기
+  // TODO: 테스터기 돌릴 때 생존 여부 확인하기
+  fcntl(pipe_fd[READ], F_SETFL, O_NONBLOCK);
   pid = fork();
   char *argv[] = {"/usr/bin/python3", "./hello.py", NULL};
   char *envp[] = {NULL};
@@ -236,13 +222,14 @@ void Server::clientReadEvent(struct kevent *current_event)
   else
   {
     close(pipe_fd[WRITE]);
-    CustomUdata *udata = new CustomUdata(pipe_fd[READ], current_event->ident);
+    CustomUdata *udata =
+        new CustomUdata(pipe_fd[READ], current_event->ident, pid);
     // udata->m_pipe_fd[WRITE] = -1;
     // Set up the event structure
 
     // pipe_fd[READ] 를  EV_EOF 로 이벤트로 등록
-    // AddEventToChangeList(PROCESS, m_kqueue.change_list, pid, EVFILT_TIMER,
-    //                      EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10, udata);
+    AddEventToChangeList(PROCESS, m_kqueue.change_list, pid, EVFILT_TIMER,
+                         EV_ADD | EV_ONESHOT, NOTE_SECONDS, 2, udata);
     AddEventToChangeList(PIPE, m_kqueue.change_list, pipe_fd[READ], EVFILT_READ,
                          EV_ADD | EV_ENABLE, 0, 0, udata);
     // delete current_event->udata;
@@ -293,6 +280,10 @@ e_kqueue_event getEventStatus(struct kevent *current_event,
     else if (fd_type == CLIENT)
       return CLIENT_ERROR;
   }
+  if (current_event->filter == EVFILT_TIMER)
+  {
+    return CGI_PROCESS_TIMEOUT;
+  }
   if (current_event->filter == EVFILT_READ)
   {
     if (fd_type == SERVER)
@@ -308,11 +299,6 @@ e_kqueue_event getEventStatus(struct kevent *current_event,
       return SERVER_WRITE;
     else if (fd_type == CLIENT)
       return CLIENT_WRITE;
-  }
-
-  if (current_event->filter == EVFILT_TIMER)
-  {
-    return CGI_PROCESS_TIMEOUT;
   }
   return NOTHING;
 }
