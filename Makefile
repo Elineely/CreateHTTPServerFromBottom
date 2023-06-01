@@ -26,12 +26,16 @@ SRC_RESPONSE_GENERATOR_FILES		:=	Mime.cpp \
 
 
 SRC_SERVER_DIR			:=	Server/
-SRC_SERVER_FILES		:=	Server.cpp 	\
-							socket.cpp	\
-							listen.cpp	\
-							bind.cpp	\
-							kqueue.cpp	\
-							setServers.cpp
+SRC_SERVER_FILES		:=	Server.cpp 				\
+							socket/socket.cpp		\
+							socket/listen.cpp		\
+							socket/bind.cpp			\
+							socket/kqueue.cpp		\
+							socket/setServers.cpp 	\
+							event/error.cpp 		\
+							event/read.cpp 			\
+							event/timer.cpp 		\
+							event/write.cpp
 
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\

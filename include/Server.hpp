@@ -45,6 +45,8 @@
 #define DEFAULT_SERVER_FILE "./server.conf"
 #define SERVER_CONTENT_FILE "./server_content.conf"
 
+#define ERROR -1
+
 enum e_event_type
 {
   SERVER = 0,
@@ -69,6 +71,28 @@ enum e_kqueue_event
   PIPE_EOF,
   NOTHING
 };
+
+enum e_pipe
+{
+  READ,
+  WRITE
+};
+
+struct EventUdata
+{
+  int m_pipe_read_fd;
+  int m_client_sock;
+  pid_t m_child_pid;
+  std::string result;
+
+  EventUdata(int pipe_read_fd, int client_sock, pid_t pid)
+      : m_pipe_read_fd(pipe_read_fd),
+        m_client_sock(client_sock),
+        m_child_pid(pid)
+  {
+  }
+};
+
 struct t_kqueue
 {
   int kq;
@@ -132,6 +156,10 @@ class Server
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
   void disconnect_socket(int socket);
+
+  // TODO: 나중에 삭제하기
+  char* getHttpCharMessages(void);
 };
+
 
 #endif
