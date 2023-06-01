@@ -9,7 +9,11 @@
 class PathFinder
 {
  private:
+  //canonical form
   PathFinder();
+  PathFinder::~PathFinder(const PathFinder& origin) 
+  PathFinder& operator=(parser const& origin)
+  //member_functions
   bool checkExist(const std::string& path_or_file);
   bool is_directory(const std::string& path);
   void setRoot(std::string root, Response& response_data);
@@ -26,6 +30,7 @@ class PathFinder
   void test_print_basics(Response& c);
 
  public:
+ //main_constructor
   PathFinder(Request requset_data, t_server server_data,
              Response& response_data);
   ~PathFinder();

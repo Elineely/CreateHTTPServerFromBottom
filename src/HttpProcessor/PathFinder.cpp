@@ -1,11 +1,20 @@
-// #include "PathFinder.hpp"
-#include "./PathTest/PathFinder.hpp"
+#include "PathFinder.hpp"
+// #include "./PathTest/PathFinder.hpp" // for test
 
 #include <iostream>
 
 PathFinder::PathFinder() {}
 
 PathFinder::~PathFinder() {}
+
+PathFinder::~PathFinder(const PathFinder& origin) 
+{};
+
+PathFinder& operator=(parser const& origin)
+{
+  return (*this);
+};
+
 
 bool PathFinder::is_directory(const std::string& path)
 {
