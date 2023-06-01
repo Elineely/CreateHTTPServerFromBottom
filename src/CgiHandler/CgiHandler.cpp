@@ -31,7 +31,7 @@ CgiHandler::~CgiHandler() {}
 // }i
 
 
-void CgiHandler::setCgiEnv()
+void CgiHandler::setCgiEnv(void)
 {
   // 수정 필요 ----------------
   std::string defualt_cgi_script("post_python.py");
@@ -87,6 +87,36 @@ void CgiHandler::setCgiEnv()
     m_env_list_parameter.push_back(m_env_list[i].c_str());
   }
   m_env_list_parameter.push_back(NULL);
+}
+
+std::vector<char> CgiHandler::makeErrorPage(void)
+{
+  std::string status_code("Status: 501 Not Implemented\n");
+  std::string content_type("Content-type: text/html; charset=UTF-8\r\n");
+  std::string body("Failed.\n");
+  std::string error_response(status_code + content_type + body);
+
+  std::vector<char> v_error_response;
+  for (int i = 0; i < error_response.size(); ++i)
+  {
+    v_error_response.push_back(error_response[i]);
+  }
+  return (v_error_response);
+}
+
+const char* CgiHandler::PipeForkException::what() const throw()
+{
+  return ("pipe() or fork() system function error");
+}
+
+const char* CgiHandler::ExecveException::what() const throw()
+{
+  return ("execve() system function error");
+}
+
+const char* CgiHandler::KqueueException::what() const throw()
+{
+  return ("something wrong with kqueue()");
 }
 
 /* //////////////////////////////////////////////////////// */
@@ -178,36 +208,41 @@ void GetCgiHandler::getDataFromCgi()
 
 void GetCgiHandler::outsourceCgiRequest(void)
 {
-  if (pipeAndFork() == ERROR)
+  setCgiEnv();
+  try
   {
-    // throw (error);
-  }
+    if (pipeAndFork() == ERROR)
+    {
+      throw PipeForkException();
+    }
+    if (m_pid == CHILD_PROCESS)
+    {
+      if (executeCgi() == ERROR)
+      {
+        throw ExecveException();
+      }
+    }
+    getDataFromCgi();
 
-  if (m_pid == CHILD_PROCESS)
+    // kqueue() 처리 필요
+      int status;
+      waitpid(m_pid, &status, 0);
+      // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
+      if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
+      {
+        // ResponseGenerator에 content 데이터 넘겨주기
+      }
+      else
+      {
+        throw KqueueException();
+      }
+  }
+  catch(const std::exception& e)
   {
-    if (executeCgi() == ERROR)
-    {
-      // throw (error);
-    }
-    return ;
+    // std::cerr << e.what() << '\n';
+    std::vector<char> error_message = makeErrorPage();
   }
-
-  getDataFromCgi();
-
-  // kqueue() 처리 필요
-    int status;
-
-    waitpid(m_pid, &status, 0);
-    // 세 번째 인자 0 : 자식 프로세스가 종료될 때까지 block 상태
-    if (WIFEXITED(status) && (WEXITSTATUS(status) == 0))
-    {
-      // MethodHandler에 content 데이터 넘겨주기
-    }
-    else
-    {
-      // throw (error);
-    }
-  }
+}
 
 
 
@@ -302,7 +337,7 @@ void PostCgiHandler::getDataFromCgi()
 
   if (m_request_data.body.size() != 0)
   {
-    if (write(m_to_child_fds[WRITE], &m_request_data.body[0], sizeof(char) * (m_request_data.body.size() + 1)) == ERROR)
+    if (write(m_to_child_fds[WRITE], &m_request_data.body[0], sizeof(char) * m_request_data.body.size()) == ERROR)
     {
       close(m_to_parent_fds[READ]);
       close(m_to_child_fds[WRITE]);
@@ -331,20 +366,21 @@ void PostCgiHandler::getDataFromCgi()
 
 void PostCgiHandler::outsourceCgiRequest(void)
 {
+  setCgiEnv();
+  try
+  {
     if (pipeAndFork() == ERROR)
     {
-      // throw (error);
+      throw PipeForkException();
     }
 
     if (m_pid == CHILD_PROCESS)
     {
       if (executeCgi() == ERROR)
       {
-        // throw error;
+        throw ExecveException();
       }
-      return ;
     }
-
     getDataFromCgi();
 
     // kqueue()의 영역
@@ -357,6 +393,12 @@ void PostCgiHandler::outsourceCgiRequest(void)
       }
       else
       {
-        // throw (error);
+        throw KqueueException();
       }
   }
+  catch(const std::exception& e)
+  {
+    // std::cerr << e.what() << '\n';
+    std::vector<char> error_message = makeErrorPage();
+  }
+}

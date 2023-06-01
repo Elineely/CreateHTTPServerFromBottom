@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "Config.hpp"
 #include "Request.hpp"
+#include "ResponseGenerator.hpp"
 
 // CgiHandler virtual class
 class CgiHandler
@@ -25,18 +25,36 @@ class CgiHandler
   int m_to_parent_fds[2];
   pid_t m_pid;
 
+  void setCgiEnv(void);
+  std::vector<char> makeErrorPage(void);
+
+  virtual int pipeAndFork(void) = 0;
+  virtual int executeCgi(void) = 0;
+  virtual void getDataFromCgi(void) = 0;
+
  public:
   CgiHandler(void);
-  // // CgiHandler(/* ??? */);
   virtual ~CgiHandler(void);
 
-  void setCgiEnv();
-
-  virtual int pipeAndFork() = 0;
-  virtual int executeCgi() = 0;
-  virtual void getDataFromCgi() = 0;
-
   virtual void outsourceCgiRequest(void) = 0;
+
+  class PipeForkException : public std::exception
+  {
+   public :
+    const char* what() const throw();
+  };
+
+  class ExecveException : public std::exception
+  {
+   public :
+    const char* what() const throw();
+  };
+
+  class KqueueException : public std::exception
+  {
+   public :
+    const char* what() const throw();
+  };
 
  private:
   CgiHandler(const CgiHandler& obj);
@@ -58,10 +76,9 @@ class GetCgiHandler : public CgiHandler
   virtual void outsourceCgiRequest(void);
 
  private:
-
-  virtual int pipeAndFork();
-  virtual int executeCgi();
-  virtual void getDataFromCgi();
+  virtual int pipeAndFork(void);
+  virtual int executeCgi(void);
+  virtual void getDataFromCgi(void);
 };
 
 // /////////////////////////////////////////////////////////////
@@ -78,9 +95,9 @@ class PostCgiHandler : public CgiHandler
   virtual void outsourceCgiRequest(void);
 
  private:
-  virtual int pipeAndFork();
-  virtual int executeCgi();
-  virtual void getDataFromCgi();
+  virtual int pipeAndFork(void);
+  virtual int executeCgi(void);
+  virtual void getDataFromCgi(void);
 };
 
 #endif
