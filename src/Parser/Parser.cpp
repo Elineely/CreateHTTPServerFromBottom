@@ -8,17 +8,16 @@
 #include "utils.hpp"
 
 // Default Constructor
-Parser::Parser(void) {}
+Parser::Parser(void) : m_max_body_size(0) {}
 
 // Constructor
-Parser::Parser(const std::string& max_body_size, int client_fd)
+Parser::Parser(const std::string& max_body_size)
 {
   std::istringstream iss(max_body_size);
   size_t value;
 
   iss >> value;
   m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
-  m_client_fd = client_fd;
 }
 
 // Destructor
@@ -356,9 +355,4 @@ void Parser::readBuffer(char* buf)
   {
     std::cerr << e.what() << std::endl;
   }
-}
-
-int Parser::get_m_client_fd(void)
-{
-  return m_client_fd;
 }

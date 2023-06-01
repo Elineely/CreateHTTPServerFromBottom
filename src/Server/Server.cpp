@@ -3,7 +3,7 @@
 #include "beforeHttpProcessor.hpp"
 
 void Server::AddEventToChangeList(
-    e_event_type fd_type, std::vector<struct kevent> &change_list,
+    std::vector<struct kevent> &change_list,
     uintptr_t ident, /* identifier for this event */
     int16_t filter,  /* filter for event */
     uint16_t flags,  /* general flags */
@@ -14,11 +14,10 @@ void Server::AddEventToChangeList(
   struct kevent temp_event;
 
   EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
-  m_event_fd_list.insert(std::pair<int, e_event_type>(ident, fd_type));
   change_list.push_back(temp_event);
 }
 
-char* Server::getHttpCharMessages(void)
+char *Server::getHttpCharMessages(void)
 {
   char *return_buff = (char *)malloc(1000000);
   int file_length;
@@ -52,20 +51,13 @@ int is_server_sock(std::vector<t_multi_server> servers, int sock)
   return 0;
 }
 
-e_kqueue_event getEventStatus(struct kevent *current_event,
-                              std::map<int, e_event_type> &m_event_fd_list)
+e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
 {
-  std::map<int, e_event_type>::iterator it;
-
-  it = m_event_fd_list.find(current_event->ident);
-  if (it == m_event_fd_list.end()) return NOTHING;
-
-  e_event_type fd_type = it->second;
   if (current_event->flags & EV_ERROR)
   {
-    if (fd_type == SERVER)
+    if (type == SERVER)
       return SERVER_ERROR;
-    else if (fd_type == CLIENT)
+    else if (type == CLIENT)
       return CLIENT_ERROR;
   }
   if (current_event->filter == EVFILT_TIMER)
@@ -74,22 +66,24 @@ e_kqueue_event getEventStatus(struct kevent *current_event,
   }
   if (current_event->filter == EVFILT_READ)
   {
-    if (fd_type == SERVER)
+    if (type == SERVER)
       return SERVER_READ;
-    else if (fd_type == CLIENT)
+    else if (type == CLIENT)
       return CLIENT_READ;
-    else if (fd_type == PIPE)
+    else if (type == PIPE)
       return PIPE_READ;
   }
   if (current_event->filter == EVFILT_WRITE)
   {
-    if (fd_type == SERVER)
+    if (type == SERVER)
       return SERVER_WRITE;
-    else if (fd_type == CLIENT)
+    else if (type == CLIENT)
       return CLIENT_WRITE;
   }
   return NOTHING;
 }
+
+const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
 Server::Server(Config server_conf)
 {
@@ -111,11 +105,12 @@ Server::Server(Config server_conf)
   int current_events;
   e_kqueue_event event_status;
   struct kevent *current_event;
+  t_event_udata *current_udata;
   for (int i = 0; i < servers.size(); ++i)
   {
-    AddEventToChangeList(SERVER, m_kqueue.change_list, servers[i].server_sock,
-                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0,
-                         &servers[i].config);
+    t_event_udata *udata = new t_event_udata(SERVER, servers[i].config);
+    AddEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
   }
   int kevent_count = 0;
   while (1)
@@ -132,8 +127,8 @@ Server::Server(Config server_conf)
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
-
-      event_status = getEventStatus(current_event, m_event_fd_list);
+      current_udata = static_cast<t_event_udata *>(current_event->udata);
+      event_status = getEventStatus(current_event, current_udata->m_type);
       switch (event_status)
       {
         case SERVER_READ:

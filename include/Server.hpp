@@ -63,7 +63,6 @@ enum e_kqueue_event
   CLIENT_READ,
   CLIENT_WRITE,
   CLIENT_ERROR,
-  // CGI_PROCESS_END,
   CGI_PROCESS_TIMEOUT,
   SERVER_EOF,
   CLIENT_EOF,
@@ -76,21 +75,6 @@ enum e_pipe
 {
   READ,
   WRITE
-};
-
-struct EventUdata
-{
-  int m_pipe_read_fd;
-  int m_client_sock;
-  pid_t m_child_pid;
-  std::string result;
-
-  EventUdata(int pipe_read_fd, int client_sock, pid_t pid)
-      : m_pipe_read_fd(pipe_read_fd),
-        m_client_sock(client_sock),
-        m_child_pid(pid)
-  {
-  }
 };
 
 struct t_kqueue
@@ -115,16 +99,51 @@ struct t_response_write
   ssize_t length;
   ssize_t offset;
 
+  t_response_write(void) : message(NULL), length(0), offset(0) {}
+
   t_response_write(const char *message, ssize_t length)
       : message(message), length(length), offset(0)
   {
   }
 };
+struct t_event_udata
+{
+  e_event_type m_type;
+  int m_pipe_read_fd;
+  int m_client_sock;
+  int m_server_sock;
+  pid_t m_child_pid;
+  std::string m_result;
+  t_response_write m_response;
+  t_server m_config;
+  Parser m_parser;
+
+  t_event_udata(e_event_type type) : m_type(type) {}
+  t_event_udata(e_event_type type, const char *message, size_t length)
+      : m_type(type), m_response(message, length)
+  {
+  }
+  t_event_udata(e_event_type type, t_server config)
+      : m_type(type), m_config(config), m_parser(config.max_body_size[0])
+  {
+  }
+
+  t_event_udata(e_event_type type, int pipe_read_fd, int client_sock, pid_t pid,
+                t_server config)
+      : m_type(type),
+        m_pipe_read_fd(pipe_read_fd),
+        m_client_sock(client_sock),
+        m_child_pid(pid),
+        m_config(config),
+        m_parser(m_config.max_body_size[0])
+  {
+  }
+};
+
 class Server
 {
  private:
   std::vector<t_multi_server> servers;
-  std::map<int, e_event_type> m_event_fd_list;
   t_kqueue m_kqueue;
   Config server;
   Server();
@@ -136,8 +155,9 @@ class Server
   Server &operator=(const Server &a);
 
   int getKqueue();
-  void AddEventToChangeList(e_event_type fd_type,
-                            std::vector<struct kevent> &change_list,
+  const std::vector<t_multi_server> &get_servers(void);
+
+  void AddEventToChangeList(std::vector<struct kevent> &change_list,
                             uintptr_t ident, int16_t filter, uint16_t flags,
                             uint32_t fflags, intptr_t data, void *udata);
   void setSocket(Config server_conf, std::vector<t_multi_server> &servers);
@@ -158,8 +178,7 @@ class Server
   void disconnect_socket(int socket);
 
   // TODO: 나중에 삭제하기
-  char* getHttpCharMessages(void);
+  char *getHttpCharMessages(void);
 };
-
 
 #endif
