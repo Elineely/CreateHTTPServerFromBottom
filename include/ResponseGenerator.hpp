@@ -29,6 +29,7 @@ struct Response
   int pipe_fd;
 };
 
+
 class ResponseGenerator
 {
  private:

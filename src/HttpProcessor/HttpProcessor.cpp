@@ -2,12 +2,12 @@
 
 HttpProcessor::HttpProcessor(void) {}
 
-HttpProcessor::HttpProcessor(Request& request_data, Config& config_data)
+HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
 {
   // parsing의 유효성 검사(일반적) -> 상태코드 업데이트
   // 굳이 responsegernerator가 갖고있을 필요가 있을까 싶음.
   m_request_data = request_data;
-  m_config_data = config_data;
+  m_server_data = server_data;
   MethodHandler* method_handler;
 
   method_handler = &GetMethodHandler(m_request_data, m_config_data);
