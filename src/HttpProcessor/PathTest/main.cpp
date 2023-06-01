@@ -79,13 +79,13 @@ int main(void)
   // make_server(a, ab, ac, ad);
   Request b;
   Response c;
-  // b.uri = "/";
+  b.uri = "/";
   // b.uri = "/basics/index.py";
   // b.uri = "/admin";
   // b.uri = "/bdmin";
   // b.uri = "/admin/a/b/c/d";
   // b.uri = "/admin/b"; // file은 컨피그내 index b 사용
-  b.uri = "/admin/b/a";  // file은 uri 내 a 사용
+  // b.uri = "/admin/b/a";  // file은 uri 내 a 사용
   cout << "start!" << endl;
   cout << "location  : '" << b.uri << "'" << endl;
   // cout << "✅ listen ✅" << endl;

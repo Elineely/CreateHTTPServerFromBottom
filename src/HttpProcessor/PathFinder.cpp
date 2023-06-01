@@ -1,7 +1,5 @@
-// #include
-// "/Users/surinlee/Desktop/42/5circle/our_webserv/include/PathFinder.hpp"
-#include "../../include/PathFinder.hpp"
-// #include "./PathFinder.hpp"
+// #include "PathFinder.hpp"
+#include "./PathTest/PathFinder.hpp"
 
 #include <iostream>
 
@@ -79,7 +77,7 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
     t_location current_location = server_data.locations.find(".py")->second;
     response_data.cgi_bin_path = current_location.ourcgi_pass;
     response_data.uploaded_path =
-        current_location.uploaded_path;  // ㄱㅕㅇ로 존존재하는지
+        current_location.uploaded_path;  // 경로 존재하는지
     setIndex(current_location.ourcgi_index, response_data);
     setMethod(current_location.accepted_method, response_data);
     return true;
@@ -145,7 +143,7 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
   if ((locationBlock) == "/" || (locationBlock) == "")  // default block
   {
     current_location = server_data.locations.find("/")->second;
-    setBasic(current_location.accepted_method, current_location.root,
+    setBasic(current_location.accepted_method, current_location.root + "/",
              current_location.index, current_location.auto_index,
              current_location.uploaded_path, response_data);
     return;
@@ -169,7 +167,7 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
     else
     {
       current_location = temp_location->second;
-      setBasic(current_location.accepted_method, current_location.root,
+      setBasic(current_location.accepted_method, current_location.root + "/",
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, response_data);
     }
@@ -197,7 +195,7 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
     pos_last = entire_path.rfind("/");
     if (is_directory(entire_path))  //"a/b/c/d(존재하는 디렉토리)"
     {
-      setBasic(current_location.accepted_method, entire_path,
+      setBasic(current_location.accepted_method, entire_path + "/",
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, response_data);
     }
@@ -206,7 +204,7 @@ PathFinder::PathFinder(Request request_data, t_server server_data,
       std::cout << pos_last << std::endl;
       std::cout << "entire : " << entire_path << std::endl;
       setBasic(current_location.accepted_method,
-               entire_path.substr(0, pos_last),
+               entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,
                current_location.uploaded_path, response_data);
       test_print_basics(response_data);

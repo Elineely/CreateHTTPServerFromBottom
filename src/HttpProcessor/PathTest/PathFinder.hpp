@@ -22,8 +22,8 @@ class PathFinder
                 std::string auto_index, std::string upload,
                 Response& response_data);
   void setUpload(std::string upload, Response& response_data);
-  void test_print_location(t_location c);
-  void test_print_basics(Response c);
+  void test_print_location(t_location& c);
+  void test_print_basics(Response& c);
 
  public:
   PathFinder(Request requset_data, t_server server_data,
