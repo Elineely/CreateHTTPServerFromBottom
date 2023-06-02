@@ -5,6 +5,7 @@
 #include "PathFinder.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "MethodHandler.hpp"
 
 class HttpProcessor
 {
@@ -15,19 +16,17 @@ class HttpProcessor
   HttpProcessor& operator=(HttpProcessor const& obj);
 
   // Member Functions
-  char* generateMessage(Response& obj);
+//   char* generateMessage(Response& obj);
 
  private:
   HttpProcessor(void);
   Request m_request_data;
   Response m_response_data;
   t_server m_server_data;
-  PathFinder m_path_finder(Request request_data, t_server server_data,
-                           Response& response_data);
+  
   // MethodHandler* m_method_handler; //이제 필요 없음?
-  char* m_response_message;
+//   char* m_response_message;
 
- private:
 };
 
 #endif
