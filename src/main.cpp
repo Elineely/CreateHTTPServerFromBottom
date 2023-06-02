@@ -3,7 +3,12 @@
 
 int main(int argc, char **argv)
 {
-  std::cout << "wellcome Cute webserv!!" << std::endl;
+  if (argc > 2)
+  {
+    std::cerr << "Usage: [./cute_webserv config_file]" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  std::cout << "🐈 Cute webserv! 🐈" << std::endl;
 
   Config server_conf(argc == 2 ? argv[1] : DEFAULT_SERVER_FILE,
                      SERVER_CONTENT_FILE);

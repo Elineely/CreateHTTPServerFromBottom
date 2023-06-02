@@ -27,7 +27,7 @@ void Server::serverReadEvent(struct kevent *current_event)
   t_event_udata *current_udata = static_cast<t_event_udata*>(current_event->udata);
 
   udata->m_server = current_udata->m_server;
-  
+
   AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }
@@ -52,7 +52,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   {
     return;
   }
-  
+
   struct Request& request = udata->m_parser.get_request();
   struct Response response;
 
@@ -70,9 +70,11 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata->m_pipe_read_fd = response.read_pipe_fd;
     udata->m_child_pid = response.cgi_child_pid;
     udata->m_client_sock = current_event->ident;
+    udata->m_other_udata = udata2;
     udata2->m_pipe_read_fd = response.read_pipe_fd;
     udata2->m_child_pid = response.cgi_child_pid;
     udata2->m_client_sock = current_event->ident;
+    udata2->m_other_udata = udata;
 
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
     AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
@@ -94,7 +96,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     else
     {
       ResponseGenerator not_ok(request, http_processor.get_m_response());
-     
+
       //vector<char> 진짜 response message
       response_message = not_ok.generateErrorResponseMessage();
     }
@@ -138,5 +140,6 @@ void Server::pipeReadEvent(struct kevent *current_event)
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    delete current_udata;
   }
 }
