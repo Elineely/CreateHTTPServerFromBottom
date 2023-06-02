@@ -5,6 +5,7 @@
 #include "PathFinder.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "MethodHandler.hpp"
 
 class HttpProcessor
 {
@@ -26,7 +27,6 @@ class HttpProcessor
   // MethodHandler* m_method_handler; //이제 필요 없음?
 //   char* m_response_message;
 
- private:
 };
 
 #endif
