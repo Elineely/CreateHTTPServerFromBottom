@@ -117,14 +117,18 @@ struct t_event_udata
   t_response_write m_response;
   t_server m_server;
   Parser m_parser;
+  struct t_event_udata *m_other_udata;
 
-  t_event_udata(e_event_type type) : m_type(type) {}
+  t_event_udata(e_event_type type) : m_type(type), m_other_udata(NULL) {}
   t_event_udata(e_event_type type, const char *message, size_t length)
-      : m_type(type), m_response(message, length)
+      : m_type(type), m_response(message, length), m_other_udata(NULL)
   {
   }
   t_event_udata(e_event_type type, t_server config)
-      : m_type(type), m_server(config), m_parser(config.max_body_size[0])
+      : m_type(type),
+        m_server(config),
+        m_parser(config.max_body_size[0]),
+        m_other_udata(NULL)
   {
   }
 
@@ -135,8 +139,17 @@ struct t_event_udata
         m_client_sock(client_sock),
         m_child_pid(pid),
         m_server(config),
-        m_parser(m_server.max_body_size[0])
+        m_parser(m_server.max_body_size[0]),
+        m_other_udata(NULL)
   {
+  }
+
+  ~t_event_udata()
+  {
+    if (m_other_udata != NULL)
+    {
+      delete m_other_udata;
+    }
   }
 };
 
