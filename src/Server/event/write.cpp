@@ -20,5 +20,5 @@ void Server::clientWriteEvent(struct kevent *current_event)
   }
   AddEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
-  // free(response);
+  delete udata;
 }
