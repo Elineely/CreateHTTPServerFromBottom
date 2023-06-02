@@ -30,6 +30,7 @@ class Parser
   void readBuffer(char* buf);
   ValidationStatus get_validation_phase(void);
   int get_m_client_fd(void);
+  struct Request& get_request(void);
 
  private:
 

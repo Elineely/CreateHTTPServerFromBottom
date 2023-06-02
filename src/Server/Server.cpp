@@ -112,7 +112,6 @@ Server::Server(Config server_conf)
     AddEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
   }
-  int kevent_count = 0;
   while (1)
   {
     current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0],
@@ -170,18 +169,6 @@ Server::Server(Config server_conf)
         case CLIENT_ERROR:
         {
           std::cout << "client socket error" << std::endl;
-          disconnect_socket(current_event->ident);
-        }
-        break;
-
-        case CLIENT_EOF:
-        {
-          disconnect_socket(current_event->ident);
-        }
-        break;
-
-        case SERVER_EOF:
-        {
           disconnect_socket(current_event->ident);
         }
         break;

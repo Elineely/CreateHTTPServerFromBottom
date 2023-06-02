@@ -115,7 +115,7 @@ struct t_event_udata
   pid_t m_child_pid;
   std::string m_result;
   t_response_write m_response;
-  t_server m_config;
+  t_server m_server;
   Parser m_parser;
 
   t_event_udata(e_event_type type) : m_type(type) {}
@@ -124,7 +124,7 @@ struct t_event_udata
   {
   }
   t_event_udata(e_event_type type, t_server config)
-      : m_type(type), m_config(config), m_parser(config.max_body_size[0])
+      : m_type(type), m_server(config), m_parser(config.max_body_size[0])
   {
   }
 
@@ -134,8 +134,8 @@ struct t_event_udata
         m_pipe_read_fd(pipe_read_fd),
         m_client_sock(client_sock),
         m_child_pid(pid),
-        m_config(config),
-        m_parser(m_config.max_body_size[0])
+        m_server(config),
+        m_parser(m_server.max_body_size[0])
   {
   }
 };

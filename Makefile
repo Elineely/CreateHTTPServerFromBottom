@@ -11,10 +11,12 @@ SRC_CONFIG_FILES		:=	Config.cpp	\
 							content.cpp
 
 SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
-# SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp \
-																MethodHandler.cpp
-SRC_HTTPPROCESSOR_FILES		:=	MethodHandler.cpp
+SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp \
+								MethodHandler.cpp \
+								PathFinder.cpp
 
+SRC_CGI_HANDLER_DIR		:=	CgiHandler/
+SRC_CGI_HANDLER_FILES	:=	CgiHandler.cpp
 
 SRC_PARSER_DIR			:=	Parser/
 SRC_PARSER_FILES		:=	Parser.cpp
@@ -51,15 +53,16 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 SRC_TEMP_DIR := temp/
 SRC_TEMP_FILES := beforeHttpProcessor.cpp
 
-SRC_FILES				:=	$(SRC_MAIN)	\
-							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
-							$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
-							$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
-							$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
-							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
-							$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
-							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
-							$(addprefix $(SRC_TEMP_DIR), $(SRC_TEMP_FILES))
+SRC_FILES			:=	$(SRC_MAIN)	\
+						$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
+						$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
+						$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
+						$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
+						$(addprefix $(SRC_CGI_HANDLER_DIR), $(SRC_CGI_HANDLER_FILES)) \
+						$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
+						$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
+						$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
+						$(addprefix $(SRC_TEMP_DIR), $(SRC_TEMP_FILES))
 SRCS				:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
 OBJ_DIR				:=	obj/

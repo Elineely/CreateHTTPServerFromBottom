@@ -4,21 +4,88 @@
 #include <fstream>
 #include <string>
 
+//canonical
+Response::Response()
+{
+  accepted_method = "";
+  rediretion_location = "";
+  file_path = "";
+  file_name = "";
+  cgi_bin_path = "";
+  uploaded_path = "";
+  status_code  = OK_200;
+  redirection_exist = false;
+  auto_index = false;
+  file_exist = false;
+  path_exist = false;
+  cgi_flag = false;
+  read_pipe_fd = -1;
+  cgi_child_pid = -1;
+}
+
+Response::Response(const Response& obj)
+{
+  accepted_method = obj.accepted_method;
+  rediretion_location = obj.rediretion_location;
+  file_path = obj.file_path;
+  file_name = obj.file_name;
+  cgi_bin_path = obj.cgi_bin_path;
+  uploaded_path = obj.uploaded_path;
+  status_code  = obj.status_code;
+  redirection_exist = obj.redirection_exist;
+  auto_index = obj.auto_index;
+  file_exist = obj.file_exist;
+  path_exist = obj.path_exist;
+  body = obj.body;
+  cgi_flag = obj.cgi_flag;
+  read_pipe_fd = obj.read_pipe_fd;
+  cgi_child_pid = obj.cgi_child_pid;
+  response_message = obj.response_message;
+}
+
+Response::~Response(){}
+
+Response& Response::operator=(const Response& obj)
+{
+  if (this != &obj)
+  {
+    accepted_method = obj.accepted_method;
+    rediretion_location = obj.rediretion_location;
+    file_path = obj.file_path;
+    file_name = obj.file_name;
+    cgi_bin_path = obj.cgi_bin_path;
+    uploaded_path = obj.uploaded_path;
+    status_code  = obj.status_code;
+    redirection_exist = obj.redirection_exist;
+    auto_index = obj.auto_index;
+    file_exist = obj.file_exist;
+    path_exist = obj.path_exist;
+    body = obj.body;
+    cgi_flag = obj.cgi_flag;
+    read_pipe_fd = obj.read_pipe_fd;
+    cgi_child_pid = obj.cgi_child_pid; 
+    response_message = obj.response_message;
+  }
+  return (*this);
+}
+
 void ResponseGenerator::appendStrToResponse_message(std::string str)
 {
   m_response.response_message.insert(m_response.response_message.end(),
                                      str.begin(), str.end());
 }
+
 void ResponseGenerator::appendStrToBody(std::string str)
 {
   m_response.body.insert(m_response.body.end(), str.begin(), str.end());
 }
+
 std::string ResponseGenerator::statusCodeToString()
 {
   std::stringstream ss;
   std::string status_code;
 
-  ss << m_request.status;
+  ss << m_response.status_code;
   status_code = ss.str();
   return (status_code);
 }
@@ -65,6 +132,7 @@ void ResponseGenerator::cgiDataProcess()
 ResponseGenerator::ResponseGenerator() {}
 ResponseGenerator::ResponseGenerator(Request& request_data,
                                      Response& response_data)
+                                     // : m_request(request_data), m_response(response_data)
 {
   m_request = request_data;
   m_response = response_data;
@@ -72,13 +140,22 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
     m_target_file = "autoindex.html";
   else
     m_target_file = response_data.file_path + response_data.file_name;
+  // Redirection 존재시
+  if (m_response.redirection_exist == true)
+  {
+    m_response.status_code = FOUND_302;
+    m_response.body = std::vector<char>();
+    m_target_file = "";
+  }
 }
+
 ResponseGenerator::ResponseGenerator(const ResponseGenerator& obj)
 {
   m_request = obj.m_request;
   m_response = obj.m_response;
   m_target_file = obj.m_response.file_path + obj.m_response.file_name;
 }
+
 ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
 {
   if (this != &obj)
@@ -89,28 +166,24 @@ ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
   }
   return (*this);
 }
+
 ResponseGenerator::~ResponseGenerator(){};
 
 void ResponseGenerator::generateVersion()
 {
   appendStrToResponse_message("HTTP/1.1");
 }
+
 void ResponseGenerator::generateStatusCode()
 {
   appendStrToResponse_message(" ");
   appendStrToResponse_message(statusCodeToString());
 }
+
 void ResponseGenerator::generateReasonPhrase()
 {
-  std::map<int, std::string> reason_map;
-  std::string reason_phrase;
-
-  // Inserting key-value pairs into the map
-  reason_map.insert(std::make_pair(200, "OK"));
-  reason_map.insert(std::make_pair(404, "NOT_FOUND"));
-
   appendStrToResponse_message(" ");
-  appendStrToResponse_message(reason_map[m_request.status]);
+  appendStrToResponse_message(status_str.getStatusStr(m_response.status_code));
 }
 
 void ResponseGenerator::generateContentType()
@@ -124,6 +197,7 @@ void ResponseGenerator::generateContentType()
     appendStrToResponse_message("\r\n");
   }
 }
+
 void ResponseGenerator::generateContentLength()
 {
   if (m_response.body.size() <= 0) return;
@@ -144,36 +218,37 @@ void ResponseGenerator::generateContentLength()
 void ResponseGenerator::generateServer()
 {
   appendStrToResponse_message("Server:");
-  //   appendStrToResponse_message("Cute_webserv/1.0 (");
-  //   std::string my_os;
-  // #if defined(_WIN32)
-  //   my_os = "Windows";
-  // #elif defined(__linux__)
-  //   my_os = "Linux";
-  // #elif defined(__APPLE__) && defined(__MACH__)
-  //   my_os = "Mac OS";
-  // #elif defined(__FreeBSD__)
-  //   my_os = "FreeBSD";
-  // #else
-  //   my_os = "Unknown OS";
-  // #endif
-  //   appendStrToResponse_message(my_os);
-  //   appendStrToResponse_message(")");
-  appendStrToResponse_message("Linux Web Server");
+  appendStrToResponse_message("Cute_webserv/1.0 (");
+  std::string my_os;
+  #if defined(_WIN32)
+    my_os = "Windows";
+  #elif defined(__linux__)
+    my_os = "Linux";
+  #elif defined(__APPLE__) && defined(__MACH__)
+    my_os = "Mac OS";
+  #elif defined(__FreeBSD__)
+    my_os = "FreeBSD";
+  #else
+    my_os = "Unknown OS";
+  #endif
+  appendStrToResponse_message(my_os);
+  appendStrToResponse_message(")");
   appendStrToResponse_message("\r\n");
 }
+
 void ResponseGenerator::generateDate()
 {
   std::time_t currentTime = std::time(nullptr);
   std::tm* timeInfo = std::gmtime(&currentTime);
 
-  char buffer[80];
+  char buffer[30];
   std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", timeInfo);
 
   appendStrToResponse_message("Date: ");
   appendStrToResponse_message(buffer);
   appendStrToResponse_message("\r\n");
 }
+
 void ResponseGenerator::generateLocation()
 {
   if (m_response.redirection_exist == false) return;
@@ -187,14 +262,14 @@ void ResponseGenerator::generateErrorBody()
   appendStrToBody("<html>\r\n<head><title>");
   appendStrToBody(statusCodeToString());
   appendStrToBody(" ");
-  appendStrToBody(status_str.getStatusStr(m_request.status));
+  appendStrToBody(status_str.getStatusStr(m_response.status_code));
   appendStrToBody(" ");
   appendStrToBody("</title></head>\r\n");
   appendStrToBody("<body>\r\n");
   appendStrToBody("<center><h1>");
   appendStrToBody(statusCodeToString());
   appendStrToBody(" ");
-  appendStrToBody(status_str.getStatusStr(m_request.status));
+  appendStrToBody(status_str.getStatusStr(m_response.status_code));
   appendStrToBody("</h1></center>\r\n");
 }
 
@@ -205,6 +280,7 @@ void ResponseGenerator::setStartLine()
   generateReasonPhrase();
   appendStrToResponse_message("\r\n");
 }
+
 void ResponseGenerator::setHeaders()
 {
   generateServer();
@@ -212,9 +288,10 @@ void ResponseGenerator::setHeaders()
   generateContentLength();
   generateContentType();
   // headerConnection();
-  // generateLocation();
+  generateLocation();
   appendStrToResponse_message("\r\n");
 }
+
 void ResponseGenerator::setBody()
 {
   if (m_request.method == "HEAD") return;

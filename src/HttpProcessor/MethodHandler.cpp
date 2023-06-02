@@ -22,7 +22,7 @@ std::string MethodHandler::generateDate(const std::time_t& timestamp)
 std::string MethodHandler::generateSize(const long long int& fileSize)
 {
   std::stringstream ss;
-  ss << fileSize << " B";
+  ss << fileSize << " Byte";
   return ss.str();
 }
 bool MethodHandler::fileInfoCompare(const FileInfo& fileInfo1,
@@ -36,7 +36,7 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   DIR* dir;
   struct dirent* entry;
   dir = opendir(target_directory.c_str());
-  if (dir == NULL) throw 501;
+  if (dir == NULL) throw INTERNAL_SERVER_ERROR_500;
   entry = readdir(dir);
   while (entry != NULL)
   {
@@ -92,8 +92,11 @@ void MethodHandler::fileToBody(std::string target_file)
   if (!file.is_open()) throw INTERNAL_SERVER_ERROR_500;
 
   // Determine the file size, resize the vector
+  // offset 을 마지막으로 밀기
   file.seekg(0, std::ios::end);
+  // 파일 사이즈 구하기
   std::streampos file_size = file.tellg();
+  // 다시 돌리기
   file.seekg(0, std::ios::beg);
   std::vector<char> buffer(file_size);
 
@@ -158,9 +161,7 @@ void GetMethodHandler::methodRun()
 {
   if (!m_response_data.file_exist) throw NOT_FOUND_404;
   if (m_response_data.auto_index == true)
-  {
     autoIndexToBody(m_response_data.file_path);
-  }
   else
     fileToBody(m_response_data.file_path + m_response_data.file_name);
 }
@@ -195,10 +196,8 @@ void PostMethodHandler::methodRun()
 
   // delete the target file
   if (m_response_data.file_exist == true)
-  {
     // error deleting file
     if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
-  }
   std::ofstream new_file_stream(target_file, std::ios::binary);
   if (!new_file_stream) throw INTERNAL_SERVER_ERROR_500;
   new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
@@ -235,10 +234,8 @@ void DeleteMethodHandler::methodRun()
                           m_response_data.file_name);
 
   if (m_response_data.file_exist == true)
-  {
     // error deleting file
     if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
-  }
 }
 
 // PutMethodHandler
@@ -281,7 +278,6 @@ void PutMethodHandler::methodRun()
   {
     std::ofstream append_stream(target_file, std::ios::app);
     std::stringstream content_stream;
-    // 파일스트림 실패시 어떤 에러코드를 줄지 모르겠음
     if (!append_stream) throw INTERNAL_SERVER_ERROR_500;
     content_stream.write(&m_request_data.body[0], m_request_data.body.size());
     append_stream << content_stream.str();

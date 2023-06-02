@@ -39,6 +39,7 @@ struct Request
     if (this != &rhs)
     {
       validation_phase = rhs.validation_phase;
+      method = rhs.method;
       uri = rhs.uri;
       http_version = rhs.http_version;
       headers = rhs.headers;
