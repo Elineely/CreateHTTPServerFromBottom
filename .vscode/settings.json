@@ -73,6 +73,8 @@
     "clocale": "cpp",
     "variant": "cpp",
     "compare": "cpp",
-    "concepts": "cpp"
+    "concepts": "cpp",
+    "__functional_03": "cpp",
+    "memory_resource": "cpp"
   }
 }

@@ -49,6 +49,11 @@ ValidationStatus Parser::get_validation_phase(void)
   return (m_data.validation_phase);
 }
 
+struct Request& Parser::get_request(void)
+{
+  return (m_data);
+}
+
 // Private member functions
 void Parser::parseFirstLine(void)
 {
@@ -353,6 +358,7 @@ void Parser::readBuffer(char* buf)
   }
   catch (std::exception& e)
   {
+    std::cerr << "Parser readBuffer function" << std::endl;
     std::cerr << e.what() << std::endl;
   }
 }

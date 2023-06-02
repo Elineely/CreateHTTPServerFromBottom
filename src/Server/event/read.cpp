@@ -1,4 +1,6 @@
 #include "Server.hpp"
+#include "HttpProcessor.hpp"
+#include "ResponseGenerator.hpp"
 
 #define CHILD_PROCESS 0
 
@@ -20,7 +22,12 @@ void Server::serverReadEvent(struct kevent *current_event)
             << std::endl;
 
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
+
   t_event_udata *udata = new t_event_udata(CLIENT);
+  t_event_udata *current_udata = static_cast<t_event_udata*>(current_event->udata);
+
+  udata->m_server = current_udata->m_server;
+  
   AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }
@@ -45,46 +52,58 @@ void Server::clientReadEvent(struct kevent *current_event)
   {
     return;
   }
+  
+  struct Request& request = udata->m_parser.get_request();
+  struct Response response;
 
-  pid_t pid;
-  int pipe_fd[2];
-  char buf[BUF_SIZE];
+  // http_processor 호출
+  HttpProcessor http_processor(request, udata->m_server);
 
-  pipe(pipe_fd);
-  // TODO: 테스터기 돌릴 때 생존 여부 확인하기
-  fcntl(pipe_fd[READ], F_SETFL, O_NONBLOCK);
-  pid = fork();
-  char *argv[] = {"/usr/bin/python3", "./hello.py", NULL};
-  char *envp[] = {NULL};
-  if (pid == CHILD_PROCESS)
+  // cgi 분기 확인
+  response = http_processor.get_m_response();
+  if (response.cgi_flag == true)
   {
-    close(pipe_fd[READ]);
-    dup2(pipe_fd[WRITE], STDOUT_FILENO);
-    char *script_path = "/usr/bin/python3";
-    if (execve(script_path, argv, envp) == ERROR)
-    {
-      std::cerr << "execve error: " << strerror(errno) << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-  else
-  {
-    close(pipe_fd[WRITE]);
-
     // Set up the event structure
     t_event_udata *udata = new t_event_udata(PIPE);
     t_event_udata *udata2 = new t_event_udata(PROCESS);
-    udata->m_pipe_read_fd = pipe_fd[READ];
-    udata->m_child_pid = pid;
+
+    udata->m_pipe_read_fd = response.read_pipe_fd;
+    udata->m_child_pid = response.cgi_child_pid;
     udata->m_client_sock = current_event->ident;
-    udata2->m_pipe_read_fd = pipe_fd[READ];
-    udata2->m_child_pid = pid;
+    udata2->m_pipe_read_fd = response.read_pipe_fd;
+    udata2->m_child_pid = response.cgi_child_pid;
     udata2->m_client_sock = current_event->ident;
 
-    AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_TIMER,
-                         EV_ADD | EV_ONESHOT, NOTE_SECONDS, 2, udata2);
-    AddEventToChangeList(m_kqueue.change_list, pipe_fd[READ], EVFILT_READ,
-                         EV_ADD | EV_ENABLE, 0, 0, udata);
+    fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
+    AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
+                        EV_ADD | EV_ENABLE, 0, 0, udata);
+    AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid, EVFILT_TIMER,
+                        EV_ADD | EV_ONESHOT, NOTE_SECONDS, 2, udata2);
+  }
+  else
+  {
+    std::vector<char> response_message;
+    std::cout << "http code " << http_processor.get_m_response().status_code  << std::endl;
+    if (http_processor.get_m_response().status_code == OK_200 \
+        || http_processor.get_m_response().status_code == FOUND_302)
+    {
+      ResponseGenerator ok(request, http_processor.get_m_response());
+      //vector<char> 진짜 response message
+      response_message = ok.generateResponseMessage();
+    }
+    else
+    {
+      ResponseGenerator not_ok(request, http_processor.get_m_response());
+     
+      //vector<char> 진짜 response message
+      response_message = not_ok.generateErrorResponseMessage();
+    }
+    t_event_udata *udata = new t_event_udata(CLIENT);
+    udata->m_response.message = &response_message[0];
+    udata->m_response.length = response_message.size();
+
+    AddEventToChangeList(m_kqueue.change_list, current_event->ident,
+                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
   }
 }
 

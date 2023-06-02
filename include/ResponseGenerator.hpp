@@ -26,7 +26,13 @@ struct Response
   std::string cgi_bin_path;
   std::string uploaded_path;
   std::vector<char> response_message;
-  int pipe_fd;
+  int read_pipe_fd;
+  int cgi_child_pid;
+
+  Response();
+  Response(const Response& obj);
+  ~Response();
+  Response& operator=(const Response& obj);
 };
 
 
@@ -35,6 +41,8 @@ class ResponseGenerator
  private:
   Request m_request;
   Response m_response;
+  // Request& m_request;
+  // Response& m_response;
   Mime mime;
   StatusStr status_str;
   std::string m_target_file;
@@ -65,8 +73,8 @@ class ResponseGenerator
   void setHeaders();
   void setBody();
 
- public:
   ResponseGenerator();
+ public:
   ResponseGenerator(const ResponseGenerator& obj);
   ResponseGenerator(Request& request_data, Response& response_data);
   ~ResponseGenerator();
@@ -75,7 +83,5 @@ class ResponseGenerator
   std::vector<char> generateErrorResponseMessage();
   std::vector<char> generateResponseMessage();
 };
-// Mime ResponseGenerator::mime;
-// StatusStr ResponseGenerator::status_str;
 
 #endif

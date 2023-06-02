@@ -9,6 +9,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
   udata = static_cast<t_event_udata *>(current_event->udata);
   response = &udata->m_response;
+  std::cout << "client data : " << response->message << std::endl;
   int send_byte = 0;
   send_byte = send(current_event->ident, response->message + response->offset,
                    response->length - response->offset, 0);

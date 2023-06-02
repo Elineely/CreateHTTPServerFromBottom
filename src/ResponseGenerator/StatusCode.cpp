@@ -12,6 +12,7 @@ StatusStr::StatusStr()
   m_str_map.insert(std::make_pair(414, "URI Too Long"));
   m_str_map.insert(std::make_pair(429, "Too Many Requests"));
   m_str_map.insert(std::make_pair(500, "Internal Server Error"));
+  m_str_map.insert(std::make_pair(501, "Not Implemented"));
   m_str_map.insert(std::make_pair(502, "Bad Gateway"));
   m_str_map.insert(std::make_pair(504, "Gateway Timeout"));
   m_str_map.insert(std::make_pair(505, "HTTP Version Not Supported"));
@@ -27,5 +28,5 @@ std::string StatusStr::getStatusStr(StatusCode code)
   if (it != m_str_map.end())
     return it->second;
   else
-    return "default";
+    return m_str_map[200];
 }

@@ -26,7 +26,10 @@ Mime::~Mime() {}
 
 std::string Mime::getMime(std::string target_file)
 {
-  std::string extension = target_file.substr(target_file.rfind("."));
+  std::string::size_type pos = target_file.rfind(".");
+  std::string extension;
+  if (!(pos == std::string::npos))
+    extension = target_file.substr(pos);
   std::map<std::string, std::string>::iterator it = m_mime_map.find(extension);
 
   if (it != m_mime_map.end())

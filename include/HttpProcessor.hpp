@@ -4,7 +4,7 @@
 #include "Config.hpp"
 #include "PathFinder.hpp"
 #include "Request.hpp"
-#include "Response.hpp"
+#include "ResponseGenerator.hpp"
 #include "MethodHandler.hpp"
 
 class HttpProcessor
@@ -14,14 +14,14 @@ class HttpProcessor
   HttpProcessor(const HttpProcessor& obj);
   virtual ~HttpProcessor(void);
   HttpProcessor& operator=(HttpProcessor const& obj);
-
+  struct Response& get_m_response(void);
   // Member Functions
 //   char* generateMessage(Response& obj);
 
  private:
   HttpProcessor(void);
-  Request m_request_data;
-  Response m_response_data;
+  struct Request m_request_data;
+  struct Response m_response_data;
   t_server m_server_data;
   
   // MethodHandler* m_method_handler; //이제 필요 없음?
