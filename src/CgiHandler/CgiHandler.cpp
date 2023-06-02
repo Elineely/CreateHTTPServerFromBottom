@@ -91,8 +91,8 @@ void CgiHandler::setCgiEnv(void)
 
 std::vector<char> CgiHandler::makeErrorPage(void)
 {
-  std::string status_code("Status: 501 Not Implemented\n");
-  std::string content_type("Content-type: text/html; charset=UTF-8\r\n");
+  std::string status_code("Status: 501 Not Implemented\r\n");
+  std::string content_type("Content-type: text/html; charset=UTF-8\r\n\r\n");
   std::string body("Failed.\n");
   std::string error_response(status_code + content_type + body);
 
