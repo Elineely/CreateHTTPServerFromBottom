@@ -7,7 +7,28 @@
 #include <vector>
 
 #include "Request.hpp"
-#include "ResponseGenerator.hpp"
+// #include "ResponseGenerator.hpp"
+#include <iostream>
+struct Response
+{
+  std::string accepted_method;
+  bool redirection_exist;
+  std::string rediretion_location;
+  bool auto_index;
+  std::string file_name;
+  bool file_exist;
+  std::string file_path;
+  bool path_exist;
+  std::vector<char> body;
+  StatusCode status_code;
+  bool cgi_flag;
+  std::string cgi_bin_path;
+  std::string uploaded_path;
+  std::vector<char> response_message;
+  int read_pipe_fd;
+  int cgi_child_pid;
+};
+
 
 /* ************************ */
 /* CgiHandler virtual class */
@@ -22,8 +43,6 @@ class CgiHandler
 
     std::vector<std::string> m_env_list;
     std::vector<const char*> m_env_list_parameter;
-
-    std::vector<char> m_content_vector;
 
     int m_to_child_fds[2];
     int m_to_parent_fds[2];
@@ -75,7 +94,8 @@ class CgiHandler
 /* ******************* */
 class GetCgiHandler : public CgiHandler
 {
-  private:
+  // private:
+    public :
     GetCgiHandler(void);
 
   public:
@@ -99,7 +119,8 @@ class GetCgiHandler : public CgiHandler
 /* ******************** */
 class PostCgiHandler : public CgiHandler
 {
-  private:
+  // private:
+    public :
     PostCgiHandler(void);
     
   public:

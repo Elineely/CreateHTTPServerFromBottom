@@ -25,8 +25,6 @@ cgitb.enable()
 
 # /////////////////////////////////////////////
 
-print()
-
 # save_path = os.getenv("SAVED_PATH")
 
 # if save_path is None:

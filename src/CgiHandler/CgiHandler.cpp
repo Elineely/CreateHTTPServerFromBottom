@@ -1,4 +1,5 @@
-#include "CgiHandler.hpp"
+// #include "CgiHandler.hpp"
+#include "../../include/CgiHandler.hpp"
 
 #define SUCCESS 0
 #define ERROR -1
@@ -17,12 +18,10 @@
 /* CgiHandler virtual class */
 /* ************************ */
 // no need to make canonical form for virtual class?
-// CgiHandler::CgiHandler() {}
+CgiHandler::CgiHandler() {}
 
 CgiHandler::CgiHandler(Request& requset_data, Response& response_data)
-  : m_request_data(requset_data), m_response_data(response_data)
-{
-}
+  : m_request_data(requset_data), m_response_data(response_data) { }
 
 CgiHandler::~CgiHandler() {}
 
@@ -31,10 +30,13 @@ Response CgiHandler::get_m_response_data()
 
 void CgiHandler::setCgiEnv(void)
 {
+  // test
+  m_response_data.cgi_bin_path = "post_python.py";
+
   // 수정 필요 ----------------
   std::string defualt_cgi_script("post_python.py");
 
-  // 값이 없는 경우는 빈 값으로 표시되면 생략하는 것과 같은 효과
+  // 값이 없는 경우는 빈 값으로 두면 생략하는 것과 같은 효과
 
   m_env_list.push_back("GATEWAY_INTERFACE=CGI/1.1");
 
@@ -121,31 +123,24 @@ const char* CgiHandler::KqueueException::what() const throw()
 /* GetCgiHandler class */
 /* ******************* */
 
-// GetCgiHandler::GetCgiHandler() {}
+GetCgiHandler::GetCgiHandler() { }
 
 GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
-  : CgiHandler(request_data, response_data)
-{
-  // m_request_data = request_data;
-  // m_response_data = response_data;
-}
+  : CgiHandler(request_data, response_data) { }
 
-GetCgiHandler::~GetCgiHandler() {}
-
-
-// GetCgiHandler::GetCgiHandler(/* ??? */)
-// {}
+GetCgiHandler::~GetCgiHandler() { }
 
 // GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj)
 // {}
 
-// GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
-// {
-//   if (this != &obj)
-//   {
-//   }
-//   return (*this);
-// }
+GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
+{
+  if (this != &obj)
+  {
+    
+  }
+  return (*this);
+}
 
 //member functions
 
@@ -189,6 +184,7 @@ void GetCgiHandler::getDataFromCgi()
 
   char buffer[4096]; // 크기
   ssize_t bytes_read;
+  std::vector<char> content_vector;
 
   while (true) // 조건문 수정?
   {
@@ -199,11 +195,11 @@ void GetCgiHandler::getDataFromCgi()
     }
     for (int i = 0; i < bytes_read; ++i)
     {
-      m_content_vector.push_back(buffer[i]);
+      content_vector.push_back(buffer[i]);
     }
   }
   close(m_to_parent_fds[READ]);
-  m_response_data.body = m_content_vector;
+  m_response_data.body = content_vector;
 }
 
 void GetCgiHandler::outsourceCgiRequest(void)
@@ -227,7 +223,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
   {
     // std::cerr << e.what() << '\n';
     std::cerr << "GetCgiHandler::outsourceCgiRequest fucntion" << std::endl;
-    std::vector<char> error_message = makeErrorPage();
+    m_response_data.body = makeErrorPage();
   }
 }
 
@@ -235,7 +231,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
 /* PostCgiHandler class */
 /* ******************** */
 
-// PostCgiHandler::PostCgiHandler() {}
+PostCgiHandler::PostCgiHandler() {}
 
 PostCgiHandler::~PostCgiHandler() {}
 
@@ -245,9 +241,6 @@ PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
   // m_request_data = request_data;
   // m_response_data = response_data;
 }
-
-// PostCgiHandler::PostCgiHandler(/* ??? */)
-// {}
 
 // PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj)
 // {}
@@ -337,17 +330,24 @@ void PostCgiHandler::getDataFromCgi()
 
   char buffer[4096]; // 크기
   ssize_t bytes_read;
+  std::vector<char> content_vector;
 
   while (true) // 조건문 수정?
   {
     bytes_read = read(m_to_parent_fds[READ], buffer, sizeof(buffer));
     if (bytes_read <= 0) { break ; }
     for (int i = 0; i < bytes_read; ++i)
-    { m_content_vector.push_back(buffer[i]); }
+    { content_vector.push_back(buffer[i]); }
   }
   close(m_to_parent_fds[READ]);
 
-  m_response_data.body = m_content_vector;
+  m_response_data.body = content_vector;
+
+  // test
+  std::cout << "after getDataFromCgi : " << std::endl;
+  for (int i = 0; i < m_response_data.body.size(); ++i)
+    std::cout << m_response_data.body[i];
+  std::cout << std::endl;
 }
 
 void PostCgiHandler::outsourceCgiRequest(void)
@@ -363,18 +363,19 @@ void PostCgiHandler::outsourceCgiRequest(void)
     }
     else
     {
-      close(m_to_child_fds[READ]);
-      close(m_to_child_fds[WRITE]);
-      close(m_to_parent_fds[WRITE]);
+      // close(m_to_child_fds[READ]);
+      // close(m_to_child_fds[WRITE]);
+      // close(m_to_parent_fds[WRITE]);
 
-      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
-      m_response_data.cgi_child_pid = m_pid;
+      // m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      // m_response_data.cgi_child_pid = m_pid;
+      getDataFromCgi();
     }
   }
   catch(const std::exception& e)
   {
-    // std::cerr << e.what() << '\n';
+    std::cerr << e.what() << '\n';
     std::cerr << "PostCgiHandler outsourceCgiRequest" << std::endl;
-    std::vector<char> error_message = makeErrorPage();
+    m_response_data.body = makeErrorPage();
   }
 }
