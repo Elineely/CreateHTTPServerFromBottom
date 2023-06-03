@@ -38,6 +38,8 @@ void Log::debug(const char* message, ...)
 
 void Log::start(void)
 {
+    std::cout << "=========================================================================" << std::endl;
+    std::cout << GREEN_TEXT << "WELCOME TO" << CUT_TEXT << std::endl;
     std::cout << " _____         _          _    _        _                             \n";
     std::cout << "/  __ \\       | |        | |  | |      | |                            \n";
     std::cout << "| /  \\/ _   _ | |_   ___ | |  | |  ___ | |__   ___   ___  _ __ __   __\n";
@@ -45,7 +47,7 @@ void Log::start(void)
     std::cout << "| \\__/\\| |_| || |_ |  __/\\  /\\  /|  __/| |_) |\\__ \\|  __/| |    \\ V / \n";
     std::cout << " \\____/ \\__,_| \\__| \\___| \\/  \\/  \\___||_.__/ |___/ \\___||_|     \\_/  \n";
     std::cout << "                                                                     \n";
-    std::cout << std::endl;
+    std::cout << "=========================================================================" << std::endl;
 }
 
 void Log::print(const char* message, va_list ap)

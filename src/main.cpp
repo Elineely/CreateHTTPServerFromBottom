@@ -1,6 +1,6 @@
 #include "Config.hpp"
-#include "Server.hpp"
 #include "Log.hpp"
+#include "Server.hpp"
 
 int main(int argc, char **argv)
 {
