@@ -10,7 +10,7 @@ void Server::startBind(std::vector<t_multi_server> &servers)
     if (bind(servers[i].server_sock, (struct sockaddr *)&servers[i].serv_addr,
              sizeof(servers[i].serv_addr)) == -1)
     {
-      ft_error_exit(1, strerror(errno));
+      ft_error_exit(EXIT_FAILURE, strerror(errno));
     }
   }
 }

@@ -1,5 +1,7 @@
 #include "Config.hpp"
 
+#include "Log.hpp"
+
 void set_vaild_content_list(std::ifstream &content_file,
                             content_list_type &vaild_content_list)
 {
@@ -22,19 +24,21 @@ Config::Config(std::string config_file_name,
 
   if (content_file.fail())
   {
-    ft_error_exit(1, "ERROR: content file open fail");
+    Log::error("Failed to open %s ", config_content_file_name.c_str());
+    exit(EXIT_FAILURE);
   }
-  ft_process_print("config_content file open Success!!");
+  Log::info("Successfully open %s ", config_content_file_name.c_str());
   set_vaild_content_list(content_file, vaild_content_list);
-  ft_process_print("config_content file set Success!!");
+  Log::info("Successfully validate %s ", config_content_file_name.c_str());
 
   if (config_file.fail())
   {
-    ft_error_exit(1, "ERROR: config file open fail");
+    Log::error("Failed to open %s ", config_file_name.c_str());
+    exit(EXIT_FAILURE);
   }
-  ft_process_print("Config file open Success!!");
-  set_m_server_conf(config_file, vaild_content_list);
-  ft_process_print("Config file set Success!!");
+  Log::info("Successfully open %s ", config_file_name.c_str());
+  set_m_server_conf(config_file, config_file_name, vaild_content_list);
+  Log::info("Successfully validate %s ", config_file_name.c_str());
 }
 
 Config::Config() { std::cout << "Config Construct call" << std::endl; }

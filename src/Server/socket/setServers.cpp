@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-void Server::setServers(Config server_conf,
+void Server::setServers(const Config& server_conf,
                         std::vector<t_multi_server> &servers)
 {
   config_vector server = server_conf.get_m_server_conf();
