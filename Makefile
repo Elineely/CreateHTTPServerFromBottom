@@ -1,31 +1,30 @@
-NAME 					:= cute_webserv
+NAME 								:= cute_webserv
 
-INCLUDE					:=	-I./include/
+INCLUDE								:=	-I./include/
 
-SRC_DIR					:=	src/
-SRC_MAIN				:=	main.cpp
+SRC_DIR								:=	src/
+SRC_MAIN							:=	main.cpp
 
-SRC_CONFIG_DIR			:=	Config/
-SRC_CONFIG_FILES		:=	Config.cpp	\
-							print.cpp	\
-							content.cpp
+SRC_CONFIG_DIR						:=	Config/
+SRC_CONFIG_FILES					:=	Config.cpp	\
+										print.cpp	\
+										content.cpp
 
-SRC_HTTPPROCESSOR_DIR		:=	HttpProcessor/
-SRC_HTTPPROCESSOR_FILES		:=	HttpProcessor.cpp \
-								MethodHandler.cpp \
-								PathFinder.cpp
+SRC_HTTPPROCESSOR_DIR				:=	HttpProcessor/
+SRC_HTTPPROCESSOR_FILES				:=	HttpProcessor.cpp \
+										MethodHandler.cpp \
+										PathFinder.cpp
 
-SRC_CGI_HANDLER_DIR		:=	CgiHandler/
-SRC_CGI_HANDLER_FILES	:=	CgiHandler.cpp
+SRC_CGI_HANDLER_DIR					:=	CgiHandler/
+SRC_CGI_HANDLER_FILES				:=	CgiHandler.cpp
 
-SRC_PARSER_DIR			:=	Parser/
-SRC_PARSER_FILES		:=	Parser.cpp
+SRC_PARSER_DIR						:=	Parser/
+SRC_PARSER_FILES					:=	Parser.cpp
 
-SRC_RESPONSE_GENERATOR_DIR		:= ResponseGenerator/
+SRC_RESPONSE_GENERATOR_DIR			:= ResponseGenerator/
 SRC_RESPONSE_GENERATOR_FILES		:=	Mime.cpp \
-																		ResponseGenerator.cpp \
-																		StatusCode.cpp
-
+										ResponseGenerator.cpp \
+										StatusCode.cpp
 
 SRC_SERVER_DIR			:=	Server/
 SRC_SERVER_FILES		:=	Server.cpp 				\
@@ -50,30 +49,35 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_error.cpp			\
 							ft_process_print.cpp
 
-SRC_TEMP_DIR := temp/
-SRC_TEMP_FILES := beforeHttpProcessor.cpp
+SRC_LOG_DIR				:=	Log/
+SRC_LOG_FILES			:=	Log.cpp
 
-SRC_FILES			:=	$(SRC_MAIN)	\
-						$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
-						$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
-						$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
-						$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
-						$(addprefix $(SRC_CGI_HANDLER_DIR), $(SRC_CGI_HANDLER_FILES)) \
-						$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
-						$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
-						$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
-						$(addprefix $(SRC_TEMP_DIR), $(SRC_TEMP_FILES))
-SRCS				:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
+SRC_TEMP_DIR			:= temp/
+SRC_TEMP_FILES			:= beforeHttpProcessor.cpp
 
-OBJ_DIR				:=	obj/
-OBJS				:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
+SRC_FILES				:=	$(SRC_MAIN)	\
+							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
+							$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
+							$(addprefix $(SRC_PARSER_DIR), $(SRC_PARSER_FILES))	\
+							$(addprefix $(SRC_HTTPPROCESSOR_DIR), $(SRC_HTTPPROCESSOR_FILES)) \
+							$(addprefix $(SRC_CGI_HANDLER_DIR), $(SRC_CGI_HANDLER_FILES)) \
+							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
+							$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
+							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
+							$(addprefix $(SRC_LOG_DIR), $(SRC_LOG_FILES)) \
+							$(addprefix $(SRC_TEMP_DIR), $(SRC_TEMP_FILES))
+
+SRCS					:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
+
+OBJ_DIR					:=	obj/
+OBJS					:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
 ifdef DEBUG_MODE
-	CXXFLAGS					:=	$(CXXFLAGS) -g3
+	CXXFLAGS			:=	$(CXXFLAGS) -g3
 endif
 
 ifdef D_SANI
-	CXXFLAGS					:=	$(CXXFLAGS) -g3 -fsanitize=address
+	CXXFLAGS			:=	$(CXXFLAGS) -g3 -fsanitize=address
 endif
 
 .PHONY : all
