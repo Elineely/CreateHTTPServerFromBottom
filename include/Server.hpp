@@ -158,7 +158,7 @@ class Server
  private:
   std::vector<t_multi_server> servers;
   t_kqueue m_kqueue;
-  Config server;
+  Config server; // TODO: 꼭 멤버변수로 가지고 있어야 하는가?
   Server();
 
  public:
