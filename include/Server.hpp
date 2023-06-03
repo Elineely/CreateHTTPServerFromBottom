@@ -162,7 +162,7 @@ class Server
   Server();
 
  public:
-  Server(Config server);
+  Server(const Config &server);
   Server(const Server &a);
   ~Server();
   Server &operator=(const Server &a);
@@ -173,8 +173,10 @@ class Server
   void AddEventToChangeList(std::vector<struct kevent> &change_list,
                             uintptr_t ident, int16_t filter, uint16_t flags,
                             uint32_t fflags, intptr_t data, void *udata);
-  void setSocket(Config server_conf, std::vector<t_multi_server> &servers);
-  void setServers(Config server_conf, std::vector<t_multi_server> &servers);
+  void setSocket(const Config &server_conf,
+                 std::vector<t_multi_server> &servers);
+  void setServers(const Config &server_conf,
+                  std::vector<t_multi_server> &servers);
   void startBind(std::vector<t_multi_server> &servers);
   void startListen(std::vector<t_multi_server> &servers, int back_log);
 

@@ -29,5 +29,4 @@ void ft_error_exit(int exit_flag, const char *message)
 {
   Log::error(message);
   exit(exit_flag);
-  return;
 }

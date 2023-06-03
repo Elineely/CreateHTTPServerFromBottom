@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Log.hpp"
 
 #include "beforeHttpProcessor.hpp"
 
@@ -85,22 +86,22 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
 
 const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
-Server::Server(Config server_conf)
+Server::Server(const Config& server_conf)
 {
   setServers(server_conf, servers);
-  std::cout << "success Server Set" << std::endl;
+  Log::info("Successfully set servers");
 
   setSocket(server_conf, servers);
-  std::cout << "success Socket" << std::endl;
+  Log::info("Successfully open server socket");
 
   startBind(servers);
-  std::cout << "success bind" << std::endl;
+  Log::info("Successfully bind server socket with IP address");
 
   startListen(servers, BACK_LOG);
-  std::cout << "success listen" << std::endl;
+  Log::info("Successfully listen server socket");
 
   m_kqueue.kq = getKqueue();
-  std::cout << "success Kqueue" << std::endl;
+  Log::info("Successfully listen server socket");
 
   int current_events;
   e_kqueue_event event_status;
