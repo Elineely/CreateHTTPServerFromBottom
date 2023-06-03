@@ -130,14 +130,24 @@ GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
 
 GetCgiHandler::~GetCgiHandler() { }
 
-// GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj)
-// {}
+GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj)
+{
+  *this = obj;
+}
 
 GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
 {
   if (this != &obj)
   {
-    
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_env_list = obj.m_env_list;
+    m_env_list_parameter = obj.m_env_list_parameter;
+    m_to_child_fds[READ] = obj.m_to_child_fds[READ];
+    m_to_child_fds[WRITE] = obj.m_to_child_fds[WRITE];
+    m_to_parent_fds[READ] = obj.m_to_parent_fds[READ];
+    m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
+    m_pid = obj.m_pid;
   }
   return (*this);
 }
@@ -168,6 +178,7 @@ void GetCgiHandler::executeCgi()
   }
   close(m_to_parent_fds[WRITE]);
 
+  setCgiEnv();
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
@@ -204,7 +215,6 @@ void GetCgiHandler::getDataFromCgi()
 
 void GetCgiHandler::outsourceCgiRequest(void)
 {
-  setCgiEnv();
   try
   {
     pipeAndFork();
@@ -236,22 +246,27 @@ PostCgiHandler::PostCgiHandler() {}
 PostCgiHandler::~PostCgiHandler() {}
 
 PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
-  : CgiHandler(request_data, response_data)
+  : CgiHandler(request_data, response_data) { }
+
+PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj)
+{ *this = obj; }
+
+PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
 {
-  // m_request_data = request_data;
-  // m_response_data = response_data;
+  if (this != &obj)
+  {
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_env_list = obj.m_env_list;
+    m_env_list_parameter = obj.m_env_list_parameter;
+    m_to_child_fds[READ] = obj.m_to_child_fds[READ];
+    m_to_child_fds[WRITE] = obj.m_to_child_fds[WRITE];
+    m_to_parent_fds[READ] = obj.m_to_parent_fds[READ];
+    m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
+    m_pid = obj.m_pid;
+  }
+  return (*this);
 }
-
-// PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj)
-// {}
-
-// PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
-// {
-//   if (this != &obj)
-//   {
-//   }
-//   return (*this);
-// }
 
 //member functions
 
@@ -302,6 +317,7 @@ void PostCgiHandler::executeCgi()
   }
   close(m_to_parent_fds[WRITE]);
 
+  setCgiEnv();
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
@@ -352,7 +368,6 @@ void PostCgiHandler::getDataFromCgi()
 
 void PostCgiHandler::outsourceCgiRequest(void)
 {
-  setCgiEnv();
   try
   {
     pipeAndFork();
