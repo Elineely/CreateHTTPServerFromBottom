@@ -1,8 +1,9 @@
+#include "Log.hpp"
 #include "utils.hpp"
 
 void print_error(const char *messaege)
 {
-  std::cerr << messaege << std::endl;
+  Log::error(messaege);
   return;
 }
 
@@ -24,9 +25,9 @@ int ft_error(int status_code, const char *error_message)
   return status_code;
 }
 
-void ft_error_exit(int exit_flag, const char *error_message)
+void ft_error_exit(int exit_flag, const char *message)
 {
-  print_error(error_message);
+  Log::error(message);
   exit(exit_flag);
   return;
 }

@@ -44,9 +44,9 @@ class Config
   int current_line;
   config_vector m_server_conf;
 
- public:
  private:
   t_server get_parse_server_block(std::ifstream &file,
+                                  std::string config_file_name,
                                   content_list_type vaild_content_list);
 
  public:
@@ -57,9 +57,11 @@ class Config
   ~Config();
 
   void set_m_server_conf(std::ifstream &config_file,
+                         std::string config_file_name,
                          content_list_type vaild_content_list);
   config_vector get_m_server_conf() const;
-  t_location get_location_expend(std::ifstream &config_file,
+  t_location get_location_expand(std::ifstream &config_file,
+                                 std::string config_file_name,
                                  content_list_type vaild_content_list,
                                  int content_size);
   void showServerConf();
