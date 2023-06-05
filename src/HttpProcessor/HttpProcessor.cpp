@@ -1,5 +1,7 @@
 #include "HttpProcessor.hpp"
+
 #include "CgiHandler.hpp"
+#include "Log.hpp"
 
 HttpProcessor::HttpProcessor(void) {}
 
@@ -10,17 +12,18 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
   m_request_data = request_data;
   m_server_data = server_data;
   // MethodHandler* method_handler;
-  if (request_data.status == NO_PROBLEM)
-    request_data.status = OK_200;
+  if (request_data.status == NO_PROBLEM) request_data.status = OK_200;
   try
   {
     if (request_data.status != OK_200)
+    {
       throw request_data.status;
+    }
   }
   catch (StatusCode code_num)
   {
     m_response_data.status_code = code_num;
-    return ;
+    return;
   }
   PathFinder path_finder(request_data, server_data, m_response_data);
   try
@@ -50,9 +53,9 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
       }
       else
       {
-      PostMethodHandler method_handler(m_request_data, m_response_data);
-      method_handler.methodRun();
-      m_response_data = method_handler.get_m_response_data();
+        PostMethodHandler method_handler(m_request_data, m_response_data);
+        method_handler.methodRun();
+        m_response_data = method_handler.get_m_response_data();
       }
     }
     else if (m_request_data.method == "PUT")
@@ -74,20 +77,19 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
       m_response_data = method_handler.get_m_response_data();
     }
     else
+    {
       throw METHOD_NOT_ALLOWED_405;
+    }
   }
   catch (StatusCode code_num)
   {
-    std::cerr << "HttpProcessor constructor" << std::endl;
-    std::cout << "code num :" <<  code_num << std::endl;
-    // m_request_data.status = code_num;
+    Log::error("[HttpProcessor] constructor catches error (status code: %d)",
+               code_num);
     m_response_data.status_code = code_num;
-    std::cerr << "catch error" << std::endl;
-    std::cout << "status code: " << code_num << std::endl;
   }
 }
 
-HttpProcessor::HttpProcessor(const HttpProcessor& obj) 
+HttpProcessor::HttpProcessor(const HttpProcessor& obj)
 {
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
@@ -97,7 +99,9 @@ HttpProcessor::HttpProcessor(const HttpProcessor& obj)
 HttpProcessor& HttpProcessor::operator=(HttpProcessor const& obj)
 {
   if (this == &obj)
+  {
     return (*this);
+  }
   m_request_data = obj.m_request_data;
   m_response_data = obj.m_response_data;
   m_server_data = obj.m_server_data;

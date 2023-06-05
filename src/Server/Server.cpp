@@ -1,6 +1,6 @@
 #include "Server.hpp"
-#include "Log.hpp"
 
+#include "Log.hpp"
 #include "beforeHttpProcessor.hpp"
 
 void Server::AddEventToChangeList(
@@ -169,14 +169,14 @@ Server::Server(const Config& server_conf)
 
         case CLIENT_ERROR:
         {
-          std::cout << "client socket error" << std::endl;
+          Log::error("🐛 Client socket error 🐛");
           disconnect_socket(current_event->ident);
         }
         break;
 
         default:
         {
-          std::cout << "deafult status == " << event_status << std::endl;
+          Log::debug("default status: %d", event_status);
         }
         break;
       }
@@ -203,6 +203,6 @@ Server::~Server() { std::cout << "Server Destructor Call" << std::endl; }
 Server &Server::operator=(const Server &other)
 {
   if (this == &other) return *this;
-  std::cout << "Server Assignment Operator Call" << std::endl;
+  Log::debug("Server Assignment Operator Call");
   return *this;
 }

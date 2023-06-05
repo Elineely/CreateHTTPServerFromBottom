@@ -1,30 +1,31 @@
 #include "Server.hpp"
 #include "HttpProcessor.hpp"
 #include "ResponseGenerator.hpp"
+#include "Log.hpp"
 
 #define CHILD_PROCESS 0
 
 void Server::serverReadEvent(struct kevent *current_event)
 {
-  std::cout << "🖥  SERVER READ EVENT  🖥" << std::endl;
   int client_sock;
   int client_addr_size;
   struct sockaddr_in client_addr;
 
+  Log::info("🖥  SERVER READ EVENT  🖥");
   client_sock = accept(current_event->ident, (struct sockaddr *)&client_addr,
                        reinterpret_cast<socklen_t *>(&client_addr_size));
   if (client_sock == -1)
   {
-    ft_error(1, strerror(errno));
+    Log::error("Failed to accept client socket (detail: %s)", strerror(errno));
     return;
   }
-  std::cout << "🏃 Client ID: " << client_sock << " is connected. 🏃"
-            << std::endl;
+  Log::info("🌵 Client Socket fd %d is created 🌵", client_sock);
 
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
   t_event_udata *udata = new t_event_udata(CLIENT);
-  t_event_udata *current_udata = static_cast<t_event_udata*>(current_event->udata);
+  t_event_udata *current_udata =
+      static_cast<t_event_udata *>(current_event->udata);
 
   udata->m_server = current_udata->m_server;
 
@@ -34,10 +35,12 @@ void Server::serverReadEvent(struct kevent *current_event)
 
 void Server::clientReadEvent(struct kevent *current_event)
 {
-  std::cout << "📖 CLIENT_READ EVENT 📖" << std::endl;
+  Log::info("📖 CLIENT_READ EVENT 📖");
+
   if (current_event->flags & EV_EOF)
   {
-    std::cerr << "closing" << std::endl;
+    Log::info("💥 Client socket(fd: %d) will be close 💥",
+              current_event->ident);
     disconnect_socket(current_event->ident);
     return;
   }
@@ -53,7 +56,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     return;
   }
 
-  struct Request& request = udata->m_parser.get_request();
+  struct Request &request = udata->m_parser.get_request();
   struct Response response;
 
   // http_processor 호출
@@ -77,27 +80,29 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata2->m_other_udata = udata;
 
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
-    AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
-                        EV_ADD | EV_ENABLE, 0, 0, udata);
-    AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid, EVFILT_TIMER,
-                        EV_ADD | EV_ONESHOT, NOTE_SECONDS, 2, udata2);
+    AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
+    AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
+                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 2,
+                         udata2);
   }
   else
   {
     std::vector<char> response_message;
-    std::cout << "http code " << http_processor.get_m_response().status_code  << std::endl;
-    if (http_processor.get_m_response().status_code == OK_200 \
-        || http_processor.get_m_response().status_code == FOUND_302)
+    Log::debug("http response code: %d",
+               http_processor.get_m_response().status_code);
+    if (http_processor.get_m_response().status_code == OK_200 ||
+        http_processor.get_m_response().status_code == FOUND_302)
     {
       ResponseGenerator ok(request, http_processor.get_m_response());
-      //vector<char> 진짜 response message
+      // vector<char> 진짜 response message
       response_message = ok.generateResponseMessage();
     }
     else
     {
       ResponseGenerator not_ok(request, http_processor.get_m_response());
 
-      //vector<char> 진짜 response message
+      // vector<char> 진짜 response message
       response_message = not_ok.generateErrorResponseMessage();
     }
     t_event_udata *udata = new t_event_udata(CLIENT);
@@ -105,13 +110,13 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata->m_response.length = response_message.size();
 
     AddEventToChangeList(m_kqueue.change_list, current_event->ident,
-                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
   }
 }
 
 void Server::pipeReadEvent(struct kevent *current_event)
 {
-  std::cout << "💧 PIPE READ EVENT 💧" << std::endl;
+  Log::info("💧 PIPE READ EVENT 💧");
 
   char buf[BUF_SIZE];
   std::memset(buf, 0, BUF_SIZE);
@@ -127,10 +132,9 @@ void Server::pipeReadEvent(struct kevent *current_event)
   wait(NULL);
   if (current_event->flags & EV_EOF)
   {
-    std::cout << "💩 PIPE EOF EVENT 💩" << std::endl;
-    close(current_event->ident);
+    Log::info("💩 PIPE EOF EVENT 💩");
 
-    // char *message = getHttpMessage();  // 인자로 response 전달
+    close(current_event->ident);
     const char *message = current_udata->m_result.c_str();
 
     t_event_udata *udata =

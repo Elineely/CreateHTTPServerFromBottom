@@ -1,8 +1,10 @@
 #include "Server.hpp"
+#include "Log.hpp"
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 {
-  std::cout << "⌛️ CGI PROCESS TIMEOUT EVENT ⌛️" << std::endl;
+  Log::info("⌛️ CGI PROCESS TIMEOUT EVENT ⌛️");
+
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);
 
