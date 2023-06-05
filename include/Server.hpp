@@ -95,13 +95,13 @@ struct t_multi_server
 
 struct t_response_write
 {
-  const char *message;
+  std::vector<char> message;
   ssize_t length;
   ssize_t offset;
 
-  t_response_write(void) : message(NULL), length(0), offset(0) {}
+  t_response_write(void) : length(0), offset(0) {}
 
-  t_response_write(const char *message, ssize_t length)
+  t_response_write(std::vector<char> message, ssize_t length)
       : message(message), length(length), offset(0)
   {
   }
@@ -120,7 +120,7 @@ struct t_event_udata
   struct t_event_udata *m_other_udata;
 
   t_event_udata(e_event_type type) : m_type(type), m_other_udata(NULL) {}
-  t_event_udata(e_event_type type, const char *message, size_t length)
+  t_event_udata(e_event_type type, std::vector<char> message, size_t length)
       : m_type(type), m_response(message, length), m_other_udata(NULL)
   {
   }
