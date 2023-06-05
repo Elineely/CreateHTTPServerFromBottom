@@ -81,7 +81,7 @@ int main(void)
   Response c;
   // b.uri = "/d";
   // b.uri = "/c";
-  b.uri = "/b/a";
+  b.uri = "/b";
   // b.uri = "/cccccc/cc";
   // b.uri = "/basics/index.py";
   // b.uri = "/admin";
