@@ -46,8 +46,15 @@ struct RequestPool
       {
         delete total_line;
       }
-      total_line = new char[line_len];
-      std::memmove(total_line, rhs.total_line, line_len + 1);
+      if (rhs.total_line != NULL)
+      {
+        total_line = new char[line_len];
+        std::memmove(total_line, rhs.total_line, line_len + 1);
+      }
+      else
+      {
+        total_line = NULL;
+      }
     }
     return (*this);
   }

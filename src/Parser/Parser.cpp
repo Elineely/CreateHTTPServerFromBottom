@@ -39,10 +39,6 @@ Parser& Parser::operator=(Parser const& rhs)
   if (this != &rhs)
   {
     m_data = rhs.m_data;
-    if (m_pool.total_line != NULL)
-    {
-      delete m_pool.total_line;
-    }
     m_pool = rhs.m_pool;
   }
   return *this;
@@ -134,7 +130,7 @@ void Parser::saveBufferInPool(char* buf)
     delete m_pool.total_line;
     // TODO: strjoin 보다 효율적인 문자열 병합 방법이 있는지 찾기
     m_pool.total_line = ft_strjoin(temp_buf, buf);
-    delete temp_buf;
+    delete temp_buf; 
   }
 }
 
