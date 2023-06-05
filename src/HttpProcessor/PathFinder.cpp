@@ -180,11 +180,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     if (temp_location == server_data.locations.end())
     {
       current_location = server_data.locations.find("/")->second;
-      if (checkExist(current_location.root + "/" + locationBlock))
+      if (checkExist(current_location.root + locationBlock))
       { // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
-        if (is_directory(current_location.root + "/" + locationBlock))
+        if (is_directory(current_location.root + locationBlock))
         {
-          setBasic(current_location.accepted_method, current_location.root + "/" + locationBlock,
+          setBasic(current_location.accepted_method, current_location.root + locationBlock + "/",
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
