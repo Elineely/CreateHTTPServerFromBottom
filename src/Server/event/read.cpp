@@ -1,5 +1,5 @@
-#include "Server.hpp"
 #include "HttpProcessor.hpp"
+#include "Server.hpp"
 #include "ResponseGenerator.hpp"
 #include "Log.hpp"
 
@@ -106,11 +106,15 @@ void Server::clientReadEvent(struct kevent *current_event)
       response_message = not_ok.generateErrorResponseMessage();
     }
     t_event_udata *udata = new t_event_udata(CLIENT);
-    udata->m_response.message = &response_message[0];
+    t_event_udata *current_udata = (t_event_udata *)current_event->udata;
+    // t_server crrent_m_server = current_udata->m_server;
+    udata->m_response.message = response_message;
     udata->m_response.length = response_message.size();
 
     AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+    Parser new_parser(current_udata->m_server.max_body_size[0]);
+    current_udata->m_parser = new_parser; 
   }
 }
 
@@ -130,20 +134,20 @@ void Server::pipeReadEvent(struct kevent *current_event)
     return;
   }
   wait(NULL);
-  if (current_event->flags & EV_EOF)
+  if (current_event->flags & EV_EOF) 
   {
     Log::info("💩 PIPE EOF EVENT 💩");
 
     close(current_event->ident);
     const char *message = current_udata->m_result.c_str();
 
-    t_event_udata *udata =
-        new t_event_udata(CLIENT, message, ft_strlen(message));
+    // t_event_udata *udata =
+    //     new t_event_udata(CLIENT, message, ft_strlen(message));
 
-    AddEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
-                         EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-    delete current_udata;
+    // AddEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+    //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+    // AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
+    //                      EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    // delete current_udata;
   }
 }

@@ -73,7 +73,7 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   {
     std::string date = generateDate((*it).date);
     std::string size = generateSize((*it).size);
-    autoindex << "\t\t\t<tr><td><a href=\"" << (*it).name << "\">" << (*it).name
+    autoindex << "\t\t\t<tr><td><a href=\"" << (m_request_data.uri == "/" ? "" : m_request_data.uri) << "/" <<(*it).name << "\">" << (*it).name
               << "</a></td><td>" << date << "</td><td>" << size
               << "</td></tr>\n";
   }
