@@ -10,6 +10,7 @@
 #include "Request.hpp"
 #include "ResponseGenerator.hpp"
 
+
 /* ************************ */
 /* CgiHandler virtual class */
 /* ************************ */

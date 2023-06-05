@@ -1,81 +1,75 @@
 #!/usr/bin/python
+#/opt/homebrew/bin/python3
 
 # keep in mind that the CGI module in Python has been removed in Python 3,
 # so you may need to use an alternative approach for handling CGI requests.
 
 import cgi
 import os
-import re
+import sys
 import cgitb
 cgitb.enable()
+# # import cgitb; cgitb.enable(display=0, logdir="./log")
 
 # Create a new CGI object
 cgi_obj = cgi.FieldStorage()
 
-# Get the values of the two numbers to add from the query string
-# if query string case
-# print(os.environ['QUERY_STRING'])
-aaa.py
-# else if post put case
-num1 = cgi_obj.getvalue('num1')
-num2 = cgi_obj.getvalue('num2')
+from datetime import datetime
 
-# print("num1:", num1)
-# print("num2:", num2)
+now = datetime.now()
+default_header = "Content-Type: text/html\r\n\r"
+default_content = "<html><head>\n" + \
+               "<title>cute CGI output</title>\n" + \
+               "</head><body>\n" + \
+              "<h1>This is my so cute CGI output</h1>\n" + \
+              "<p>Bang-gle</p>\n" + \
+              "<p>" + now.strftime('%Y-%m-%d %H:%M:%S') + "</p>\n" + \
+             "</body></html>"
 
-# Convert the numbers to integers
-if num1 is None or num2 is None:
-    if 'QUERY_STRING' in os.environ:
-        query = os.environ['QUERY_STRING']
-        query_list = query.split('&')
-        for item in query_list:
-            var, val = item.split('=')
-            val = val.replace("'", "")
-            val = val.replace('+', ' ')
-            val = re.sub(r'%(\w\w)', lambda m: chr(int(m.group(1), 16)), val)
-            if var == "num1":
-                if val != "":
-                    num1 = int(val)
-            elif var == "num2":
-                if val != "":
-                    num2 = int(val)
+#*******************************************#
+# only for '.py' file that we've already set
+#*******************************************#
+# print('\n *** CASE OF DEFAULT *** \n')
 
-        if num1 is None or num2 is None:
-            print("Content-Type: text/html")
-            print()
-            print("<html><head><title>Addition Result</title></head><body>")
-            print("<center><h1>Addition Result</h1></center>")
-            print("<p>num1 or num2 does not exist.</p>")
-            print("</body></html>")
-            exit()
-        else:
-            sum = num1 + num2
+print(default_header)
+print(default_content)
 
-            print("Content-Type: text/html")
-            print()
-            print("<html><head><title>Addition Result</title></head><body>")
-            print("<center><h1>Addition Result</h1></center>")
-            print("<p>The sum of {} and {} is {}.</p>".format(num1, num2, sum))
-            print("</body></html>")
-            exit()
-    else:
-        print("Content-Type: text/html")
-        print()
-        print("<html><head><title>Addition Result</title></head><body>")
-        print("<center><h1>Addition Result</h1></center>")
-        print("<p>num1 and num2 does not exist.</p>")
-        print("</body></html>")
-        exit()
+#**************************************************************#
+# case of taking text file 'PATH_INFO' env (maybe for cgi tester?)
+#**************************************************************#
+# print('\n *** CASE OF TEXT PATH_INFO *** \n')
+
+print("Content-Type: text/html\r\n\r")
+# print(os.getenv('PATH_INFO'))
+path_info_t = os.getenv('PATH_INFO')
+# with -> no need to use close() function
+if os.path.isfile(path_info_t):
+    with open(path_info_t, 'r') as text_file:
+        text_content = text_file.read()
+        sys.stdout.write(text_content)
 else:
-    num1 = int(num1)
-    num2 = int(num2)
-    # Add the numbers
-    sum = num1 + num2
+    print(default_header)
+    print(default_content)
 
-    # Print the HTML response
-    print("Content-Type: text/html")
-    print()
-    print("<html><head><title>Addition Result</title></head><body>")
-    print("<center><h1>Addition Result</h1></center>")
-    print("<p>The sum of {} and {} is {}.</p>".format(num1, num2, sum))
-    print("</body></html>")
+#**************************************************************#
+# case of taking binary file 'PATH_INFO' env (maybe for cgi tester?)
+#**************************************************************#
+# print('\n *** CASE OF BINARY PATH_INFO *** \n')
+
+# pip install pillow
+# from PIL import Image
+# from PIL import ImageDraw
+
+print("Content-Type: image/jpeg\r\n\r")
+path_info_i = os.getenv('PATH_INFO')
+if os.path.isfile(path_info_i):
+    with open(path_info_i, 'rb') as image_file:
+        image_content = image_file.read()
+        sys.stdout.write(image_content)
+else:
+    print(default_header)
+    print(default_content)
+
+# img = Image.open(path_info_i)
+# draw = ImageDraw.Draw(img)
+# display(img)

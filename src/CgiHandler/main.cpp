@@ -8,10 +8,9 @@
 
 int main(int argc, char** argv, char** env)
 {
-
-  PostCgiHandler post_handler;
-  post_handler.outsourceCgiRequest();
-  std::vector<char> test = post_handler.makeErrorPage();
+  // PostCgiHandler post_handler;
+  // post_handler.outsourceCgiRequest();
+  // std::vector<char> test = post_handler.makeErrorPage();
 
   // for(int i = 0; i < post_handler.m_content_vector.size(); ++i)
   // {

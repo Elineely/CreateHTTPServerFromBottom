@@ -1,4 +1,5 @@
-#include "CgiHandler.hpp"
+// #include "CgiHandler.hpp"
+#include "../../include/CgiHandler.hpp"
 
 #include "Log.hpp"
 
@@ -18,7 +19,7 @@
 /* CgiHandler virtual class */
 /* ************************ */
 // no need to make canonical form for virtual class?
-// CgiHandler::CgiHandler() {}
+CgiHandler::CgiHandler() {}
 
 CgiHandler::CgiHandler(Request& requset_data, Response& response_data)
     : m_request_data(requset_data), m_response_data(response_data)
@@ -31,10 +32,13 @@ Response CgiHandler::get_m_response_data() { return (m_response_data); }
 
 void CgiHandler::setCgiEnv(void)
 {
+  // test
+  m_response_data.cgi_bin_path = "post_python.py";
+
   // 수정 필요 ----------------
   std::string defualt_cgi_script("post_python.py");
 
-  // 값이 없는 경우는 빈 값으로 표시되면 생략하는 것과 같은 효과
+  // 값이 없는 경우는 빈 값으로 두면 생략하는 것과 같은 효과
 
   m_env_list.push_back("GATEWAY_INTERFACE=CGI/1.1");
 
@@ -125,7 +129,7 @@ const char* CgiHandler::KqueueException::what() const throw()
 /* GetCgiHandler class */
 /* ******************* */
 
-// GetCgiHandler::GetCgiHandler() {}
+GetCgiHandler::GetCgiHandler() { }
 
 GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
     : CgiHandler(request_data, response_data)
@@ -140,13 +144,22 @@ GetCgiHandler::~GetCgiHandler() {}
 // GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj)
 // {}
 
-// GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
-// {
-//   if (this != &obj)
-//   {
-//   }
-//   return (*this);
-// }
+GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
+{
+  if (this != &obj)
+  {
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_env_list = obj.m_env_list;
+    m_env_list_parameter = obj.m_env_list_parameter;
+    m_to_child_fds[READ] = obj.m_to_child_fds[READ];
+    m_to_child_fds[WRITE] = obj.m_to_child_fds[WRITE];
+    m_to_parent_fds[READ] = obj.m_to_parent_fds[READ];
+    m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
+    m_pid = obj.m_pid;
+  }
+  return (*this);
+}
 
 // member functions
 
@@ -181,6 +194,7 @@ void GetCgiHandler::executeCgi()
   }
   close(m_to_parent_fds[WRITE]);
 
+  setCgiEnv();
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
@@ -196,7 +210,6 @@ void GetCgiHandler::executeCgi()
 
 void GetCgiHandler::outsourceCgiRequest(void)
 {
-  setCgiEnv();
   try
   {
     pipeAndFork();
@@ -223,7 +236,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
 /* PostCgiHandler class */
 /* ******************** */
 
-// PostCgiHandler::PostCgiHandler() {}
+PostCgiHandler::PostCgiHandler() {}
 
 PostCgiHandler::~PostCgiHandler() {}
 
@@ -234,19 +247,25 @@ PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
   // m_response_data = response_data;
 }
 
-// PostCgiHandler::PostCgiHandler(/* ??? */)
-// {}
+PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj)
+{ *this = obj; }
 
-// PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj)
-// {}
-
-// PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
-// {
-//   if (this != &obj)
-//   {
-//   }
-//   return (*this);
-// }
+PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
+{
+  if (this != &obj)
+  {
+    m_request_data = obj.m_request_data;
+    m_response_data = obj.m_response_data;
+    m_env_list = obj.m_env_list;
+    m_env_list_parameter = obj.m_env_list_parameter;
+    m_to_child_fds[READ] = obj.m_to_child_fds[READ];
+    m_to_child_fds[WRITE] = obj.m_to_child_fds[WRITE];
+    m_to_parent_fds[READ] = obj.m_to_parent_fds[READ];
+    m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
+    m_pid = obj.m_pid;
+  }
+  return (*this);
+}
 
 // member functions
 
@@ -304,6 +323,7 @@ void PostCgiHandler::executeCgi()
   }
   close(m_to_parent_fds[WRITE]);
 
+  setCgiEnv();
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
@@ -319,7 +339,6 @@ void PostCgiHandler::executeCgi()
 
 void PostCgiHandler::outsourceCgiRequest(void)
 {
-  setCgiEnv();
   try
   {
     pipeAndFork();
@@ -330,12 +349,13 @@ void PostCgiHandler::outsourceCgiRequest(void)
     }
     else
     {
-      close(m_to_child_fds[READ]);
-      close(m_to_child_fds[WRITE]);
-      close(m_to_parent_fds[WRITE]);
+      // close(m_to_child_fds[READ]);
+      // close(m_to_child_fds[WRITE]);
+      // close(m_to_parent_fds[WRITE]);
 
-      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
-      m_response_data.cgi_child_pid = m_pid;
+      // m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      // m_response_data.cgi_child_pid = m_pid;
+      getDataFromCgi();
     }
   }
   catch (const std::exception& e)
