@@ -1,5 +1,4 @@
 #include "PathFinder.hpp"
-
 #include "Log.hpp"
 // #include "./PathTest/PathFinder.hpp" // for test
 
@@ -163,6 +162,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
              current_location.index, current_location.auto_index,
              current_location.uploaded_path, current_location.redirection,
              response_data);
+    if (response_data.auto_index == true)
+    {
+      response_data.file_name = "";
+      response_data.file_exist = false;
+    }
     return;
   }
   if (setCgi((locationBlock), server_data, response_data))
@@ -175,11 +179,36 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     temp_location = server_data.locations.find(locationBlock);
     if (temp_location == server_data.locations.end())
     {
+      current_location = server_data.locations.find("/")->second;
+      if (checkExist(current_location.root + "/" + locationBlock))
+      { // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
+        if (is_directory(current_location.root + locationBlock))
+        {
+          setBasic(current_location.accepted_method, current_location.root + locationBlock,
+               current_location.index, current_location.auto_index,
+               current_location.uploaded_path, current_location.redirection,
+               response_data);
+          if (response_data.auto_index == true)
+          {
+            response_data.file_name = "";
+            response_data.file_exist = false;
+          }
+        }
+        else
+        {
+           setBasic(current_location.accepted_method, current_location.root + "/",
+               locationBlock.substr(1), current_location.auto_index,
+               current_location.uploaded_path, current_location.redirection,
+               response_data);
+        }
+      }
+      else
+      {
       // 들어온 블록이름이 location에 존재하지 않음.
-      //  '/파일이름'으로 들어온 경우 후에 처리를 원하면 이 블록에서 로직 추가
       response_data.path_exist = false;
       response_data.file_exist = false;
       response_data.auto_index = false;
+      }
     }
     else
     {
@@ -200,10 +229,42 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
         (locationBlock).substr(0, (locationBlock).find("/", 1));
     temp_location = server_data.locations.find(location_key);
     if (temp_location == server_data.locations.end())
-    {  // "/??(location에 없음)/b/c/d" 경우
-      response_data.path_exist = false;
-      response_data.file_exist = false;
-      response_data.auto_index = false;
+    {  // "/??(location에 없음)/b/c/d" 경우 + "/(기본디렉토리)/(그 안의 디렉토리)/그 안의 파일"
+       current_location = server_data.locations.find("/")->second;
+      if (checkExist(current_location.root + "/" + locationBlock))
+      { //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
+        std::string rest_of_uri =
+            (locationBlock).substr((locationBlock).find("/"));
+        std::cout << rest_of_uri << std::endl;
+        std::string entire_path = current_location.root + rest_of_uri;
+        pos_last = entire_path.rfind("/");
+        if (!is_directory(current_location.root + locationBlock))
+        {// 파일로 끝나는 경로가 온 경우
+        std::cout << "!!!!!" << entire_path.substr(0, pos_last + 1) << std::endl;
+          setBasic(current_location.accepted_method,
+               entire_path.substr(0, pos_last + 1),
+               entire_path.substr(pos_last + 1), current_location.auto_index,
+               current_location.uploaded_path, current_location.redirection,
+               response_data);
+          return ;
+        }
+        // 디렉토리로 끝나는 경우가 온 경우
+        setBasic(current_location.accepted_method, current_location.root + "/",
+               current_location.index, current_location.auto_index,
+               current_location.uploaded_path, current_location.redirection,
+               response_data);
+         if (response_data.auto_index == true)
+        {
+          response_data.file_name = "";
+          response_data.file_exist = false;
+        }
+      }
+      else
+      { // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
+        response_data.path_exist = false;
+        response_data.file_exist = false;
+        response_data.auto_index = false;
+      }
       return;
     }
     current_location = temp_location->second;
@@ -217,11 +278,17 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
+      if (response_data.auto_index == true)
+      {
+        response_data.file_name = "";
+        response_data.file_exist = false;
+      }
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
-      Log::debug("pos_last: %d, entire_path: %s", pos_last,
-                 entire_path.c_str());
+      std::cout << "pos_last: " << pos_last << std::endl;
+      std::cout << "entire_path: " << 
+                 entire_path.c_str() << std::endl;
       setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,

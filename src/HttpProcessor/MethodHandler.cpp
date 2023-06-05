@@ -159,11 +159,17 @@ GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
 }
 void GetMethodHandler::methodRun()
 {
+  if (m_response_data.path_exist ==false) throw NOT_FOUND_404;
   if (m_response_data.auto_index == true)
-    autoIndexToBody(m_response_data.file_path);
+  {
+    if (m_response_data.file_exist)
+      fileToBody(m_response_data.file_path + m_response_data.file_name);
+    else
+      autoIndexToBody(m_response_data.file_path);
+  }
   else
   {
-    if (!m_response_data.file_exist) throw NOT_FOUND_404;
+    if (!m_response_data.file_exist) 
     fileToBody(m_response_data.file_path + m_response_data.file_name);
   }
 }
