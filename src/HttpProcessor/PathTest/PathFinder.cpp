@@ -1,8 +1,6 @@
-// #include "PathFinder.hpp"
+#include "PathFinder.hpp"
 // #include "Log.hpp"
-
-// #include "./PathTest/Log.hpp" //for test
-#include "./PathFinder.hpp" // for test
+// #include "./PathTest/PathFinder.hpp" // for test
 
 #include <iostream>
 
@@ -64,10 +62,6 @@ void PathFinder::setIndex(std::string root, std::string index,
   {
     response_data.file_exist = true;
   }
-  else
-  {
-    response_data.file_exist = false;
-  }
 }
 
 void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
@@ -108,41 +102,42 @@ void PathFinder::setRedirection(std::string redirection,
   }
 }
 
-void PathFinder::test_print_location(t_location& c)
-{
-  std::cout <<   "🧪 test_print_location 🧪" << std::endl;
-  std::cout <<   "language: " << c.language.c_str() << std::endl;
-  std::cout << "root: " << c.root.c_str() << std::endl;
-  std::cout <<   "auto_index: "<< c.auto_index.c_str() << std::endl;
-  std::cout << "index: " << c.index.c_str() << std::endl;
-  std::cout << "ourcgi_pass: " <<  c.ourcgi_pass.c_str() << std::endl;
-  std::cout << "ourcgi_index: " <<  c.ourcgi_index.c_str() << std::endl;
-  std::cout << "uploaded_path: " <<  c.uploaded_path.c_str() << std::endl;
-  std::cout << "accepted_method: " <<  c.accepted_method.c_str() << std::endl;
-  std::cout << "🧪 test_print_location 🧪" << std::endl;
-}
+// void PathFinder::test_print_location(t_location& c)
+// {
+//   Log::debug("🧪 test_print_location 🧪");
+//   Log::debug("language: %s", c.language.c_str());
+//   Log::debug("root: %s", c.root.c_str());
+//   Log::debug("auto_index: %d", c.auto_index.c_str());
+//   Log::debug("index: %s", c.index.c_str());
+//   Log::debug("ourcgi_pass: %s", c.ourcgi_pass.c_str());
+//   Log::debug("ourcgi_index: %s", c.ourcgi_index.c_str());
+//   Log::debug("uploaded_path: %s", c.uploaded_path.c_str());
+//   Log::debug("accepted_method: %s", c.accepted_method.c_str());
+//   Log::debug("🧪 test_print_location 🧪");
+// }
 
-void PathFinder::test_print_basics(Response& c)
-{
-  std::cout << "🧪 test_print_basics 🧪" << std::endl;
-  std::cout << "accepted_method: " <<  c.accepted_method.c_str() << std::endl;
-  std::cout << "auto_index: " <<  c.auto_index << std::endl;
-  std::cout << "file_exist: " <<  c.file_exist << std::endl;
-  std::cout << "file_name: " <<  c.file_name.c_str() << std::endl;
-  std::cout << "path_exist: " <<  c.path_exist << std::endl;
-  std::cout << "file_path: " <<  c.file_path.c_str() << std::endl;
-  std::cout << "cgi_flag: " <<  c.cgi_flag << std::endl;
-  std::cout << "cgi_bin_path: " <<  c.cgi_bin_path.c_str() << std::endl;
-  std::cout << "uploaded_path: " <<  c.uploaded_path.c_str() << std::endl;
-  std::cout << "🧪 test_print_basics 🧪" << std::endl;
-}
+// void PathFinder::test_print_basics(Response& c)
+// {
+//   Log::debug("🧪 test_print_basics 🧪");
+//   Log::debug("accepted_method: %s", c.accepted_method.c_str());
+//   Log::debug("auto_index: %d", c.auto_index);
+//   Log::debug("file_exist: %d", c.file_exist);
+//   Log::debug("file_name: %s", c.file_name.c_str());
+//   Log::debug("path_exist: %d", c.path_exist);
+//   Log::debug("file_path: %s", c.file_path.c_str());
+//   Log::debug("cgi_flag: %d", c.cgi_flag);
+//   Log::debug("cgi_bin_path: %s", c.cgi_bin_path.c_str());
+//   Log::debug("uploaded_path: %s", c.uploaded_path.c_str());
+//   Log::debug("🧪 test_print_basics 🧪");
+// }
 
 void PathFinder::setBasic(std::string method, std::string root,
                           std::string index, std::string auto_index,
                           std::string upload, std::string redirection,
                           Response& response_data)
 {
-  std::cout << "Default server block (root: , index: " << root << "," << index << std::endl;
+  // Log::debug("Default server block (root: %s, index: %s)", root.c_str(),
+  //            index.c_str());
   setMethod(method, response_data);
   setRoot(root, response_data);
   setIndex(root, index, response_data);
@@ -167,6 +162,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
              current_location.index, current_location.auto_index,
              current_location.uploaded_path, current_location.redirection,
              response_data);
+    if (response_data.auto_index == true)
+    {
+      response_data.file_name = "";
+      response_data.file_exist = false;
+    }
     return;
   }
   if (setCgi((locationBlock), server_data, response_data))
@@ -180,11 +180,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     if (temp_location == server_data.locations.end())
     {
       current_location = server_data.locations.find("/")->second;
-      if (checkExist(current_location.root + "/" + locationBlock))
+      if (checkExist(current_location.root + locationBlock))
       { // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
         if (is_directory(current_location.root + locationBlock))
         {
-          setBasic(current_location.accepted_method, current_location.root + locationBlock,
+          setBasic(current_location.accepted_method, current_location.root + locationBlock + "/",
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
@@ -240,7 +240,6 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
         pos_last = entire_path.rfind("/");
         if (!is_directory(current_location.root + locationBlock))
         {// 파일로 끝나는 경로가 온 경우
-        std::cout << "!!!!!" << entire_path.substr(0, pos_last + 1) << std::endl;
           setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,
@@ -294,7 +293,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                entire_path.substr(pos_last + 1), current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
-      test_print_basics(response_data);
+      // test_print_basics(response_data);
     }
   }
 }
