@@ -1,5 +1,7 @@
 #include "CgiHandler.hpp"
 
+#include "Log.hpp"
+
 #define SUCCESS 0
 #define ERROR -1
 
@@ -12,7 +14,6 @@
 // #define SERVER_NAME std::string("10.12.9.2")
 // #define SERVER_PORT std::string("80")
 
-
 /* ************************ */
 /* CgiHandler virtual class */
 /* ************************ */
@@ -20,14 +21,13 @@
 // CgiHandler::CgiHandler() {}
 
 CgiHandler::CgiHandler(Request& requset_data, Response& response_data)
-  : m_request_data(requset_data), m_response_data(response_data)
+    : m_request_data(requset_data), m_response_data(response_data)
 {
 }
 
 CgiHandler::~CgiHandler() {}
 
-Response CgiHandler::get_m_response_data()
-{ return (m_response_data); }
+Response CgiHandler::get_m_response_data() { return (m_response_data); }
 
 void CgiHandler::setCgiEnv(void)
 {
@@ -58,11 +58,13 @@ void CgiHandler::setCgiEnv(void)
     // m_env_list.push_back("SCRIPT_NAME=" + m_response_data.file_name);
   }
 
-  // 원래는 https://hostname:port/script_name/foo/bar.. 이런 식일 때 script_name 이후의 값을 말함
-  // 그러나 우린 CGI 스크립트만 실행시킴(실행시킬 스크립트 파일 이외의 파일을 받지 않기 때문에 빈 값)
-  // CGI tester에서 혹시 값을 추가로 줄까? 그러면 설정 필요함
+  // 원래는 https://hostname:port/script_name/foo/bar.. 이런 식일 때 script_name
+  // 이후의 값을 말함 그러나 우린 CGI 스크립트만 실행시킴(실행시킬 스크립트 파일
+  // 이외의 파일을 받지 않기 때문에 빈 값) CGI tester에서 혹시 값을 추가로 줄까?
+  // 그러면 설정 필요함
   m_env_list.push_back("PATH_INFO=");
-  // PATH_INFO가 NULL이면 얘도 NULL (값이 있으면, 서버 내의 실제 주소를 담아주면 됨 ex. usr/www/html ..)
+  // PATH_INFO가 NULL이면 얘도 NULL (값이 있으면, 서버 내의 실제 주소를 담아주면
+  // 됨 ex. usr/www/html ..)
   m_env_list.push_back("PATH_TRANSLATED=");
 
   // 값을 안 줘도 ""로라도 채워줘야 하는 환경변수
@@ -70,11 +72,13 @@ void CgiHandler::setCgiEnv(void)
 
   if (m_request_data.body.size() != 0)
   {
-    m_env_list.push_back("CONTENT_LENGTH=" + m_request_data.headers["content-length"]);
+    m_env_list.push_back("CONTENT_LENGTH=" +
+                         m_request_data.headers["content-length"]);
   }
   if (m_request_data.headers["content-type"] != "")
   {
-    m_env_list.push_back("CONTENT_TYPE=" + m_request_data.headers["content-type"]);
+    m_env_list.push_back("CONTENT_TYPE=" +
+                         m_request_data.headers["content-type"]);
   }
 
   m_env_list.push_back("X_FILE_PATH=" + m_response_data.file_path);
@@ -124,14 +128,11 @@ const char* CgiHandler::KqueueException::what() const throw()
 // GetCgiHandler::GetCgiHandler() {}
 
 GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
-  : CgiHandler(request_data, response_data)
+    : CgiHandler(request_data, response_data)
 {
-  // m_request_data = request_data;
-  // m_response_data = response_data;
 }
 
 GetCgiHandler::~GetCgiHandler() {}
-
 
 // GetCgiHandler::GetCgiHandler(/* ??? */)
 // {}
@@ -147,15 +148,20 @@ GetCgiHandler::~GetCgiHandler() {}
 //   return (*this);
 // }
 
-//member functions
+// member functions
 
 void GetCgiHandler::pipeAndFork()
 {
-  if (pipe(m_to_parent_fds) == ERROR) { throw PipeForkException(); }
+  if (pipe(m_to_parent_fds) == ERROR)
+  {
+    Log::error("[GetCgiHandler] Failed to create pipe");
+    throw PipeForkException();
+  }
 
   m_pid = fork();
   if (m_pid == ERROR)
   {
+    Log::error("[GetCgiHandler] Failed to fork");
     close(m_to_parent_fds[READ]);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
@@ -168,6 +174,8 @@ void GetCgiHandler::executeCgi()
 
   if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
   {
+    Log::error("[GetCgiHandler] Failed to dup2(%d, %d)", m_to_parent_fds,
+               STDOUT_FILENO);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
   }
@@ -177,33 +185,13 @@ void GetCgiHandler::executeCgi()
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
 
-  if (execve(cgi_bin_path, const_cast<char *const *>(argv), const_cast<char *const *>(envp)) == ERROR)
+  if (execve(cgi_bin_path, const_cast<char* const*>(argv),
+             const_cast<char* const*>(envp)) == ERROR)
   {
+    Log::error("[GetCgiHandler] Failed to execve function => strerrno: %s",
+               strerror(errno));
     throw ExecutionException();
   }
-}
-
-void GetCgiHandler::getDataFromCgi()
-{
-  close(m_to_parent_fds[WRITE]);
-
-  char buffer[4096]; // 크기
-  ssize_t bytes_read;
-
-  while (true) // 조건문 수정?
-  {
-    bytes_read = read(m_to_parent_fds[READ], buffer, sizeof(buffer));
-    if (bytes_read <= 0)
-    {
-      break ;
-    }
-    for (int i = 0; i < bytes_read; ++i)
-    {
-      m_content_vector.push_back(buffer[i]);
-    }
-  }
-  close(m_to_parent_fds[READ]);
-  m_response_data.body = m_content_vector;
 }
 
 void GetCgiHandler::outsourceCgiRequest(void)
@@ -212,8 +200,8 @@ void GetCgiHandler::outsourceCgiRequest(void)
   try
   {
     pipeAndFork();
-    if (m_pid == CHILD_PROCESS) 
-    { 
+    if (m_pid == CHILD_PROCESS)
+    {
       executeCgi();
     }
     else
@@ -223,10 +211,10 @@ void GetCgiHandler::outsourceCgiRequest(void)
       m_response_data.cgi_child_pid = m_pid;
     }
   }
-  catch(const std::exception& e)
+  catch (const std::exception& e)
   {
     // std::cerr << e.what() << '\n';
-    std::cerr << "GetCgiHandler::outsourceCgiRequest fucntion" << std::endl;
+    Log::error("[GetCgiHandler] outsourceCgiRequest catch error");
     std::vector<char> error_message = makeErrorPage();
   }
 }
@@ -240,7 +228,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
 PostCgiHandler::~PostCgiHandler() {}
 
 PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
-  : CgiHandler(request_data, response_data)
+    : CgiHandler(request_data, response_data)
 {
   // m_request_data = request_data;
   // m_response_data = response_data;
@@ -260,17 +248,19 @@ PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
 //   return (*this);
 // }
 
-//member functions
+// member functions
 
 void PostCgiHandler::pipeAndFork()
 {
   if (pipe(m_to_child_fds) == ERROR)
-  { 
+  {
+    Log::error("[PostCgiHandler] Failed to create m_to_child_fds pipe");
     throw PipeForkException();
   }
 
   if (pipe(m_to_parent_fds) == ERROR)
   {
+    Log::error("[PostCgiHandler] Failed to create m_to_parent_fds pipe");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     throw PipeForkException();
@@ -279,6 +269,7 @@ void PostCgiHandler::pipeAndFork()
   m_pid = fork();
   if (m_pid == ERROR)
   {
+    Log::error("[PostCgiHandler] Failed to fork");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     close(m_to_parent_fds[READ]);
@@ -295,6 +286,8 @@ void PostCgiHandler::executeCgi()
   // 부모 프로세스로부터 받은 데이터를 cgi에 표준 입력으로 넘겨주는 dup2
   if (dup2(m_to_child_fds[READ], STDIN_FILENO) == ERROR)
   {
+    Log::error("[PostCgiHandler] Failed to dup2(%d, %d)", m_to_child_fds[READ],
+               STDIN_FILENO);
     close(m_to_child_fds[READ]);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
@@ -304,6 +297,8 @@ void PostCgiHandler::executeCgi()
   // cgi의 표준 출력 반환값을 부모 프로세스에 넘겨주는 dup2
   if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
   {
+    Log::error("[PostCgiHandler] Failed to dup2(%d, %d)",
+               m_to_parent_fds[WRITE], STDOUT_FILENO);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
   }
@@ -313,41 +308,13 @@ void PostCgiHandler::executeCgi()
   const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
 
-  if (execve(cgi_bin_path, const_cast<char *const *>(argv), const_cast<char *const *>(envp)) == ERROR)
+  if (execve(cgi_bin_path, const_cast<char* const*>(argv),
+             const_cast<char* const*>(envp)) == ERROR)
   {
+    Log::error("[PostCgiHandler] Failed to execve function => strerrno: %s",
+               strerror(errno));
     throw ExecutionException();
   }
-}
-
-void PostCgiHandler::getDataFromCgi()
-{
-  close(m_to_parent_fds[WRITE]);
-  close(m_to_child_fds[READ]);
-
-  if (m_request_data.body.size() != 0)
-  {
-    if (write(m_to_child_fds[WRITE], &m_request_data.body[0], sizeof(char) * m_request_data.body.size()) == ERROR)
-    {
-      close(m_to_parent_fds[READ]);
-      close(m_to_child_fds[WRITE]);
-      throw ExecutionException();
-    }
-  }
-  close(m_to_child_fds[WRITE]); //child가 읽는 파이프에 EOF 신호
-
-  char buffer[4096]; // 크기
-  ssize_t bytes_read;
-
-  while (true) // 조건문 수정?
-  {
-    bytes_read = read(m_to_parent_fds[READ], buffer, sizeof(buffer));
-    if (bytes_read <= 0) { break ; }
-    for (int i = 0; i < bytes_read; ++i)
-    { m_content_vector.push_back(buffer[i]); }
-  }
-  close(m_to_parent_fds[READ]);
-
-  m_response_data.body = m_content_vector;
 }
 
 void PostCgiHandler::outsourceCgiRequest(void)
@@ -371,10 +338,10 @@ void PostCgiHandler::outsourceCgiRequest(void)
       m_response_data.cgi_child_pid = m_pid;
     }
   }
-  catch(const std::exception& e)
+  catch (const std::exception& e)
   {
     // std::cerr << e.what() << '\n';
-    std::cerr << "PostCgiHandler outsourceCgiRequest" << std::endl;
+    Log::error("[PostCgiHandler] outsourceCgiRequest catch error");
     std::vector<char> error_message = makeErrorPage();
   }
 }

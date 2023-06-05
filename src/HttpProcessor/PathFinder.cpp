@@ -1,4 +1,6 @@
 #include "PathFinder.hpp"
+
+#include "Log.hpp"
 // #include "./PathTest/PathFinder.hpp" // for test
 
 #include <iostream>
@@ -7,14 +9,9 @@ PathFinder::PathFinder() {}
 
 PathFinder::~PathFinder() {}
 
-PathFinder::PathFinder(const PathFinder& origin) 
-{};
+PathFinder::PathFinder(const PathFinder& origin){};
 
-PathFinder& PathFinder::operator=(PathFinder const& origin)
-{
-  return (*this);
-};
-
+PathFinder& PathFinder::operator=(PathFinder const& origin) { return (*this); };
 
 bool PathFinder::is_directory(const std::string& path)
 {
@@ -56,7 +53,8 @@ void PathFinder::setRoot(std::string root, Response& response_data)
   //   } //넣을까말까 고민중.. 초기화때 false가 있으면 필요없을 듯
 }
 
-void PathFinder::setIndex(std::string root, std::string index, Response& response_data)
+void PathFinder::setIndex(std::string root, std::string index,
+                          Response& response_data)
 {
   // Post method의 경우, 요청받은 file이 존재하지 않더라도
   // 요청받은 파일 name을 기록할 필요가 있다.
@@ -87,14 +85,16 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
     response_data.cgi_bin_path = current_location.ourcgi_pass;
     response_data.uploaded_path =
         current_location.uploaded_path;  // 경로 존재하는지
-    setIndex(current_location.root + "/", current_location.ourcgi_index, response_data);
+    setIndex(current_location.root + "/", current_location.ourcgi_index,
+             response_data);
     setMethod(current_location.accepted_method, response_data);
     return true;
   }
   return false;
 }
 
-void PathFinder::setRedirection(std::string redirection, Response& response_data)
+void PathFinder::setRedirection(std::string redirection,
+                                Response& response_data)
 {
   if (redirection != "")
   {
@@ -105,35 +105,31 @@ void PathFinder::setRedirection(std::string redirection, Response& response_data
 
 void PathFinder::test_print_location(t_location& c)
 {
-  std::cout << "✅"
-            << "location"
-            << "✅" << std::endl;
-  std::cout << "language : " << c.language << std::endl;
-  std::cout << "root : " << c.root << std::endl;
-  std::cout << "auto_index : " << c.auto_index << std::endl;
-  std::cout << "index : " << c.index << std::endl;
-  std::cout << "ourcgi_pass : " << c.ourcgi_pass << std::endl;
-  std::cout << "ourcgi_index : " << c.ourcgi_index << std::endl;
-  std::cout << "uploaded_path : " << c.uploaded_path << std::endl;
-  std::cout << "accepted_method : " << c.accepted_method << std::endl;
-  std::cout << "✅--------------------✅" << std::endl;
+  Log::debug("🧪 test_print_location 🧪");
+  Log::debug("language: %s", c.language);
+  Log::debug("root: %s", c.root);
+  Log::debug("auto_index: %s", c.auto_index);
+  Log::debug("index: %s", c.index);
+  Log::debug("ourcgi_pass: %s", c.ourcgi_pass);
+  Log::debug("ourcgi_index: %s", c.ourcgi_index);
+  Log::debug("uploaded_path: %s", c.uploaded_path);
+  Log::debug("accepted_method: %s", c.accepted_method);
+  Log::debug("🧪 test_print_location 🧪");
 }
 
 void PathFinder::test_print_basics(Response& c)
 {
-  std::cout << "✅"
-            << "response"
-            << "✅" << std::endl;
-  std::cout << "accepted : " << c.accepted_method << std::endl;
-  std::cout << "auto : " << c.auto_index << std::endl;
-  std::cout << "file_exist : " << c.file_exist << std::endl;
-  std::cout << "file : " << c.file_name << std::endl;
-  std::cout << "path_exist : " << c.path_exist << std::endl;
-  std::cout << "path : " << c.file_path << std::endl;
-  std::cout << "cgi_flag : " << c.cgi_flag << std::endl;
-  std::cout << "cgi_path : " << c.cgi_bin_path << std::endl;
-  std::cout << "save_path : " << c.uploaded_path << std::endl;
-  std::cout << "✅--------------------✅" << std::endl;
+  Log::debug("🧪 test_print_basics 🧪");
+  Log::debug("accepted_method: %s", c.accepted_method);
+  Log::debug("auto_index: %s", c.auto_index);
+  Log::debug("file_exist: %s", c.file_exist);
+  Log::debug("file_name: %s", c.file_name);
+  Log::debug("path_exist: %s", c.path_exist);
+  Log::debug("file_path: %s", c.file_path);
+  Log::debug("cgi_flag: %s", c.cgi_flag);
+  Log::debug("cgi_bin_path: %s", c.cgi_bin_path);
+  Log::debug("uploaded_path: %s", c.uploaded_path);
+  Log::debug("🧪 test_print_basics 🧪");
 }
 
 void PathFinder::setBasic(std::string method, std::string root,
@@ -141,8 +137,8 @@ void PathFinder::setBasic(std::string method, std::string root,
                           std::string upload, std::string redirection,
                           Response& response_data)
 {
-  std::cout << "root : " << root << std::endl;
-  std::cout << "index : " << index << std::endl;
+  Log::debug("Default server block (root: %s, index: %s)", root.c_str(),
+             index.c_str());
   setMethod(method, response_data);
   setRoot(root, response_data);
   setIndex(root, index, response_data);
@@ -160,7 +156,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
   locationBlock = request_data.uri;
 
   std::map<std::string, t_location>::iterator temp_location;
-  if ((locationBlock) == "/" || (locationBlock) == "")   // default block
+  if ((locationBlock) == "/" || (locationBlock) == "")  // default block
   {
     current_location = server_data.locations.find("/")->second;
     setBasic(current_location.accepted_method, current_location.root + "/",
@@ -191,7 +187,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       setBasic(current_location.accepted_method, current_location.root + "/",
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
-              response_data);
+               response_data);
     }
   }
   else
@@ -220,17 +216,16 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       setBasic(current_location.accepted_method, entire_path + "/",
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
-              response_data);
+               response_data);
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
-      std::cout << pos_last << std::endl;
-      std::cout << "entire : " << entire_path << std::endl;
+      Log::debug("pos_last: %d, entire_path: %s", pos_last, entire_path);
       setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
-              response_data);
+               response_data);
       test_print_basics(response_data);
     }
   }

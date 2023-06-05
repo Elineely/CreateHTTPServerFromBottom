@@ -1,15 +1,16 @@
 #include "Server.hpp"
+#include "Log.hpp"
 
 void Server::clientWriteEvent(struct kevent *current_event)
 {
-  std::cout << "✅ CLIENT WRITE EVENT ✅" << std::endl;
+  Log::info("✅ CLIENT WRITE EVENT ✅");
 
   t_event_udata *udata;
   t_response_write *response;
 
   udata = static_cast<t_event_udata *>(current_event->udata);
   response = &udata->m_response;
-  std::cout << "client data : " << response->message << std::endl;
+  Log::debug("response->message: %s", response->message);
   int send_byte = 0;
   send_byte = send(current_event->ident, response->message + response->offset,
                    response->length - response->offset, 0);

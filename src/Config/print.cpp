@@ -1,4 +1,5 @@
 #include "Config.hpp"
+#include "Log.hpp"
 
 void showIterVector(std::vector<std::string> vector)
 {
@@ -14,14 +15,10 @@ void showIterMap(std::map<std::string, t_location> location)
   for (std::map<std::string, t_location>::iterator iter = location.begin();
        iter != location.end(); ++iter)
   {
-    std::cout << "location : auto_index : " << (*iter).second.auto_index
-              << std::endl;
-
-    std::cout << "location : index : " << (*iter).second.index << std::endl;
-
-    std::cout << "location : language : " << (*iter).second.language
-              << std::endl;
-    std::cout << "location : root : " << (*iter).second.root << std::endl;
+    Log::debug("location auto_index: %s", (*iter).second.auto_index.c_str());
+    Log::debug("location index: %s", (*iter).second.index.c_str());
+    Log::debug("location language: %s", (*iter).second.language.c_str());
+    Log::debug("location root: %s", (*iter).second.root.c_str());
   }
 }
 

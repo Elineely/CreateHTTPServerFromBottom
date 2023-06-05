@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 
+#include "Log.hpp"
 #include "utils.hpp"
 
 // Default Constructor
@@ -49,10 +50,7 @@ ValidationStatus Parser::get_validation_phase(void)
   return (m_data.validation_phase);
 }
 
-struct Request& Parser::get_request(void)
-{
-  return (m_data);
-}
+struct Request& Parser::get_request(void) { return (m_data); }
 
 // Private member functions
 void Parser::parseFirstLine(void)
@@ -67,7 +65,6 @@ void Parser::parseFirstLine(void)
   size_t idx2;
 
   // 1. HTTP Method 탐색
-  // std::cout << "first line: " << input << std::endl;
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
   if (method != "GET" && method != "POST" && method != "DELETE")
@@ -107,7 +104,7 @@ void Parser::parseFirstLine(void)
   m_data.validation_phase = ON_HEADER;
 }
 
-// QUESTION: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
+// TODO: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
 void Parser::saveBufferInPool(char* buf)
 {
   size_t buf_len;
@@ -203,7 +200,6 @@ void Parser::parseHeaders(void)
 
     value = ft_strtrim(input.substr(idx1 + 1, (idx2 - idx1 - 1)));
     m_data.headers[key] = value;
-    // std::cout << "key:" << key << "/ value:" << value << std::endl;
   } while (findNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
 }
 
@@ -224,9 +220,6 @@ void Parser::parseBody(void)
     m_data.body.push_back(*(m_pool.total_line + idx));
   }
 
-  // std::cout << "content_length: " << content_length << std::endl;
-  // std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
-
   if (static_cast<size_t>(content_length) != m_data.body.size())
   {
     m_data.status = BAD_REQUEST_400;
@@ -235,15 +228,6 @@ void Parser::parseBody(void)
   }
 
   m_data.validation_phase = COMPLETE;
-
-  // TODO: 디버깅용 출력문. 나중에 삭제하기
-  // std::cout << "Body:";
-  // for (std::vector<char>::iterator it = m_data.body.begin();
-  //      it != m_data.body.end(); it++)
-  // {
-  //   std::cout << *it;
-  // }
-  // std::cout << std::endl;
 }
 
 void Parser::parseChunkedBody(void)
@@ -261,7 +245,6 @@ void Parser::parseChunkedBody(void)
     std::string str_chunk_size(body_curr,
                                static_cast<size_t>(find - body_curr));
     long long chunk_size = std::stoll(str_chunk_size);
-    // std::cout << "chunk_size:" << chunk_size << std::endl;
     if (str_chunk_size != "0" && chunk_size <= 0)
     {
       m_data.status = BAD_REQUEST_400;
@@ -284,15 +267,6 @@ void Parser::parseChunkedBody(void)
     {
       m_data.body.push_back(*ptr);
     }
-
-    // TODO: 디버깅용 출력문. 나중에 삭제하기
-    // for (std::vector<char>::iterator it = m_data.body.begin();
-    //      it != m_data.body.end(); it++)
-    // {
-    //   std::cout << *it;
-    // }
-
-    // std::cout << std::endl;
 
     m_pool.prev_offset = next_newline - m_pool.total_line + 2;
     m_pool.offset = m_pool.prev_offset;
@@ -330,7 +304,6 @@ void Parser::readBuffer(char* buf)
           parseHeaders();
           break;
         case ON_BODY:
-          // std::cout << "on_body" << std::endl;
           if (m_data.headers.find("content-length") != m_data.headers.end())
           {
             parseBody();
@@ -339,8 +312,6 @@ void Parser::readBuffer(char* buf)
           {
             parseChunkedBody();
           }
-          // std::cout << "body size: " << m_data.body.size() << std::endl;
-          // std::cout << "m_max_body_size: " << m_max_body_size << std::endl;
           if (m_data.body.size() > m_max_body_size)
           {
             m_data.status = BAD_REQUEST_400;
@@ -358,7 +329,6 @@ void Parser::readBuffer(char* buf)
   }
   catch (std::exception& e)
   {
-    std::cerr << "Parser readBuffer function" << std::endl;
-    std::cerr << e.what() << std::endl;
+    Log::error("Parser readBuffer catches error (%s)", e.what());
   }
 }
