@@ -217,6 +217,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
+      if (response_data.auto_index == true)
+      {
+        response_data.file_name = "";
+        response_data.file_exist = false;
+      }
     }
   }
   else
