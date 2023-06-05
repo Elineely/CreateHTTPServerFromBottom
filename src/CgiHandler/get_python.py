@@ -28,20 +28,20 @@ default_content = "<html><head>\n" + \
 
 # check path_info value
 path_info = os.getenv('PATH_INFO')
-if (path_info == None | path_info == ""):
+if (path_info == None or path_info == ""):
     path_info = "index.html"
-else if not (os.path.isfile(path_info)):
+elif not (os.path.isfile(path_info)):
     path_info = "index.html"
-else if not (os.path.exists(path_info)):
+elif not (os.path.exists(path_info)):
     path_info = "index.html"
 
 # make response message
-if (os.path.splitext(path_info)[1] == "html" | os.path.splitext(path_info)[1] == "txt"):
+if (os.path.splitext(path_info)[1] == "html" or os.path.splitext(path_info)[1] == "txt"):
     print("Content-Type: text/html\r\n\r")
     with open(path_info, 'r') as text_file:
         text_content = text_file.read()
         sys.stdout.write(text_content)
-else if (os.path.splitext(path_info)[1] == "jpg" | os.path.splitext(path_info)[1] == "jpeg"):
+elif (os.path.splitext(path_info)[1] == "jpg" or os.path.splitext(path_info)[1] == "jpeg"):
     print("Content-Type: image/jpeg\r\n\r")
     with open(path_info, 'rb') as image_file:
         image_content = image_file.read()

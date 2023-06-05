@@ -26,12 +26,12 @@ default_content = "<html><head>\n" + \
 
 content_length = os.getenv('CONTENT_LENGTH=')
 content_type = os.getenv('CONTENT_TYPE=')
-if (content_length == None | content_length == "" | content_length == "0"):
+if (content_length == None or content_length == "" or content_length == "0"):
     print(default_header)
     print(default_content)
     exit()
     # return error page?
-if not (content_type == "text/html" | content_type == "image/jpeg"):
+if not (content_type == "text/html" or content_type == "image/jpeg"):
     print(default_header)
     print(default_content)
     exit()
@@ -68,7 +68,7 @@ with open(new_file, 'w') as text_file:
 # which header needed
 if (content_type == "text/html"):
     print("Content-Type: text/html\r\n\r")
-else if (content_type == "image/jpeg"):
+elif (content_type == "image/jpeg"):
     print("Content-Type: image/jpeg\r\n\r")
 else:
     print(default_header)
