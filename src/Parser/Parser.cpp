@@ -39,6 +39,10 @@ Parser& Parser::operator=(Parser const& rhs)
   if (this != &rhs)
   {
     m_data = rhs.m_data;
+    if (m_pool.total_line != NULL)
+    {
+      delete m_pool.total_line;
+    }
     m_pool = rhs.m_pool;
   }
   return *this;
@@ -102,6 +106,8 @@ void Parser::parseFirstLine(void)
   m_data.uri = uri;
   m_data.http_version = http_version;
   m_data.validation_phase = ON_HEADER;
+  Log::debug("request method: %s", method.c_str());
+  Log::debug("request uri: %s", uri.c_str());
 }
 
 // TODO: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
@@ -135,6 +141,7 @@ void Parser::saveBufferInPool(char* buf)
 bool Parser::findNewlineInPool(void)
 {
   const char* find;
+  const char* target;
 
   find = std::strstr(m_pool.total_line + m_pool.offset, "\r\n");
   if (find == NULL)
@@ -143,8 +150,15 @@ bool Parser::findNewlineInPool(void)
   }
 
   m_pool.prev_offset = m_pool.offset;
-  if (std::strncmp(m_pool.total_line + m_pool.prev_offset - 2, "\r\n\r\n", 4) ==
-      0)
+  if (m_pool.prev_offset < 2)
+  {
+    target = m_pool.total_line;
+  }
+  else
+  {
+    target = m_pool.total_line + m_pool.prev_offset - 2;
+  }
+  if (std::strncmp(target, "\r\n\r\n", 4) == 0)
   {
     if (m_data.method == "POST" &&
         (m_data.headers.find("content-length") != m_data.headers.end() ||
