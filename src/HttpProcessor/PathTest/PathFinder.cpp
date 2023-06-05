@@ -182,12 +182,25 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       current_location = server_data.locations.find("/")->second;
       if (checkExist(current_location.root + "/" + locationBlock))
       { // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
-        setBasic(current_location.accepted_method, current_location.root + locationBlock,
+        if (is_directory(current_location.root + locationBlock))
+        {
+          setBasic(current_location.accepted_method, current_location.root + locationBlock,
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
-        if (!is_directory(current_location.root + locationBlock))
-          setIndex(current_location.root + "/", locationBlock, response_data);
+          if (response_data.auto_index == true)
+          {
+            response_data.file_name = "";
+            response_data.file_exist = false;
+          }
+        }
+        else
+        {
+           setBasic(current_location.accepted_method, current_location.root + "/",
+               locationBlock.substr(1), current_location.auto_index,
+               current_location.uploaded_path, current_location.redirection,
+               response_data);
+        }
       }
       else
       {
@@ -227,6 +240,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
         pos_last = entire_path.rfind("/");
         if (!is_directory(current_location.root + locationBlock))
         {// 파일로 끝나는 경로가 온 경우
+        std::cout << "!!!!!" << entire_path.substr(0, pos_last + 1) << std::endl;
           setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,
@@ -239,6 +253,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
+         if (response_data.auto_index == true)
+        {
+          response_data.file_name = "";
+          response_data.file_exist = false;
+        }
       }
       else
       { // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
@@ -259,6 +278,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                response_data);
+      if (response_data.auto_index == true)
+      {
+        response_data.file_name = "";
+        response_data.file_exist = false;
+      }
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
