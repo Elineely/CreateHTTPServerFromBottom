@@ -355,7 +355,6 @@ void PostCgiHandler::outsourceCgiRequest(void)
 
       // m_response_data.read_pipe_fd = m_to_parent_fds[READ];
       // m_response_data.cgi_child_pid = m_pid;
-      getDataFromCgi();
     }
   }
   catch (const std::exception& e)
