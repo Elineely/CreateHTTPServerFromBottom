@@ -79,7 +79,8 @@ int main(void)
   // make_server(a, ab, ac, ad);
   Request b;
   Response c;
-  b.uri = "/";
+  // b.uri = "/b";
+  b.uri = "/cccccc/cc";
   // b.uri = "/basics/index.py";
   // b.uri = "/admin";
   // b.uri = "/bdmin";
