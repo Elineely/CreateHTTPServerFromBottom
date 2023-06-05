@@ -85,7 +85,7 @@ int main(void)
   // b.uri = "/b/a";
   // b.uri = "/cccccc/cc";
   // b.uri = "/basics/index.py";
-  b.uri = "/admin";
+  b.uri = "/admin/";
   // b.uri = "/bdmin";
   // b.uri = "/admin/a/b/c/d";
   // b.uri = "/admin"; // file은 컨피그내 index b 사용
