@@ -49,7 +49,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   char buff[BUF_SIZE];
   std::memset(buff, 0, BUF_SIZE);
   int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-  udata->m_parser.readBuffer(buff);
+  udata->m_parser.readBuffer(buff, recv_size);
   if (udata->m_parser.get_validation_phase() != COMPLETE)
   {
     return;
