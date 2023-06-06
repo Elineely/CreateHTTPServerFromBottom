@@ -3,7 +3,7 @@
 
 void Server::clientWriteEvent(struct kevent *current_event)
 {
-  Log::info("✅ CLIENT WRITE EVENT ✅");
+  LOG_INFO("✅ CLIENT WRITE EVENT ✅");
 
   t_event_udata *udata;
   t_event_udata *new_udata;

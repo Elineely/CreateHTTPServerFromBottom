@@ -3,7 +3,7 @@
 
 void print_error(const char *messaege)
 {
-  Log::error(messaege);
+  LOG_ERROR(messaege);
   return;
 }
 
@@ -27,6 +27,6 @@ int ft_error(int status_code, const char *error_message)
 
 void ft_error_exit(int exit_flag, const char *message)
 {
-  Log::error(message);
+  LOG_ERROR(message);
   exit(exit_flag);
 }

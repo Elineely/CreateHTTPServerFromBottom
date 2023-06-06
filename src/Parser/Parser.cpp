@@ -339,6 +339,6 @@ void Parser::readBuffer(char* buf)
   }
   catch (std::exception& e)
   {
-    Log::error("Parser readBuffer catches error (%s)", e.what());
+    LOG_ERROR("Parser readBuffer catches error (%s)", e.what());
   }
 }

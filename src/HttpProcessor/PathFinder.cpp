@@ -104,31 +104,31 @@ void PathFinder::setRedirection(std::string redirection,
 
 void PathFinder::test_print_location(t_location& c)
 {
-  Log::debug("🧪 test_print_location 🧪");
-  Log::debug("language: %s", c.language.c_str());
-  Log::debug("root: %s", c.root.c_str());
-  Log::debug("auto_index: %d", c.auto_index.c_str());
-  Log::debug("index: %s", c.index.c_str());
-  Log::debug("ourcgi_pass: %s", c.ourcgi_pass.c_str());
-  Log::debug("ourcgi_index: %s", c.ourcgi_index.c_str());
-  Log::debug("uploaded_path: %s", c.uploaded_path.c_str());
-  Log::debug("accepted_method: %s", c.accepted_method.c_str());
-  Log::debug("🧪 test_print_location 🧪");
+  LOG_DEBUG("🧪 test_print_location 🧪");
+  LOG_DEBUG("language: %s", c.language.c_str());
+  LOG_DEBUG("root: %s", c.root.c_str());
+  LOG_DEBUG("auto_index: %d", c.auto_index.c_str());
+  LOG_DEBUG("index: %s", c.index.c_str());
+  LOG_DEBUG("ourcgi_pass: %s", c.ourcgi_pass.c_str());
+  LOG_DEBUG("ourcgi_index: %s", c.ourcgi_index.c_str());
+  LOG_DEBUG("uploaded_path: %s", c.uploaded_path.c_str());
+  LOG_DEBUG("accepted_method: %s", c.accepted_method.c_str());
+  LOG_DEBUG("🧪 test_print_location 🧪");
 }
 
 void PathFinder::test_print_basics(Response& c)
 {
-  Log::debug("🧪 test_print_basics 🧪");
-  Log::debug("accepted_method: %s", c.accepted_method.c_str());
-  Log::debug("auto_index: %d", c.auto_index);
-  Log::debug("file_exist: %d", c.file_exist);
-  Log::debug("file_name: %s", c.file_name.c_str());
-  Log::debug("path_exist: %d", c.path_exist);
-  Log::debug("file_path: %s", c.file_path.c_str());
-  Log::debug("cgi_flag: %d", c.cgi_flag);
-  Log::debug("cgi_bin_path: %s", c.cgi_bin_path.c_str());
-  Log::debug("uploaded_path: %s", c.uploaded_path.c_str());
-  Log::debug("🧪 test_print_basics 🧪");
+  LOG_DEBUG("🧪 test_print_basics 🧪");
+  LOG_DEBUG("accepted_method: %s", c.accepted_method.c_str());
+  LOG_DEBUG("auto_index: %d", c.auto_index);
+  LOG_DEBUG("file_exist: %d", c.file_exist);
+  LOG_DEBUG("file_name: %s", c.file_name.c_str());
+  LOG_DEBUG("path_exist: %d", c.path_exist);
+  LOG_DEBUG("file_path: %s", c.file_path.c_str());
+  LOG_DEBUG("cgi_flag: %d", c.cgi_flag);
+  LOG_DEBUG("cgi_bin_path: %s", c.cgi_bin_path.c_str());
+  LOG_DEBUG("uploaded_path: %s", c.uploaded_path.c_str());
+  LOG_DEBUG("🧪 test_print_basics 🧪");
 }
 
 void PathFinder::setBasic(std::string method, std::string root,
@@ -136,8 +136,8 @@ void PathFinder::setBasic(std::string method, std::string root,
                           std::string upload, std::string redirection,
                           Response& response_data)
 {
-  Log::debug("Default server block (root: %s, index: %s)", root.c_str(),
-             index.c_str());
+  LOG_DEBUG("Default server block (root: %s, index: %s)", root.c_str(),
+            index.c_str());
   setMethod(method, response_data);
   setRoot(root, response_data);
   setIndex(root, index, response_data);
@@ -290,9 +290,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
-      std::cout << "pos_last: " << pos_last << std::endl;
-      std::cout << "entire_path: " << 
-                 entire_path.c_str() << std::endl;
+      LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
       setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,
