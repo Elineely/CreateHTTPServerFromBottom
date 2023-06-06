@@ -27,7 +27,7 @@ class Parser
   Parser& operator=(Parser const& rhs);
 
   // Member Functions
-  void readBuffer(char* buf);
+  void readBuffer(char* buf, int recv_size);
   ValidationStatus get_validation_phase(void);
   int get_m_client_fd(void);
   struct Request& get_request(void);
@@ -40,7 +40,7 @@ class Parser
   size_t m_max_body_size;
 
   // Member Functions
-  void saveBufferInPool(char* buf);
+  void saveBufferInPool(char* buf, int recv_size);
   bool findNewlineInPool(void);
   void parseFirstLine(void);
   void parseHeaders(void);

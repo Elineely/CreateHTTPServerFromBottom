@@ -29,7 +29,7 @@
 				}
 				fetch("./index.html", {
 					method: "POST",
-					body: "hello"
+					body: "123412345"
 				}).
 				then(response => {
 					if (response.ok) {
@@ -107,8 +107,8 @@
 				</td>
 			</tr>
 		</h1>
-		<form action="/" method="POST" enctype="multipart/form-data">
-			<input type="file" name="image" />
+		<form action="./data/upload/kipark.png" enctype="multipart/form-data" method="POST">
+			<input type="file" name="png" />
 			<input type="submit" />
 		</form>
 	</body>

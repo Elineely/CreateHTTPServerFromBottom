@@ -8,6 +8,7 @@ cgitb.enable()
 # # import cgitb; cgitb.enable(display=0, logdir="./log")
 
 form = cgi.FieldStorage()
+print(form)
 
 from datetime import datetime
 now = datetime.now()
