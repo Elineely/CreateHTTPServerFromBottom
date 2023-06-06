@@ -19,7 +19,7 @@
 
 enum e_log_level
 {
-  ERROR = -1,
+  ERROR,
   DEBUG,
   INFO,
 };
