@@ -30,6 +30,7 @@ void print_basics(Response& c)
   cout << "cgi_flag : " << c.cgi_flag << endl;
   cout << "cgi_path : " << c.cgi_bin_path << endl;
   cout << "save_path : " << c.uploaded_path << endl;
+  cout << "root_path : " << c.root_path << endl;
 }
 
 void fill_location(t_location& a, std::string b, std::string c, std::string d,
@@ -85,7 +86,7 @@ int main(void)
   // b.uri = "/b/a";
   // b.uri = "/cccccc/cc";
   // b.uri = "/basics/index.py";
-  b.uri = "/admin/";
+  b.uri = "/admin/c";
   // b.uri = "/bdmin";
   // b.uri = "/admin/a/b/c/d";
   // b.uri = "/admin"; // file은 컨피그내 index b 사용

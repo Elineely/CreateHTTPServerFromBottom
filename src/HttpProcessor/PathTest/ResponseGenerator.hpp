@@ -20,6 +20,7 @@ struct Response
   bool file_exist;
   std::string file_path;
   bool path_exist;
+  std::string root_path;
   std::vector<char> body;
   StatusCode status_code;
   bool cgi_flag;
