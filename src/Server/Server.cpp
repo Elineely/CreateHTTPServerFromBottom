@@ -86,22 +86,22 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
 
 const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
-Server::Server(const Config& server_conf)
+Server::Server(const Config &server_conf)
 {
   setServers(server_conf, servers);
-  Log::info("Successfully set servers");
+  LOG_INFO("Successfully set servers");
 
   setSocket(server_conf, servers);
-  Log::info("Successfully open server socket");
+  LOG_INFO("Successfully open server socket");
 
   startBind(servers);
-  Log::info("Successfully bind server socket with IP address");
+  LOG_INFO("Successfully bind server socket with IP address");
 
   startListen(servers, BACK_LOG);
-  Log::info("Successfully listen server socket");
+  LOG_INFO("Successfully listen server socket");
 
   m_kqueue.kq = getKqueue();
-  Log::info("Successfully listen server socket");
+  LOG_INFO("Successfully listen server socket");
 
   int current_events;
   e_kqueue_event event_status;
@@ -169,14 +169,14 @@ Server::Server(const Config& server_conf)
 
         case CLIENT_ERROR:
         {
-          Log::error("🐛 Client socket error 🐛");
+          LOG_ERROR("🐛 Client socket error 🐛");
           disconnect_socket(current_event->ident);
         }
         break;
 
         default:
         {
-          Log::debug("default status: %d", event_status);
+          LOG_DEBUG("default status: %d", event_status);
         }
         break;
       }
@@ -203,6 +203,6 @@ Server::~Server() { std::cout << "Server Destructor Call" << std::endl; }
 Server &Server::operator=(const Server &other)
 {
   if (this == &other) return *this;
-  Log::debug("Server Assignment Operator Call");
+  LOG_DEBUG("Server Assignment Operator Call");
   return *this;
 }

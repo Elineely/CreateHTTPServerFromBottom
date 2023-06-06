@@ -8,8 +8,8 @@ void Server::setSocket(const Config& server_conf,
   {
     servers[i].server_sock = socket(PF_INET, SOCK_STREAM, 0);
 
-    Log::info("Server port number: %d (socket fd: %d)", servers[i].server_port,
-              servers[i].server_sock);
+    LOG_INFO("Server port number: %d (socket fd: %d)", servers[i].server_port,
+             servers[i].server_sock);
     if (servers[i].server_sock == -1)
     {
       ft_error_exit(1, strerror(errno));

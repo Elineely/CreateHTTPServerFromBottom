@@ -3,7 +3,7 @@
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 {
-  Log::info("⌛️ CGI PROCESS TIMEOUT EVENT ⌛️");
+  LOG_INFO("⌛️ CGI PROCESS TIMEOUT EVENT ⌛️");
 
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);

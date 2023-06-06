@@ -1,7 +1,7 @@
-#include "Server.hpp"
 #include "HttpProcessor.hpp"
-#include "ResponseGenerator.hpp"
 #include "Log.hpp"
+#include "ResponseGenerator.hpp"
+#include "Server.hpp"
 
 #define CHILD_PROCESS 0
 
@@ -11,15 +11,15 @@ void Server::serverReadEvent(struct kevent *current_event)
   int client_addr_size;
   struct sockaddr_in client_addr;
 
-  Log::info("🖥  SERVER READ EVENT  🖥");
+  LOG_INFO("🖥  SERVER READ EVENT  🖥");
   client_sock = accept(current_event->ident, (struct sockaddr *)&client_addr,
                        reinterpret_cast<socklen_t *>(&client_addr_size));
   if (client_sock == -1)
   {
-    Log::error("Failed to accept client socket (detail: %s)", strerror(errno));
+    LOG_ERROR("Failed to accept client socket (strerror: %s)", strerror(errno));
     return;
   }
-  Log::info("🌵 Client Socket fd %d is created 🌵", client_sock);
+  LOG_INFO("🌵 Client Socket fd %d is created 🌵", client_sock);
 
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
@@ -35,12 +35,11 @@ void Server::serverReadEvent(struct kevent *current_event)
 
 void Server::clientReadEvent(struct kevent *current_event)
 {
-  Log::info("📖 CLIENT_READ EVENT 📖");
+  LOG_INFO("📖 CLIENT_READ EVENT 📖");
 
   if (current_event->flags & EV_EOF)
   {
-    Log::info("💥 Client socket(fd: %d) will be close 💥",
-              current_event->ident);
+    LOG_INFO("💥 Client socket(fd: %d) will be close 💥", current_event->ident);
     disconnect_socket(current_event->ident);
     return;
   }
@@ -89,8 +88,8 @@ void Server::clientReadEvent(struct kevent *current_event)
   else
   {
     std::vector<char> response_message;
-    Log::debug("http response code: %d",
-               http_processor.get_m_response().status_code);
+    LOG_DEBUG("http response code: %d",
+              http_processor.get_m_response().status_code);
     if (http_processor.get_m_response().status_code == OK_200 ||
         http_processor.get_m_response().status_code == FOUND_302)
     {
@@ -116,7 +115,7 @@ void Server::clientReadEvent(struct kevent *current_event)
 
 void Server::pipeReadEvent(struct kevent *current_event)
 {
-  Log::info("💧 PIPE READ EVENT 💧");
+  LOG_INFO("💧 PIPE READ EVENT 💧");
 
   char buf[BUF_SIZE];
   std::memset(buf, 0, BUF_SIZE);
@@ -132,7 +131,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
   wait(NULL);
   if (current_event->flags & EV_EOF)
   {
-    Log::info("💩 PIPE EOF EVENT 💩");
+    LOG_INFO("💩 PIPE EOF EVENT 💩");
 
     close(current_event->ident);
     const char *message = current_udata->m_result.c_str();
