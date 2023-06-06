@@ -1,9 +1,115 @@
 <html>
+	<head>
+		<script>
+			const sendGetRequest = () => {
+				console.log("GET");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "GET",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						location.reload();
+					} else {
+						window.alert("Error !", resposne.status);
+					}
+				})
+				.catch(error => {
+					window.alert("error catch", error);
+				})
+			}
 
-		<body>
-			<marquee> HELLO WORLD</marquee>
-            <h1>
-                i am joonhan the tamjeong.
-            </h1>
-		</body>
-</html>
+			const sendPostRequest = () => {
+				console.log("POST");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "POST",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						location.reload();
+					} else {
+						window.alert("Error !", resposne.status);
+					}
+				})
+				.catch(error => {
+					window.alert("error catch", error);
+				})
+			};
+
+			const sendDeleteRequest = () => {
+				console.log("DELETE");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "DELETE",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						location.reload();
+					} else {
+						window.alert("Error !", resposne.status);
+					}
+				})
+				.catch(error => {
+					window.alert("error catch", error);
+				})
+			}
+
+			const sendPutRequest = () => {
+				console.log("PUT");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "PUT",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						location.reload();
+					} else {
+						window.alert("Error !", resposne.status);
+					}
+				})
+				.catch(error => {
+					window.alert("error catch", error);
+				})
+			}
+
+			
+		</script>
+	</head>
+	<body>
+		<marquee> HELLO WORLD</marquee>
+		<h1>
+			i am joonhan the tamjeong.
+			<tr>
+				<td>
+					<input type='button' onClick="sendGetRequest()" value='GET'/>
+				</td>
+				<td>	
+					<input type='button' onClick="sendPostRequest()" value='POST'/>
+				</td>
+				<td>
+					<input type='button' onClick="sendDeleteRequest()" value='DELETE'/>
+				</td>
+				<td>
+					<input type='button' onClick="sendPutRequest()" value='PUT'/>
+				</td>
+			</tr>
+		</h1>
+		<form action="/" method="POST" enctype="multipart/form-data">
+			<input type="file" name="image" />
+			<input type="submit" />
+		</form>
+	</body>
+</html> 
