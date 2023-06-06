@@ -32,9 +32,12 @@ bool MethodHandler::fileInfoCompare(const FileInfo& fileInfo1,
 }
 void MethodHandler::autoIndexToBody(std::string target_directory)
 {
-  std::vector<FileInfo> fileList;
+  size_t pos = m_request_data.uri.find("//");
+  if (pos != std::string::npos)
+   m_request_data.uri.erase(m_request_data.uri.end() - 1);
+  std::vector<FileInfo> fileList; 
   DIR* dir;
-  struct dirent* entry;
+  struct dirent* entry; 
   dir = opendir(target_directory.c_str());
   if (dir == NULL) throw INTERNAL_SERVER_ERROR_500;
   entry = readdir(dir);
@@ -55,6 +58,9 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   }
   closedir(dir);
   std::sort(fileList.begin(), fileList.end(), fileInfoCompare);
+  fileList.erase(fileList.begin());
+  if (target_directory == (m_response_data.root_path + "/"))
+    fileList.erase(fileList.begin());
   std::stringstream autoindex;
   autoindex << "<html>\n"
             << "\t<head>\n"
@@ -64,7 +70,7 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
             << "\t\t</style>\n"
             << "\t</head>\n"
             << "\t<body>\n"
-            << "\t\t<h1>Index of " << target_directory << "</h1>\n";
+            << "\t\t<h1>Index of " << m_request_data.uri << "</h1>\n";
   autoindex
       << "\t\t<table>\n"
       << "\t\t\t<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
@@ -73,7 +79,7 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   {
     std::string date = generateDate((*it).date);
     std::string size = generateSize((*it).size);
-    autoindex << "\t\t\t<tr><td><a href=\"" << (m_request_data.uri == "/" ? "" : m_request_data.uri) << "/" <<(*it).name << "\">" << (*it).name
+    autoindex << "\t\t\t<tr><td><a href=\"" << (m_request_data.uri == "/" ? "" : m_request_data.uri ) << "/" <<(*it).name << "\">" << (*it).name
               << "</a></td><td>" << date << "</td><td>" << size
               << "</td></tr>\n";
   }

@@ -23,11 +23,11 @@ void Server::serverReadEvent(struct kevent *current_event)
 
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-  t_event_udata *udata = new t_event_udata(CLIENT);
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);
+  t_event_udata *udata = new t_event_udata(CLIENT, current_udata->m_server);
 
-  udata->m_server = current_udata->m_server;
+  // udata->m_server = current_udata->m_server;
 
   AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
@@ -55,7 +55,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     return;
   }
 
-  struct Request &request = udata->m_parser.get_request();
+  struct Request &request = udata->m_parser.get_request(); 
   struct Response response;
 
   // http_processor 호출
