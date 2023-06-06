@@ -3,26 +3,23 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 struct RequestPool
 {
-  char* total_line;
+  std::vector<char> total_line;
   size_t line_len;
   size_t prev_offset;
   size_t offset; // 마지막으로 찾은 \r\n 이후 + 2 지점
 
   // Default Constructor
-  RequestPool(void) : total_line(NULL), line_len(0), prev_offset(0), offset(0)
+  RequestPool(void) : line_len(0), prev_offset(0), offset(0)
   {
   }
  
   // Destructor
   ~RequestPool(void)
   {
-    if (total_line != NULL)
-    {
-      delete total_line;
-    }
   }
 
   // Copy constructor
@@ -42,18 +39,14 @@ struct RequestPool
       line_len = rhs.line_len;
       prev_offset = rhs.prev_offset;
       offset = rhs.offset;
-      if (total_line != NULL)
+      if (total_line.size() > 0)
       {
-        delete total_line;
+        total_line.clear();
       }
-      if (rhs.total_line != NULL)
+      if (rhs.total_line.size() > 0)
       {
-        total_line = new char[line_len];
-        std::memmove(total_line, rhs.total_line, line_len + 1);
-      }
-      else
-      {
-        total_line = NULL;
+        total_line.insert(total_line.begin(), rhs.total_line.begin(),
+                          rhs.total_line.end());
       }
     }
     return (*this);
