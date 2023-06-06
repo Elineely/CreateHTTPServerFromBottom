@@ -1,6 +1,6 @@
 // #include "PathFinder.hpp"
 // #include "Log.hpp"
-#include "./PathTest/PathFinder.hpp" // for test
+#include "./PathFinder.hpp" // for test
 
 #include <iostream>
 
