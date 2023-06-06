@@ -102,8 +102,8 @@ void Parser::parseFirstLine(void)
   m_data.uri = uri;
   m_data.http_version = http_version;
   m_data.validation_phase = ON_HEADER;
-  Log::debug("request method: %s", method.c_str());
-  Log::debug("request uri: %s", uri.c_str());
+  LOG_DEBUG("request method: %s", method.c_str());
+  LOG_DEBUG("request uri: %s", uri.c_str());
 }
 
 // TODO: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
@@ -130,7 +130,7 @@ void Parser::saveBufferInPool(char* buf)
     delete m_pool.total_line;
     // TODO: strjoin 보다 효율적인 문자열 병합 방법이 있는지 찾기
     m_pool.total_line = ft_strjoin(temp_buf, buf);
-    delete temp_buf; 
+    delete temp_buf;
   }
 }
 
