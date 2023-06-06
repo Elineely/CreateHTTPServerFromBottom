@@ -45,8 +45,6 @@
 #define DEFAULT_SERVER_FILE "./server.conf"
 #define SERVER_CONTENT_FILE "./server_content.conf"
 
-#define ERROR -1
-
 enum e_event_type
 {
   SERVER = 0,
