@@ -4,7 +4,7 @@
 #include "Log.hpp"
 
 #define SUCCESS 0
-#define ERROR -1
+#define RETURN_ERROR -1
 
 #define READ 0
 #define WRITE 1
@@ -129,7 +129,7 @@ const char* CgiHandler::KqueueException::what() const throw()
 /* GetCgiHandler class */
 /* ******************* */
 
-GetCgiHandler::GetCgiHandler() { }
+GetCgiHandler::GetCgiHandler() {}
 
 GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
     : CgiHandler(request_data, response_data)
@@ -165,16 +165,16 @@ GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
 
 void GetCgiHandler::pipeAndFork()
 {
-  if (pipe(m_to_parent_fds) == ERROR)
+  if (pipe(m_to_parent_fds) == RETURN_ERROR)
   {
-    Log::error("[GetCgiHandler] Failed to create pipe");
+    LOG_ERROR("Failed to create pipe");
     throw PipeForkException();
   }
 
   m_pid = fork();
-  if (m_pid == ERROR)
+  if (m_pid == RETURN_ERROR)
   {
-    Log::error("[GetCgiHandler] Failed to fork");
+    LOG_ERROR("Failed to fork");
     close(m_to_parent_fds[READ]);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
@@ -185,10 +185,9 @@ void GetCgiHandler::executeCgi()
 {
   close(m_to_parent_fds[READ]);
 
-  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
+  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == RETURN_ERROR)
   {
-    Log::error("[GetCgiHandler] Failed to dup2(%d, %d)", m_to_parent_fds,
-               STDOUT_FILENO);
+    LOG_ERROR("Failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
   }
@@ -200,10 +199,9 @@ void GetCgiHandler::executeCgi()
   const char** envp = &m_env_list_parameter[0];
 
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
-             const_cast<char* const*>(envp)) == ERROR)
+             const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    Log::error("[GetCgiHandler] Failed to execve function => strerrno: %s",
-               strerror(errno));
+    LOG_ERROR("Failed to execve function strerrno: %s", strerror(errno));
     throw ExecutionException();
   }
 }
@@ -226,8 +224,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
   }
   catch (const std::exception& e)
   {
-    // std::cerr << e.what() << '\n';
-    Log::error("[GetCgiHandler] outsourceCgiRequest catch error");
+    LOG_ERROR("catch error %s", e.what());
     std::vector<char> error_message = makeErrorPage();
   }
 }
@@ -247,22 +244,21 @@ PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
   // m_response_data = response_data;
 }
 
-PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj)
-{ *this = obj; }
+PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj) { *this = obj; }
 
 PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
 {
   if (this != &obj)
   {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
-    m_env_list = obj.m_env_list;
-    m_env_list_parameter = obj.m_env_list_parameter;
-    m_to_child_fds[READ] = obj.m_to_child_fds[READ];
-    m_to_child_fds[WRITE] = obj.m_to_child_fds[WRITE];
-    m_to_parent_fds[READ] = obj.m_to_parent_fds[READ];
-    m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
-    m_pid = obj.m_pid;
+               m_request_data = obj.m_request_data;
+               m_response_data = obj.m_response_data;
+               m_env_list = obj.m_env_list;
+               m_env_list_parameter = obj.m_env_list_parameter;
+               m_to_child_fds[READ] = obj.m_to_child_fds[READ];
+               m_to_child_fds[WRITE] = obj.m_to_child_fds[WRITE];
+               m_to_parent_fds[READ] = obj.m_to_parent_fds[READ];
+               m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
+               m_pid = obj.m_pid;
   }
   return (*this);
 }
@@ -271,24 +267,24 @@ PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
 
 void PostCgiHandler::pipeAndFork()
 {
-  if (pipe(m_to_child_fds) == ERROR)
+  if (pipe(m_to_child_fds) == RETURN_ERROR)
   {
-    Log::error("[PostCgiHandler] Failed to create m_to_child_fds pipe");
+    LOG_ERROR("Failed to create m_to_child_fds pipe");
     throw PipeForkException();
   }
 
-  if (pipe(m_to_parent_fds) == ERROR)
+  if (pipe(m_to_parent_fds) == RETURN_ERROR)
   {
-    Log::error("[PostCgiHandler] Failed to create m_to_parent_fds pipe");
+    LOG_ERROR("Failed to create m_to_parent_fds pipe");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     throw PipeForkException();
   }
 
   m_pid = fork();
-  if (m_pid == ERROR)
+  if (m_pid == RETURN_ERROR)
   {
-    Log::error("[PostCgiHandler] Failed to fork");
+    LOG_ERROR("Failed to fork");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     close(m_to_parent_fds[READ]);
@@ -303,10 +299,9 @@ void PostCgiHandler::executeCgi()
   close(m_to_child_fds[WRITE]);
 
   // 부모 프로세스로부터 받은 데이터를 cgi에 표준 입력으로 넘겨주는 dup2
-  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == ERROR)
+  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == RETURN_ERROR)
   {
-    Log::error("[PostCgiHandler] Failed to dup2(%d, %d)", m_to_child_fds[READ],
-               STDIN_FILENO);
+    LOG_ERROR("Failed to dup2(%d, %d)", m_to_child_fds[READ], STDIN_FILENO);
     close(m_to_child_fds[READ]);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
@@ -314,10 +309,9 @@ void PostCgiHandler::executeCgi()
   close(m_to_child_fds[READ]);
 
   // cgi의 표준 출력 반환값을 부모 프로세스에 넘겨주는 dup2
-  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == ERROR)
+  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == RETURN_ERROR)
   {
-    Log::error("[PostCgiHandler] Failed to dup2(%d, %d)",
-               m_to_parent_fds[WRITE], STDOUT_FILENO);
+    LOG_ERROR("Failed to dup2(%d, %d)", m_to_parent_fds[WRITE], STDOUT_FILENO);
     close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
   }
@@ -329,10 +323,9 @@ void PostCgiHandler::executeCgi()
   const char** envp = &m_env_list_parameter[0];
 
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
-             const_cast<char* const*>(envp)) == ERROR)
+             const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    Log::error("[PostCgiHandler] Failed to execve function => strerrno: %s",
-               strerror(errno));
+    LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
     throw ExecutionException();
   }
 }
@@ -359,8 +352,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
   }
   catch (const std::exception& e)
   {
-    // std::cerr << e.what() << '\n';
-    Log::error("[PostCgiHandler] outsourceCgiRequest catch error");
+    LOG_ERROR("catch error %s", e.what());
     std::vector<char> error_message = makeErrorPage();
   }
 }

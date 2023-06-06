@@ -3,6 +3,6 @@
 
 void Server::serverErrorEvent(struct kevent *current_event)
 {
-  Log::error("🐛 Server socket error 🐛");
+  LOG_ERROR("🐛 Server socket error 🐛");
   disconnect_socket(current_event->ident);
 }

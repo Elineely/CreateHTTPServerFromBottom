@@ -1,41 +1,5 @@
 #include "Log.hpp"
 
-void Log::error(const char* message, ...)
-{
-  va_list ap;
-  va_start(ap, message);
-
-  std::cout << RED_TEXT << "[ERROR] " << CUT_TEXT;
-
-  print(message, ap);
-
-  va_end(ap);
-}
-
-void Log::info(const char* message, ...)
-{
-  va_list ap;
-  va_start(ap, message);
-
-  std::cout << BLUE_TEXT << "[INFO] " << CUT_TEXT;
-
-  print(message, ap);
-
-  va_end(ap);
-}
-
-void Log::debug(const char* message, ...)
-{
-  va_list ap;
-  va_start(ap, message);
-
-  std::cout << GREEN_TEXT << "[DEBUG] " << CUT_TEXT;
-
-  print(message, ap);
-
-  va_end(ap);
-}
-
 void Log::start(void)
 {
     std::cout << "=========================================================================" << std::endl;
@@ -50,8 +14,49 @@ void Log::start(void)
     std::cout << "=========================================================================" << std::endl;
 }
 
-void Log::print(const char* message, va_list ap)
+void Log::printCallerInfo(const char* file, const char* function, int line)
 {
+  std::ostringstream log_info_stream;
+  std::string log_info_str;
+
+  log_info_stream << "[" << file << ":" << line << "][" << function << "]";
+  log_info_str = log_info_stream.str() + " ";
+
+  std::cout << log_info_str;
+}
+
+void Log::printLogLevel(e_log_level level)
+{
+  switch (level)
+  {
+    case INFO:
+      std::cout << BLUE_TEXT << "[INFO] " << CUT_TEXT;
+      break;
+    case DEBUG:
+      std::cout << GREEN_TEXT << "[DEBUG] " << CUT_TEXT;
+      break;
+    case ERROR:
+      std::cout << RED_TEXT << "[ERROR] " << CUT_TEXT;
+      break;
+    default:
+      break;
+  }
+}
+
+void Log::print(e_log_level level, const char* file, const char* function,
+                int line, const char* message, ...)
+{
+  va_list ap;
+
+  printLogLevel(level);
+
+  // TODO: 디버깅에서만 함수 호출 정보 출력할 지 결정하기
+  // if (level == DEBUG)
+  // {
+    printCallerInfo(file, function, line);
+  // }
+
+  va_start(ap, message);
   for (const char* p = message; *p != '\0'; ++p)
   {
     if (*p == '%')
@@ -81,4 +86,6 @@ void Log::print(const char* message, va_list ap)
   }
 
   std::cout << std::endl;
+
+  va_end(ap);
 }

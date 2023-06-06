@@ -33,8 +33,8 @@ t_location Config::get_location_expand(std::ifstream &config_file,
 {
   if (isContentCount(content_size, 3))
   {
-    Log::error("Invalid content at line %d in %s", current_line,
-               config_file_name.c_str());
+    LOG_ERROR("Invalid content at line %d in %s", current_line,
+              config_file_name.c_str());
     exit(EXIT_FAILURE);
   }
   std::string read_line;
@@ -51,8 +51,8 @@ t_location Config::get_location_expand(std::ifstream &config_file,
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list) ||
         split_content_line.size() >= 3)
     {
-      Log::error("Invalid content at line %d in %s", current_line,
-                 config_file_name.c_str());
+      LOG_ERROR("Invalid content at line %d in %s", current_line,
+                config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     temp_location_map.insert(std::pair<std::string, std::string>(
@@ -90,8 +90,8 @@ t_server Config::get_parse_server_block(std::ifstream &file,
     }
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list))
     {
-      Log::error("Invalid content at line %d in %s", current_line,
-                 config_file_name.c_str());
+      LOG_ERROR("Invalid content at line %d in %s", current_line,
+                config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     if (split_content_line[0] == "location")
@@ -135,8 +135,8 @@ void Config::set_m_server_conf(std::ifstream &config_file,
     if (split_content_line.size() != 2 || split_content_line[0] != "server" ||
         split_content_line[1] != "{")
     {
-      Log::error("Invalid content at line %d in %s", current_line,
-                 config_file_name.c_str());
+      LOG_ERROR("Invalid content at line %d in %s", current_line,
+                config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     ++current_line;
