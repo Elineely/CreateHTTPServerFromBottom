@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 #include "Log.hpp"
 #include "utils.hpp"
@@ -56,8 +57,12 @@ struct Request& Parser::get_request(void) { return (m_data); }
 void Parser::parseFirstLine(void)
 {
   // \r\n 은 제외하고 input 에 저장
-  std::string input(m_pool.total_line, 0,
-                    m_pool.offset - m_pool.prev_offset - 2);
+  // size_t len = std::string::npos;
+  // if (m_pool.offset > 2)
+  // {
+    size_t len = m_pool.offset - m_pool.prev_offset - 2;
+  // }
+  std::string input(&m_pool.total_line[0], len);
   std::string method;
   std::string uri;
   std::string http_version;
@@ -107,9 +112,8 @@ void Parser::parseFirstLine(void)
 }
 
 // TODO: vector 의 push_back 처럼 size 를 2배씩 늘려야 효율이 좋을까?
-void Parser::saveBufferInPool(char* buf)
+void Parser::saveBufferInPool(char* buf, int recv_size)
 {
-  size_t buf_len;
   char* temp_buf;
 
   if (buf == NULL)
@@ -117,20 +121,10 @@ void Parser::saveBufferInPool(char* buf)
     throw std::invalid_argument("NULL string is not allowed");
   }
 
-  buf_len = std::strlen(buf);
-  m_pool.line_len += buf_len;
-  if (m_pool.total_line == NULL)
+  m_pool.line_len += recv_size;
+  for (int idx = 0; idx < recv_size; idx += 1)
   {
-    m_pool.total_line = new char[buf_len + 1]();
-    std::memmove(m_pool.total_line, buf, buf_len + 1);
-  }
-  else
-  {
-    temp_buf = ft_strdup(m_pool.total_line);
-    delete m_pool.total_line;
-    // TODO: strjoin 보다 효율적인 문자열 병합 방법이 있는지 찾기
-    m_pool.total_line = ft_strjoin(temp_buf, buf);
-    delete temp_buf;
+    m_pool.total_line.push_back(buf[idx]);
   }
 }
 
@@ -138,21 +132,41 @@ bool Parser::findNewlineInPool(void)
 {
   const char* find;
   const char* target;
+  bool found_newline;
 
-  find = std::strstr(m_pool.total_line + m_pool.offset, "\r\n");
-  if (find == NULL)
+  // std::string temp(m_pool.total_line.begin(), m_pool.total_line.end());
+  // size_t pos  = temp.find("\r\n");
+  find = NULL;
+  found_newline = false;
+  for (size_t idx = m_pool.offset; idx <= m_pool.total_line.size() - 2; idx += 1)
+  {
+    if (std::strncmp(&m_pool.total_line[idx], "\r\n", 2) == 0)
+    {
+      found_newline = true;
+      find = &m_pool.total_line[idx];
+      break ;
+    }
+  }
+
+  if (found_newline == false)
   {
     return (false);
   }
 
+  // find = std::strstr(&m_pool.total_line[m_pool.offset], "\r\n");
+  // if (find == NULL)
+  // {
+  //   return (false);
+  // }
+
   m_pool.prev_offset = m_pool.offset;
   if (m_pool.prev_offset < 2)
   {
-    target = m_pool.total_line;
+    target = &m_pool.total_line[0];
   }
   else
   {
-    target = m_pool.total_line + m_pool.prev_offset - 2;
+    target = &m_pool.total_line[0] + m_pool.prev_offset - 2;
   }
   if (std::strncmp(target, "\r\n\r\n", 4) == 0)
   {
@@ -170,7 +184,7 @@ bool Parser::findNewlineInPool(void)
   }
   else
   {
-    m_pool.offset = static_cast<size_t>((find + 2) - m_pool.total_line);
+    m_pool.offset = static_cast<size_t>((find + 2) - &m_pool.total_line[0]);
   }
   return (true);
 }
@@ -180,7 +194,7 @@ void Parser::parseHeaders(void)
   do
   {
     // '\r\n' 을 포함해서 저장
-    std::string input(m_pool.total_line, m_pool.prev_offset,
+    std::string input(&m_pool.total_line[m_pool.prev_offset], 
                       m_pool.offset - m_pool.prev_offset);
     std::string key;
     std::string value;
@@ -227,9 +241,13 @@ void Parser::parseBody(void)
   m_data.body.reserve(m_pool.line_len - m_pool.offset);
   for (size_t idx = m_pool.offset; idx < m_pool.line_len; idx += 1)
   {
-    m_data.body.push_back(*(m_pool.total_line + idx));
+    m_data.body.push_back(m_pool.total_line[idx]);
   }
 
+  if (static_cast<size_t>(content_length) > m_data.body.size())
+  {
+    return ;
+  }
   if (static_cast<size_t>(content_length) != m_data.body.size())
   {
     m_data.status = BAD_REQUEST_400;
@@ -245,7 +263,7 @@ void Parser::parseChunkedBody(void)
   while (true)
   {
     char* body_curr =
-        m_pool.total_line + m_pool.prev_offset;  // 마지막 파싱 위치
+        &m_pool.total_line[0] + m_pool.prev_offset;  // 마지막 파싱 위치
     char* find = std::strstr(body_curr, "\r\n");
     if (find == NULL)
     {
@@ -278,13 +296,13 @@ void Parser::parseChunkedBody(void)
       m_data.body.push_back(*ptr);
     }
 
-    m_pool.prev_offset = next_newline - m_pool.total_line + 2;
+    m_pool.prev_offset = next_newline - &m_pool.total_line[0] + 2;
     m_pool.offset = m_pool.prev_offset;
   }
 }
 
 // Public member functions
-void Parser::readBuffer(char* buf)
+void Parser::readBuffer(char* buf, int recv_size)
 {
   try
   {
@@ -294,7 +312,7 @@ void Parser::readBuffer(char* buf)
     }
 
     // 클라이언트가 보낸 데이터를 RequestPool 에 저장
-    saveBufferInPool(buf);
+    saveBufferInPool(buf, recv_size);
 
     // 마지막으로 CRLF 를 찾은 지점 이후에 CRLF 가 들어왔는지 확인
     if (findNewlineInPool() == false && m_data.validation_phase != ON_BODY)
@@ -322,13 +340,19 @@ void Parser::readBuffer(char* buf)
           {
             parseChunkedBody();
           }
-          if (m_data.body.size() > m_max_body_size)
-          {
-            m_data.status = BAD_REQUEST_400;
-            throw std::invalid_argument("Exceed max body size.");
-          }
         default:
           break;
+      }
+
+      long long content_length = std::strtoll(m_data.headers["content-length"].c_str(), NULL, 10);
+      if (static_cast<size_t>(content_length) > m_data.body.size())
+      {
+        return ;
+      }
+      if (m_data.body.size() > m_max_body_size)
+      {
+        m_data.status = BAD_REQUEST_400;
+        throw std::invalid_argument("Exceed max body size.");
       }
 
       if (findNewlineInPool() == false && m_data.validation_phase == COMPLETE)
