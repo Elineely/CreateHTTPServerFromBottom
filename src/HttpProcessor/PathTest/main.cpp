@@ -30,6 +30,7 @@ void print_basics(Response& c)
   cout << "cgi_flag : " << c.cgi_flag << endl;
   cout << "cgi_path : " << c.cgi_bin_path << endl;
   cout << "save_path : " << c.uploaded_path << endl;
+  cout << "root_path : " << c.root_path << endl;
 }
 
 void fill_location(t_location& a, std::string b, std::string c, std::string d,

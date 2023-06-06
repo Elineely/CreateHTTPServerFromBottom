@@ -23,7 +23,7 @@ class PathFinder
   bool setCgi(std::string locationBlock, t_server server_data,
               Response& response_data);
   void setMethod(std::string method, Response& response_data);
-  void setRedirection(std::string redirection, Response& response_data);
+ void setRedirection(std::string redirection, Response& response_data);
   void setUpload(std::string upload, Response& response_data);
   void setRootPath(std::string root_path, Response& response_data);
   void setBasic(std::string method, std::string root, std::string index,
