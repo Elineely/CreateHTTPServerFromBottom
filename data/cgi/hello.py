@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import os
 import sys
+import time
 
 print("HTTP/1.1 200 OK\r\n", end='')
 print("Content-type: text/plain\r\n\r\n", end='')

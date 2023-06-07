@@ -88,7 +88,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
-                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 600,
+                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10,
                          udata2);
     Parser new_parser(current_udata->m_server.max_body_size[0]);
     current_udata->m_parser = new_parser;
@@ -153,7 +153,6 @@ void Server::pipeReadEvent(struct kevent *current_event)
     
     current_udata->m_response.body = current_udata->m_result;
     ResponseGenerator ok(current_udata->m_parser.get_request(), current_udata->m_response);
-    // vector<char> 진짜 response message
     response_message = ok.generateResponseMessage();
     t_event_udata *udata =
         new t_event_udata(CLIENT, response_message, response_message.size());

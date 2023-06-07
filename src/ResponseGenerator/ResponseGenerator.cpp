@@ -102,6 +102,11 @@ void ResponseGenerator::cgiDataProcess()
   std::string::size_type status_begin;
   std::string::size_type status_end;
   std::string cgi_status_code;
+  if (cgi_data.size() == 0)
+  {
+    m_response.status_code = GATEWAY_TIMEOUT_504;
+    throw m_response.status_code;
+  }
   status_begin = cgi_data.find("Status: ");
   status_end = cgi_data.find("\r\n", status_begin);
   if (status_begin != std::string::npos && status_end != std::string::npos)
