@@ -175,7 +175,7 @@ void GetMethodHandler::methodRun()
   }
   else
   {
-    if (!m_response_data.file_exist) 
+    if (!m_response_data.file_exist) throw NOT_FOUND_404;
     fileToBody(m_response_data.file_path + m_response_data.file_name);
   }
 }

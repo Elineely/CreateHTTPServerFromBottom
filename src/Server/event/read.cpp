@@ -44,22 +44,23 @@ void Server::clientReadEvent(struct kevent *current_event)
     return;
   }
 
-  t_event_udata *udata = static_cast<t_event_udata *>(current_event->udata);
+  t_event_udata *current_udata = static_cast<t_event_udata *>(current_event->udata);
 
   char buff[BUF_SIZE];
   std::memset(buff, 0, BUF_SIZE);
   int recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-  udata->m_parser.readBuffer(buff, recv_size);
-  if (udata->m_parser.get_validation_phase() != COMPLETE)
+  current_udata->m_parser.readBuffer(buff, recv_size);
+  if (current_udata->m_parser.get_validation_phase() != COMPLETE)
   {
     return;
   }
 
-  struct Request &request = udata->m_parser.get_request(); 
+
+  struct Request &request = current_udata->m_parser.get_request(); 
   struct Response response;
 
   // http_processor 호출
-  HttpProcessor http_processor(request, udata->m_server);
+  HttpProcessor http_processor(request, current_udata->m_server);
 
   // cgi 분기 확인
   response = http_processor.get_m_response();
@@ -72,18 +73,25 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata->m_pipe_read_fd = response.read_pipe_fd;
     udata->m_child_pid = response.cgi_child_pid;
     udata->m_client_sock = current_event->ident;
+    udata->m_parser = current_udata->m_parser;
+    udata->m_response = response;
     udata->m_other_udata = udata2;
+
     udata2->m_pipe_read_fd = response.read_pipe_fd;
     udata2->m_child_pid = response.cgi_child_pid;
     udata2->m_client_sock = current_event->ident;
+    udata2->m_parser = current_udata->m_parser;
+    udata2->m_response = response;
     udata2->m_other_udata = udata;
 
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
     AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
-                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 2,
+                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 600,
                          udata2);
+    Parser new_parser(current_udata->m_server.max_body_size[0]);
+    current_udata->m_parser = new_parser;
   }
   else
   {
@@ -107,8 +115,8 @@ void Server::clientReadEvent(struct kevent *current_event)
     t_event_udata *udata = new t_event_udata(CLIENT);
     t_event_udata *current_udata = (t_event_udata *)current_event->udata;
     // t_server crrent_m_server = current_udata->m_server;
-    udata->m_response.message = response_message;
-    udata->m_response.length = response_message.size();
+    udata->m_response_write.message = response_message;
+    udata->m_response_write.length = response_message.size();
 
     AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
@@ -129,7 +137,10 @@ void Server::pipeReadEvent(struct kevent *current_event)
   ssize_t read_byte = read(current_udata->m_pipe_read_fd, buf, BUF_SIZE);
   if (read_byte > 0)
   {
-    current_udata->m_result.append(buf);
+    for (int i=0; i<read_byte; ++i)
+    {
+      current_udata->m_result.push_back(buf[i]);
+    }
     return;
   }
   wait(NULL);
@@ -138,15 +149,20 @@ void Server::pipeReadEvent(struct kevent *current_event)
     LOG_INFO("💩 PIPE EOF EVENT 💩");
 
     close(current_event->ident);
-    const char *message = current_udata->m_result.c_str();
+    std::vector<char> response_message;
+    
+    current_udata->m_response.body = current_udata->m_result;
+    ResponseGenerator ok(current_udata->m_parser.get_request(), current_udata->m_response);
+    // vector<char> 진짜 response message
+    response_message = ok.generateResponseMessage();
+    t_event_udata *udata =
+        new t_event_udata(CLIENT, response_message, response_message.size());
 
-    // t_event_udata *udata =
-    //     new t_event_udata(CLIENT, message, ft_strlen(message));
-
-    // AddEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-    //                      EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    // AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
-    //                      EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-    // delete current_udata;
+    AddEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+    AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
+                         EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    delete current_udata->m_other_udata;
+    delete current_udata;
   }
 }

@@ -34,6 +34,8 @@
 #include "Config.hpp"
 #include "Parser.hpp"
 
+#include "ResponseGenerator.hpp"
+
 // Server 세팅
 #define BUF_SIZE 1024
 #define MAX_EVENT_LIST_SIZE 8
@@ -111,15 +113,16 @@ struct t_event_udata
   int m_client_sock;
   int m_server_sock;
   pid_t m_child_pid;
-  std::string m_result;
-  t_response_write m_response;
+  std::vector<char> m_result;
+  t_response_write m_response_write;
   t_server m_server;
   Parser m_parser;
+  Response m_response;
   struct t_event_udata *m_other_udata;
 
   t_event_udata(e_event_type type) : m_type(type), m_other_udata(NULL) {}
   t_event_udata(e_event_type type, std::vector<char> message, size_t length)
-      : m_type(type), m_response(message, length), m_other_udata(NULL)
+      : m_type(type), m_response_write(message, length), m_other_udata(NULL)
   {
   }
   t_event_udata(e_event_type type, t_server config)
@@ -144,10 +147,11 @@ struct t_event_udata
 
   ~t_event_udata()
   {
-    if (m_other_udata != NULL)
-    {
-      delete m_other_udata;
-    }
+    // if (m_other_udata != NULL)
+    // {
+    //   std::cout << m_other_udata->m_child_pid << std::endl;
+    //   delete m_other_udata;
+    // }
   }
 };
 

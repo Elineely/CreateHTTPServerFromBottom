@@ -11,6 +11,7 @@ Response::Response()
   rediretion_location = "";
   file_path = "";
   file_name = "";
+  root_path = "";
   cgi_bin_path = "";
   uploaded_path = "";
   status_code  = OK_200;
@@ -29,6 +30,7 @@ Response::Response(const Response& obj)
   rediretion_location = obj.rediretion_location;
   file_path = obj.file_path;
   file_name = obj.file_name;
+  root_path = obj.root_path;
   cgi_bin_path = obj.cgi_bin_path;
   uploaded_path = obj.uploaded_path;
   status_code  = obj.status_code;
@@ -53,6 +55,7 @@ Response& Response::operator=(const Response& obj)
     rediretion_location = obj.rediretion_location;
     file_path = obj.file_path;
     file_name = obj.file_name;
+    root_path = obj.root_path;
     cgi_bin_path = obj.cgi_bin_path;
     uploaded_path = obj.uploaded_path;
     status_code  = obj.status_code;
@@ -108,7 +111,8 @@ void ResponseGenerator::cgiDataProcess()
     cgi_status_code = cgi_data.substr(status_begin + 8, 3);
     ss << cgi_status_code;
     ss >> error_code;
-    throw error_code;
+    m_response.status_code = static_cast<StatusCode>(error_code);
+    throw m_response.status_code;
   }
 
   // generate content-type header in case of cgi
@@ -317,10 +321,17 @@ std::vector<char> ResponseGenerator::generateErrorResponseMessage()
 
 std::vector<char> ResponseGenerator::generateResponseMessage()
 {
-  cgiDataProcess();
-  setStartLine();
-  setHeaders();
-  setBody();
+  try
+  {
+    cgiDataProcess();
+    setStartLine();
+    setHeaders();
+    setBody();
+  }
+  catch (StatusCode code)
+  {
+    generateErrorResponseMessage();
+  }
 
   return (m_response.response_message);
 }

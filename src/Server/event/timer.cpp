@@ -17,5 +17,6 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 
   // AddEventToChangeList(m_kqueue.change_list, udata->m_client_sock, EVFILT_WRITE,
   //                      EV_ADD | EV_ENABLE, 0, 0, udata);
+  // delete current_udata->m_other_udata;
   // delete current_udata;
 }
