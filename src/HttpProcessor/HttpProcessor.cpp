@@ -26,12 +26,8 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
     return;
   }
   PathFinder path_finder(request_data, server_data, m_response_data);
-  t_location current_location = server_data.locations.find("/")->second;
   try
   {
-    // std::cout << server_data.locations.find("/")->second.accepted_method << std::endl;
-        std::cout << "!!!!!!!!!!!!!! : " << m_response_data.accepted_method << std::endl;
-    std::cout << "!!!!!!!!!!!!!! : " << m_response_data.accepted_method.find("GET") << std::endl;
     if (m_request_data.method == "GET" && m_response_data.accepted_method.find("GET") != std::string::npos)
     {
       if (m_response_data.cgi_flag == true)
