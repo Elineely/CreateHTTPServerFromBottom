@@ -200,7 +200,7 @@ void ResponseGenerator::generateContentType()
 
 void ResponseGenerator::generateContentLength()
 {
-  if (m_response.body.size() <= 0) return;
+  if (m_response.body.size() < 0) return;
 
   std::stringstream ss;
   std::string body_length;

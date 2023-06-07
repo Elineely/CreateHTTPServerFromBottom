@@ -69,7 +69,7 @@ void Parser::parseFirstLine(void)
   // 1. HTTP Method 탐색
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
-  if (method != "GET" && method != "POST" && method != "DELETE")
+  if (method != "GET" && method != "POST" && method != "DELETE" && method != "HEAD" && method != "PUT")
   {
     m_data.status = BAD_REQUEST_400;
     throw std::invalid_argument("Method is not acceptable");
@@ -160,7 +160,7 @@ bool Parser::findNewlineInPool(void)
   }
   if (std::strncmp(target, "\r\n\r\n", 4) == 0)
   {
-    if (m_data.method == "POST" &&
+    if ((m_data.method == "POST" || m_data.method == "PUT") &&
         (content_length_it != m_data.headers.end() ||
          m_data.headers["transfer-encoding"] == "chunked"))
     {
@@ -232,6 +232,12 @@ void Parser::parseBody(void)
 
   std::cout << "content_length: " <<content_length << std::endl;
   std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
+  std::cout << "m_data.body : " << std::endl;
+  for(int i = 0; i < m_data.body.size(); ++i)
+  {
+    std::cout << m_data.body[i];
+  }
+  std::cout << std::endl;
   std::cout << "m_pool.offset: " << m_pool.offset << std::endl;
   std::cout << "m_pool.line_len: " << m_pool.line_len << std::endl;
   if (static_cast<size_t>(content_length) > m_data.body.size())
