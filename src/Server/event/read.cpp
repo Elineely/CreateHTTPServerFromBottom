@@ -90,20 +90,10 @@ void Server::clientReadEvent(struct kevent *current_event)
     std::vector<char> response_message;
     LOG_DEBUG("http response code: %d",
               http_processor.get_m_response().status_code);
-    if (http_processor.get_m_response().status_code == OK_200 ||
-        http_processor.get_m_response().status_code == FOUND_302)
-    {
-      ResponseGenerator ok(request, http_processor.get_m_response());
-      // vector<char> 진짜 response message
-      response_message = ok.generateResponseMessage();
-    }
-    else
-    {
-      ResponseGenerator not_ok(request, http_processor.get_m_response());
 
+      ResponseGenerator response_generator(request, http_processor.get_m_response());
       // vector<char> 진짜 response message
-      response_message = not_ok.generateErrorResponseMessage();
-    }
+      response_message = response_generator.generateResponseMessage();
     t_event_udata *udata = new t_event_udata(CLIENT);
     t_event_udata *current_udata = (t_event_udata *)current_event->udata;
     // t_server crrent_m_server = current_udata->m_server;

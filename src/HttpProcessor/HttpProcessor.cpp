@@ -28,7 +28,8 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
   PathFinder path_finder(request_data, server_data, m_response_data);
   try
   {
-    if (m_request_data.method == "GET" && m_response_data.accepted_method.find("GET") != std::string::npos)
+    if (m_request_data.method == "GET" &&
+        m_response_data.accepted_method.find("GET") != std::string::npos)
     {
       if (m_response_data.cgi_flag == true)
       {
@@ -43,7 +44,8 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
         m_response_data = method_handler.get_m_response_data();
       }
     }
-    else if (m_request_data.method == "POST" && m_response_data.accepted_method.find("POST") != std::string::npos)
+    else if (m_request_data.method == "POST" &&
+             m_response_data.accepted_method.find("POST") != std::string::npos)
     {
       if (m_response_data.cgi_flag == true)
       {
@@ -58,19 +60,23 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
         m_response_data = method_handler.get_m_response_data();
       }
     }
-    else if (m_request_data.method == "PUT" && m_response_data.accepted_method.find("PUT") != std::string::npos)
+    else if (m_request_data.method == "PUT" &&
+             m_response_data.accepted_method.find("PUT") != std::string::npos)
     {
       PutMethodHandler method_handler(m_request_data, m_response_data);
       method_handler.methodRun();
       m_response_data = method_handler.get_m_response_data();
     }
-    else if (m_request_data.method == "HEAD" && m_response_data.accepted_method.find("HEAD") != std::string::npos)
+    else if (m_request_data.method == "HEAD" &&
+             m_response_data.accepted_method.find("HEAD") != std::string::npos)
     {
       GetMethodHandler method_handler(m_request_data, m_response_data);
       method_handler.methodRun();
       m_response_data = method_handler.get_m_response_data();
     }
-    else if (m_request_data.method == "DELETE" && m_response_data.accepted_method.find("DELETE") != std::string::npos)
+    else if (m_request_data.method == "DELETE" &&
+             m_response_data.accepted_method.find("DELETE") !=
+                 std::string::npos)
     {
       DeleteMethodHandler method_handler(m_request_data, m_response_data);
       method_handler.methodRun();
