@@ -14,6 +14,8 @@ Response::Response()
   root_path = "";
   cgi_bin_path = "";
   uploaded_path = "";
+  index_name = "";
+  index_exist = false;
   status_code = OK_200;
   redirection_exist = false;
   auto_index = false;
@@ -31,6 +33,8 @@ Response::Response(const Response& obj)
   file_path = obj.file_path;
   file_name = obj.file_name;
   root_path = obj.root_path;
+  index_name = obj.index_name;
+  index_exist = obj.index_exist;
   cgi_bin_path = obj.cgi_bin_path;
   uploaded_path = obj.uploaded_path;
   status_code = obj.status_code;
@@ -56,6 +60,8 @@ Response& Response::operator=(const Response& obj)
     file_path = obj.file_path;
     file_name = obj.file_name;
     root_path = obj.root_path;
+    index_name = obj.index_name;
+   index_exist = obj.index_exist;
     cgi_bin_path = obj.cgi_bin_path;
     uploaded_path = obj.uploaded_path;
     status_code = obj.status_code;
