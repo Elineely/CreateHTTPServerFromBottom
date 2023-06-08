@@ -182,6 +182,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     }
     return;
   }
+  if (locationBlock[locationBlock.length() - 1] == '/')
+    throw BAD_REQUEST_400;
   if (setCgi((locationBlock), server_data, response_data))
   {
     return;
