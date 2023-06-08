@@ -200,7 +200,7 @@ void ResponseGenerator::generateContentType()
 
 void ResponseGenerator::generateContentLength()
 {
-  if (m_response.body.size() <= 0) return;
+  if (m_response.body.size() < 0) return;
 
   std::stringstream ss;
   std::string body_length;
@@ -270,7 +270,7 @@ void ResponseGenerator::generateErrorBody()
   appendStrToBody(statusCodeToString());
   appendStrToBody(" ");
   appendStrToBody(status_str.getStatusStr(m_response.status_code));
-  appendStrToBody("</h1></center>\r\n");
+  appendStrToBody("</h1></center></body>\r\n</html>");
 }
 
 void ResponseGenerator::setStartLine()

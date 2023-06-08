@@ -70,9 +70,9 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
     else if (m_request_data.method == "HEAD" &&
              m_response_data.accepted_method.find("HEAD") != std::string::npos)
     {
-      // HeadMethodHandler method_handler(m_request_data, m_response_data);
-      // method_handler.methodRun();
-      // m_response_data = method_handler.get_m_response_data();
+      GetMethodHandler method_handler(m_request_data, m_response_data);
+      method_handler.methodRun();
+      m_response_data = method_handler.get_m_response_data();
     }
     else if (m_request_data.method == "DELETE" &&
              m_response_data.accepted_method.find("DELETE") !=
