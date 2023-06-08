@@ -144,7 +144,7 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
 {
   m_request = request_data;
   m_response = response_data;
-  if (response_data.auto_index == true)
+  if (response_data.auto_index == true && m_response.file_exist == false)
     m_target_file = "autoindex.html";
   else
     m_target_file = response_data.file_path + response_data.file_name;
