@@ -18,6 +18,8 @@ struct Response
   bool auto_index;
   std::string file_name;
   bool file_exist;
+  std::string index_name;
+  bool index_exist;
   std::string file_path;
   bool path_exist;
   std::string root_path;
