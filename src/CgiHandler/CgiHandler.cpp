@@ -33,10 +33,10 @@ Response CgiHandler::get_m_response_data() { return (m_response_data); }
 void CgiHandler::setCgiEnv(void)
 {
   // test
-  m_response_data.cgi_bin_path = "post_python.py";
+  // m_response_data.cgi_bin_path = "post_python.py";
 
   // 수정 필요 ----------------
-  std::string defualt_cgi_script("post_python.py");
+  std::string defualt_cgi_script(m_response_data.file_name);
 
   // 값이 없는 경우는 빈 값으로 두면 생략하는 것과 같은 효과
 
@@ -194,15 +194,17 @@ void GetCgiHandler::executeCgi()
   close(m_to_parent_fds[WRITE]);
 
   setCgiEnv();
+  std::string cgi_file = m_response_data.root_path + "/" + m_response_data.file_name;
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
-  const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
+  const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
-
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to execve function strerrno: %s", strerror(errno));
-    throw ExecutionException();
+    // LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
+    std::vector<char> error_message = makeErrorPage();
+    write(STDOUT_FILENO, &error_message[0], error_message.size());
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -225,7 +227,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
   catch (const std::exception& e)
   {
     LOG_ERROR("catch error %s", e.what());
-    std::vector<char> error_message = makeErrorPage();
+    m_response_data.body = makeErrorPage();
   }
 }
 
@@ -319,14 +321,16 @@ void PostCgiHandler::executeCgi()
 
   setCgiEnv();
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
-  const char* argv[] = {cgi_bin_path, m_response_data.file_name.c_str(), NULL};
+  std::string cgi_file = m_response_data.root_path + "/" + m_response_data.file_name;
+  const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
-
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
-    throw ExecutionException();
+    // LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
+    std::vector<char> error_message = makeErrorPage();
+    write(STDOUT_FILENO, &error_message[0], error_message.size());
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -342,17 +346,17 @@ void PostCgiHandler::outsourceCgiRequest(void)
     }
     else
     {
-      // close(m_to_child_fds[READ]);
-      // close(m_to_child_fds[WRITE]);
-      // close(m_to_parent_fds[WRITE]);
+      close(m_to_child_fds[READ]);
+      close(m_to_child_fds[WRITE]);
+      close(m_to_parent_fds[WRITE]);
 
-      // m_response_data.read_pipe_fd = m_to_parent_fds[READ];
-      // m_response_data.cgi_child_pid = m_pid;
+      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      m_response_data.cgi_child_pid = m_pid;
     }
   }
   catch (const std::exception& e)
   {
     LOG_ERROR("catch error %s", e.what());
-    std::vector<char> error_message = makeErrorPage();
+    m_response_data.body = makeErrorPage();
   }
 }
