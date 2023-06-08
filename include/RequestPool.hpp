@@ -9,11 +9,10 @@ struct RequestPool
 {
   std::vector<char> total_line;
   size_t line_len;
-  size_t prev_offset;
   size_t offset; // 마지막으로 찾은 \r\n 이후 + 2 지점
 
   // Default Constructor
-  RequestPool(void) : line_len(0), prev_offset(0), offset(0)
+  RequestPool(void) : line_len(0), offset(0)
   {
   }
  
@@ -37,7 +36,6 @@ struct RequestPool
     if (this != &rhs)
     {
       line_len = rhs.line_len;
-      prev_offset = rhs.prev_offset;
       offset = rhs.offset;
       if (total_line.size() > 0)
       {

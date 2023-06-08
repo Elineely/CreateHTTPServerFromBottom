@@ -1,5 +1,5 @@
-#ifndef PARSER_HPP
-#define PARSER_HPP
+#ifndef NEW_PARSER_HPP
+#define NEW_PARSER_HPP
 
 #include <map>
 #include <string>
@@ -29,23 +29,25 @@ class Parser
   // Member Functions
   void readBuffer(char* buf, int recv_size);
   ValidationStatus get_validation_phase(void);
-  int get_m_client_fd(void);
   struct Request& get_request(void);
-
+    
  private:
 
   // Member Variables
-  struct Request m_data;
+  struct Request m_request;
   struct RequestPool m_pool;
   size_t m_max_body_size;
 
   // Member Functions
   void saveBufferInPool(char* buf, int recv_size);
-  bool findNewlineInPool(void);
+  size_t findNewline(const char* buf, size_t offset);
+  void checkBodyType(void);
   void parseFirstLine(void);
   void parseHeaders(void);
   void parseBody(void);
-  void parseChunkedBody(void);
+  ssize_t parseChunkedBodyLength(void);
+  void parseChunkedBody(ssize_t chunked_body_size);
+
 };
 
 #endif

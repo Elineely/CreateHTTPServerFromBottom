@@ -10,6 +10,7 @@
 
 #include "Log.hpp"
 #include "utils.hpp"
+
 // Default Constructor
 Parser::Parser(void) : m_max_body_size(0) {}
 
@@ -41,7 +42,7 @@ Parser& Parser::operator=(Parser const& rhs)
 {
   if (this != &rhs)
   {
-    m_data = rhs.m_data;
+    m_request = rhs.m_request;
     m_pool = rhs.m_pool;
     m_max_body_size = rhs.m_max_body_size;
   }
@@ -49,66 +50,14 @@ Parser& Parser::operator=(Parser const& rhs)
 }
 
 // Public member functions
-ValidationStatus Parser::get_validation_phase(void)
+struct Request& Parser::get_request(void)
 {
-  return (m_data.validation_phase);
+  return m_request;
 }
 
-struct Request& Parser::get_request(void) { return (m_data); }
-
-// Private member functions
-void Parser::parseFirstLine(void)
+ValidationStatus Parser::get_validation_phase(void)
 {
-  // \r\n 은 제외하고 input 에 저장
-  size_t len = m_pool.offset - 2;
-  std::string input(&m_pool.total_line[0], len);
-  std::string method;
-  std::string uri;
-  std::string http_version;
-  size_t idx1;
-  size_t idx2;
-
-  // 1. HTTP Method 탐색
-  idx1 = input.find_first_of(' ', 0);
-  method = input.substr(0, idx1);
-  if (method != "GET" && method != "POST" && method != "DELETE" &&
-      method != "HEAD" && method != "PUT")
-  {
-    m_data.status = BAD_REQUEST_400;
-    throw std::invalid_argument("Method is not acceptable");
-  }
-
-  // 2. URI 탐색
-  idx2 = input.find_first_of(' ', idx1 + 1);
-  // EXCEPTION: Method 뒤에 아무 정보도 없는 경우
-  if (idx2 == std::string::npos)
-  {
-    m_data.status = BAD_REQUEST_400;
-    throw std::invalid_argument("There should be a whitespace after method");
-  }
-  uri = input.substr(idx1 + 1, idx2 - idx1 - 1);
-  if (uri.at(0) != '/')
-  {
-    m_data.status = BAD_REQUEST_400;
-    throw std::invalid_argument("URI should start with slash(/)");
-  }
-
-  // 3. HTTP Version 탐색
-  // TODO: HTTP 1.0 버전도 호환 가능하게 받을 것인지?
-  http_version =
-      input.substr(idx2 + 1, input.find_first_of('\r', idx2 + 1) - idx2 - 1);
-  if (http_version != "HTTP/1.0" && http_version != "HTTP/1.1")
-  {
-    m_data.status = BAD_REQUEST_400;
-    throw std::invalid_argument("HTTP version should be either 1.0 or 1.1");
-  }
-
-  m_data.method = method;
-  m_data.uri = uri;
-  m_data.http_version = http_version;
-  m_data.validation_phase = ON_HEADER;
-  LOG_DEBUG("request method: %s", method.c_str());
-  LOG_DEBUG("request uri: %s", uri.c_str());
+  return (m_request.validation_phase);
 }
 
 void Parser::saveBufferInPool(char* buf, int recv_size)
@@ -125,201 +74,224 @@ void Parser::saveBufferInPool(char* buf, int recv_size)
   }
 }
 
-bool Parser::findNewlineInPool(void)
+size_t Parser::findNewline(const char* buf, size_t offset)
 {
-  const char* find;
-  const char* target;
-
-  std::map<std::string, std::string>::iterator content_length_it =
-      m_data.headers.find("content-length");
-
-  find = NULL;
-  for (size_t idx = m_pool.offset; idx <= m_pool.total_line.size() - 2;
-       idx += 1)
+  for (size_t idx = offset; idx <= m_pool.line_len - 2; idx += 1)
   {
-    if (m_pool.total_line[idx] != '\r')
+    if (buf[idx] != '\r')
     {
       continue;
     }
-    if (std::strncmp(&m_pool.total_line[idx], "\r\n", 2) == 0)
+    if (std::strncmp(&buf[idx], "\r\n", 2) == 0)
     {
-      find = &m_pool.total_line[idx];
-      break;
+      return (idx);
     }
   }
-
-  if (find == NULL)
-  {
-    return (false);
-  }
-
-  m_pool.prev_offset = m_pool.offset;
-  if (m_pool.prev_offset < 2)
-  {
-    target = &m_pool.total_line[0];
-  }
-  else
-  {
-    target = &m_pool.total_line[m_pool.prev_offset - 2];
-  }
-  if (std::strncmp(target, "\r\n\r\n", 4) == 0)
-  {
-    std::map<std::string, std::string>::iterator transfer_encoding_it =
-        m_data.headers.find("transfer-encoding");
-    if ((m_data.method == "POST" || m_data.method == "PUT") &&
-        (transfer_encoding_it != m_data.headers.end() ||
-         transfer_encoding_it->second == "chunked"))
-    {
-      m_data.validation_phase = ON_BODY;
-      if (transfer_encoding_it->second == "chunked")
-      {
-        m_data.validation_phase = ON_CHUNKED_BODY;
-        m_pool.offset = m_pool.prev_offset + 2;
-        m_pool.prev_offset = m_pool.offset;
-        return (true);
-      }
-    }
-    else
-    {
-      m_data.validation_phase = COMPLETE;
-    }
-    m_pool.offset = m_pool.prev_offset + 2;
-  }
-  else
-  {
-    m_pool.offset = static_cast<size_t>((find + 2) - &m_pool.total_line[0]);
-  }
-  return (true);
+  return (0);
 }
 
-void Parser::parseHeaders(void)
+void Parser::parseFirstLine(void)
 {
-  do
+  LOG_DEBUG("parse_FIrstLine");
+  size_t crlf_idx;
+
+  crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
+  if (crlf_idx == 0)
   {
-    // '\r\n' 을 포함해서 저장
-    std::string input(&m_pool.total_line[m_pool.prev_offset],
-                      m_pool.offset - m_pool.prev_offset);
-    std::string key;
-    std::string value;
-    size_t idx1;
-    size_t idx2;
+    return ;
+  }
+  m_pool.offset = crlf_idx + 2;
+  
+  std::string input(&m_pool.total_line[0], crlf_idx); // \r\n 은 제외하고 input 에 저장
+  std::string method;
+  std::string uri;
+  std::string http_version;
+  size_t idx1;
+  size_t idx2;
 
-    idx1 = input.find_first_of(':', 0);
-    if (idx1 == std::string::npos)
-    {
-      m_data.status = BAD_REQUEST_400;
-      throw std::invalid_argument("[HEADERS] There is no key.");
-    }
+  // 1. HTTP Method 탐색
+  idx1 = input.find_first_of(' ', 0);
+  method = input.substr(0, idx1);
+  if (method != "GET" && method != "POST" && method != "DELETE" &&
+      method != "HEAD" && method != "PUT")
+  {
+    m_request.status = BAD_REQUEST_400;
+    throw std::invalid_argument("Method is not acceptable");
+  }
 
-    key = ft_toLower(input.substr(0, idx1));
-    if (m_data.headers.find(key) != m_data.headers.end())
-    {
-      m_data.status = BAD_REQUEST_400;
-      throw std::invalid_argument("HTTP header field should not be duplicated");
-    }
+  // 2. URI 탐색
+  idx2 = input.find_first_of(' ', idx1 + 1);
+  // EXCEPTION: Method 뒤에 아무 정보도 없는 경우
+  if (idx2 == std::string::npos)
+  {
+    m_request.status = BAD_REQUEST_400;
+    throw std::invalid_argument("There should be a whitespace after method");
+  }
+  uri = input.substr(idx1 + 1, idx2 - idx1 - 1);
+  if (uri.at(0) != '/')
+  {
+    m_request.status = BAD_REQUEST_400;
+    throw std::invalid_argument("URI should start with slash(/)");
+  }
 
-    idx2 = input.find_first_of('\n', idx1 + 1);
-    if (idx2 == std::string::npos)
-    {
-      m_data.status = BAD_REQUEST_400;
-      throw std::invalid_argument("[HEADERS] There is no CRLF.");
-    }
+  // 3. HTTP Version 탐색
+  http_version =
+      input.substr(idx2 + 1, input.find_first_of('\r', idx2 + 1) - idx2 - 1);
+  if (http_version != "HTTP/1.0" && http_version != "HTTP/1.1")
+  {
+    m_request.status = BAD_REQUEST_400;
+    throw std::invalid_argument("HTTP version should be either 1.0 or 1.1");
+  }
 
-    value = ft_strtrim(input.substr(idx1 + 1, (idx2 - idx1 - 1)));
-    m_data.headers[key] = value;
-  } while (findNewlineInPool() == true && m_data.validation_phase == ON_HEADER);
+  m_request.method = method;
+  m_request.uri = uri;
+  m_request.http_version = http_version;
+  m_request.validation_phase = ON_HEADER;
+  LOG_DEBUG("request method: %s", method.c_str());
+  LOG_DEBUG("request uri: %s", uri.c_str());
+}
+
+void Parser::checkBodyType(void)
+{
+  std::map<std::string, std::string>::iterator it;
+  std::map<std::string, std::string>::iterator end_it = m_request.headers.end();
+
+  if (m_request.method == "GET" || m_request.method == "DELETE")
+  {
+    m_request.validation_phase = COMPLETE;
+    return;
+  }
+  it = m_request.headers.find("content-length");
+  if (it != end_it)
+  {
+    m_request.validation_phase = ON_BODY;
+    return;
+  }
+  it = m_request.headers.find("transfer-encoding");
+  if (it != end_it)
+  {
+    m_request.validation_phase = ON_CHUNKED_BODY;
+    return;
+  }
+  m_request.status = BAD_REQUEST_400;
 }
 
 void Parser::parseBody(void)
 {
+  for (size_t idx = m_pool.offset; idx < m_pool.line_len; idx += 1)
+  {
+    m_request.body.push_back(m_pool.total_line[idx]);
+    m_pool.offset += 1;
+  }
+
   long long content_length =
-      std::strtoll(m_data.headers["content-length"].c_str(), NULL, 10);
-
-  for (size_t idx = m_pool.offset; idx < m_pool.line_len; ++idx)
+    std::strtoll(m_request.headers["content-length"].c_str(), NULL, 10);
+  
+  if (content_length == m_request.body.size())
   {
-    m_data.body.push_back(m_pool.total_line[idx]);
-    ++m_pool.offset;
+    m_request.validation_phase = COMPLETE;
   }
-
-  sleep(1);
-
-  std::cout << "content_length: " << content_length << std::endl;
-  std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
-  std::cout << "m_data.body : " << std::endl;
-  for (int i = 0; i < m_data.body.size(); ++i)
+  else if (content_length < m_request.body.size())
   {
-    std::cout << m_data.body[i];
+    m_request.status = BAD_REQUEST_400;
+    m_request.validation_phase = COMPLETE;
   }
-  std::cout << std::endl;
-  std::cout << "m_pool.offset: " << m_pool.offset << std::endl;
-  std::cout << "m_pool.line_len: " << m_pool.line_len << std::endl;
-  if (static_cast<size_t>(content_length) > m_data.body.size())
-  {
-    return;
-  }
-
-  if (static_cast<size_t>(content_length) < m_data.body.size())
-  {
-    m_data.status = BAD_REQUEST_400;
-    throw std::invalid_argument(
-        "Content-length and body length should be equal");
-  }
-
-  m_data.validation_phase = COMPLETE;
+  LOG_DEBUG("m_pool.line_len: %d, m_pool.offset: %d, content-length: %d, body_size: %d", m_pool.line_len, m_pool.offset, content_length, m_request.body.size());
 }
 
-void Parser::parseChunkedBody(void)
+ssize_t Parser::parseChunkedBodyLength(void)
 {
-  while (true)
+  size_t crlf_idx;
+
+  crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
+  if (crlf_idx == m_pool.offset)
   {
-    if (m_pool.prev_offset + 2 >= m_pool.line_len)
-    {
-      break;
-    }
-    char* body_curr =
-        &m_pool.total_line[0] + m_pool.prev_offset;  // 마지막 파싱 위치
-    char* newline = std::strstr(body_curr, "\r\n");
-    if (newline == NULL)
-    {
-      break;
-    }
-
-    std::string str_chunk_size(body_curr,
-                               static_cast<size_t>(newline - body_curr));
-    long long chunk_size = std::stoll(str_chunk_size);
-    if (str_chunk_size != "0" && chunk_size <= 0)
-    {
-      m_data.status = BAD_REQUEST_400;
-      throw std::invalid_argument("Chunk size should be positive value");
-    }
-
-    // Chunked body end
-    if (std::strncmp(newline, "\r\n\r\n", 4) == 0)
-    {
-      m_data.validation_phase = COMPLETE;
-      break;
-    }
-
-    char* next_newline = std::strstr(newline + 2, "\r\n");
-    if (next_newline == NULL)
-    {
-      break;
-    }
-
-    if (static_cast<long long>(next_newline - (newline + 2)) != chunk_size)
-    {
-      m_data.status = BAD_REQUEST_400;
-      throw std::invalid_argument("Chunk body should be equal with chunk size");
-    }
-
-    for (char* ptr = newline + 2; ptr < next_newline; ptr += 1)
-    {
-      m_data.body.push_back(*ptr);
-    }
-
-    m_pool.prev_offset = next_newline - &m_pool.total_line[0] + 2;
-    m_pool.offset = m_pool.prev_offset;
+    m_request.validation_phase = COMPLETE;
+    return (-1);
   }
+  std::string str_chunk_size(&m_pool.total_line[m_pool.offset], crlf_idx);
+  long long chunk_size = std::strtoll(str_chunk_size.c_str(), NULL, 10);
+
+  m_pool.offset += 2;
+  if (chunk_size < 0)
+  {
+    m_request.status = BAD_REQUEST_400;
+    return (-1);
+  }
+  return (static_cast<ssize_t>(chunk_size));
+}
+
+void Parser::parseChunkedBody(ssize_t chunked_body_size)
+{
+  if (chunked_body_size == -1)
+  {
+    return ;
+  }
+
+  /*
+  
+  5\r\n
+  hello\r\n
+  0\r\n\r\n
+
+  */
+
+  if (m_pool.line_len - m_pool.offset < chunked_body_size)
+  {
+    return ;
+  }
+  size_t crlf_idx;
+
+  crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
+  if (crlf_idx == 0)
+  {
+    return ;
+  }
+  for (size_t idx = m_pool.offset; idx < crlf_idx; ++idx)
+  {
+    m_request.body.push_back(m_pool.total_line[idx]);
+    m_pool.offset += 1;
+  }
+  
+}
+
+
+void Parser::parseHeaders(void)
+{
+  size_t crlf_idx;
+
+  crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
+  if (crlf_idx == m_pool.offset)
+  {
+    m_request.validation_phase = ON_BODY;
+    checkBodyType();
+    m_pool.offset = m_pool.offset + 2;
+    return ; 
+  }
+  // \r\n 은 제외하고 input 에 저장
+  std::string input(&m_pool.total_line[m_pool.offset], crlf_idx - m_pool.offset);
+  std::string key;
+  std::string value;
+  size_t idx1;
+  m_pool.offset = crlf_idx + 2;
+
+  idx1 = input.find_first_of(':', 0);
+  if (idx1 == std::string::npos)
+  {
+    m_request.status = BAD_REQUEST_400;
+    throw std::invalid_argument("[HEADERS] There is no key.");
+  }
+
+  key = ft_toLower(input.substr(0, idx1));
+  if (m_request.headers.find(key) != m_request.headers.end())
+  {
+    m_request.status = BAD_REQUEST_400;
+    throw std::invalid_argument("HTTP header field should not be duplicated");
+  }
+
+  value = ft_strtrim(input.substr(idx1 + 1, (crlf_idx - idx1 - 1)));
+  LOG_DEBUG("key: %s, value: %s", key.c_str(), value.c_str());
+  m_request.headers[key] = value;
 }
 
 // Public member functions
@@ -327,87 +299,52 @@ void Parser::readBuffer(char* buf, int recv_size)
 {
   try
   {
-    std::cout << buf << std::endl;
-    if (m_data.validation_phase == COMPLETE)
+    // std::cout << buf << std::endl;
+    if (m_request.validation_phase == COMPLETE)
     {
       return;
     }
+
+    LOG_DEBUG("recv_size: %d", recv_size);
 
     // 클라이언트가 보낸 데이터를 RequestPool 에 저장
     saveBufferInPool(buf, recv_size);
 
-    // 마지막으로 CRLF 를 찾은 지점 이후에 CRLF 가 들어왔는지 확인
-    if (findNewlineInPool() == false && m_data.validation_phase != ON_BODY)
-    {
-      return;
-    }
-
     // Validation 단계에 따라 first-line, header, [body] 를 파싱
-    while (m_data.validation_phase != COMPLETE)
+    while (m_request.validation_phase != COMPLETE)
     {
-      switch (m_data.validation_phase)
+      switch (m_request.validation_phase)
       {
         case READY:
+        {
           parseFirstLine();
           break;
+        }
         case ON_HEADER:
+        {
           parseHeaders();
           break;
+        }
         case ON_BODY:
+        {
           parseBody();
           break;
+        }
         case ON_CHUNKED_BODY:
-          parseChunkedBody();
+        {
+          ssize_t chunked_body_size;
+
+          chunked_body_size = parseChunkedBodyLength();
+          parseChunkedBody(chunked_body_size);
+          break;
+        }
         default:
           break;
       }
 
-      if (m_data.validation_phase == COMPLETE)
+      if (m_request.validation_phase == COMPLETE || m_pool.line_len == m_pool.offset)
       {
         return;
-      }
-
-      // Chunked body 로 들어왔지만, 아직 클라이언트로부터 데이터를 다 받지 못한 경우
-      if (m_data.validation_phase == ON_CHUNKED_BODY &&
-          m_pool.prev_offset + 2 >= m_pool.line_len)
-      {
-        return ;
-      }
-
-      std::map<std::string, std::string>::iterator content_length_it =
-          m_data.headers.find("content-length");
-      if (content_length_it != m_data.headers.end())
-      {
-        long long content_length =
-            std::strtoll((content_length_it->second).c_str(), NULL, 10);
-        if (content_length < 0)
-        {
-          m_data.status = BAD_REQUEST_400;
-          m_data.validation_phase = COMPLETE;
-          throw std::invalid_argument(
-              "Content-length should be positive value");
-        }
-        if (m_data.body.size() > m_max_body_size)
-        {
-          m_data.status = BAD_REQUEST_400;
-          m_data.validation_phase = COMPLETE;
-          std::cout << "m_max_body_size: " << m_max_body_size << std::endl;
-          throw std::invalid_argument("Exceed max body size.");
-        }
-      }
-
-      if (m_data.validation_phase == ON_BODY && m_pool.line_len > m_pool.offset)
-      {
-        LOG_DEBUG("CONTINUE");
-        continue;
-      }
-
-      if ((findNewlineInPool() == false &&
-           m_data.validation_phase == COMPLETE) ||
-          m_data.validation_phase == ON_BODY)
-      {
-        LOG_DEBUG("BREAK");
-        break;
       }
     }
   }
