@@ -11,6 +11,7 @@ Response::Response()
   rediretion_location = "";
   file_path = "";
   file_name = "";
+  root_path = "";
   cgi_bin_path = "";
   uploaded_path = "";
   status_code = OK_200;
@@ -29,6 +30,7 @@ Response::Response(const Response& obj)
   rediretion_location = obj.rediretion_location;
   file_path = obj.file_path;
   file_name = obj.file_name;
+  root_path = obj.root_path;
   cgi_bin_path = obj.cgi_bin_path;
   uploaded_path = obj.uploaded_path;
   status_code = obj.status_code;
@@ -53,6 +55,7 @@ Response& Response::operator=(const Response& obj)
     rediretion_location = obj.rediretion_location;
     file_path = obj.file_path;
     file_name = obj.file_name;
+    root_path = obj.root_path;
     cgi_bin_path = obj.cgi_bin_path;
     uploaded_path = obj.uploaded_path;
     status_code = obj.status_code;
@@ -99,6 +102,11 @@ void ResponseGenerator::cgiDataProcess()
   std::string::size_type status_begin;
   std::string::size_type status_end;
   std::string cgi_status_code;
+  if (cgi_data.size() == 0)
+  {
+    m_response.status_code = GATEWAY_TIMEOUT_504;
+    throw m_response.status_code;
+  }
   status_begin = cgi_data.find("Status: ");
   status_end = cgi_data.find("\r\n", status_begin);
   if (status_begin != std::string::npos && status_end != std::string::npos)

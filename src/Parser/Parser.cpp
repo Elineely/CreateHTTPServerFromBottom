@@ -42,6 +42,7 @@ Parser& Parser::operator=(Parser const& rhs)
   {
     m_data = rhs.m_data;
     m_pool = rhs.m_pool;
+    m_max_body_size = rhs.m_max_body_size;
   }
   return *this;
 }

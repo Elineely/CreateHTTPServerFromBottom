@@ -58,10 +58,14 @@ void PathFinder::setIndex(std::string root, std::string index,
 {
   // Post method의 경우, 요청받은 file이 존재하지 않더라도
   // 요청받은 파일 name을 기록할 필요가 있다.
-  response_data.file_name = index;
+  response_data.file_name =  index;
   if (checkExist(root + index))
   {
     response_data.file_exist = true;
+  }
+  else
+  {
+    response_data.file_exist = false;
   }
 }
 
@@ -83,6 +87,7 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
     response_data.cgi_flag = true;
     t_location current_location = server_data.locations.find(".py")->second;
     response_data.cgi_bin_path = current_location.ourcgi_pass;
+    response_data.root_path = current_location.root;
     response_data.uploaded_path =
         current_location.uploaded_path;  // 경로 존재하는지
     setIndex(current_location.root + "/", current_location.ourcgi_index,

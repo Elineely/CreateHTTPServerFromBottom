@@ -8,18 +8,18 @@ void Server::clientWriteEvent(struct kevent *current_event)
   t_event_udata *udata;
   t_event_udata *new_udata;
   t_event_udata *read_udata;
-  t_response_write *response;
+  t_response_write *response_write;
   char *message;
   
   udata = static_cast<t_event_udata *>(current_event->udata);
-  response = &udata->m_response;
-  message = &response->message[0];
-  write(1, message, response->length);
+  response_write = &udata->m_response_write;
+  message = &response_write->message[0];
+  write(1, message, response_write->length);
   int send_byte = 0;
-  send_byte = send(current_event->ident, message + response->offset,
-                   response->length - response->offset, 0);
-  response->offset += send_byte;
-  if (response->length > response->offset)
+  send_byte = send(current_event->ident, message + response_write->offset,
+                   response_write->length - response_write->offset, 0);
+  response_write->offset += send_byte;
+  if (response_write->length > response_write->offset)
   {
     return;
   }
