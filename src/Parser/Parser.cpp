@@ -229,8 +229,6 @@ void Parser::parseBody(void)
     ++m_pool.offset;
   }
 
-  sleep(1);
-
   std::cout << "content_length: " <<content_length << std::endl;
   std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
   std::cout << "m_data.body : " << std::endl;
