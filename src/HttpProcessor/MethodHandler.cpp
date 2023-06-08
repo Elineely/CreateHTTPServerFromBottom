@@ -205,9 +205,9 @@ PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
 }
 void PostMethodHandler::methodRun()
 {
+  if (m_response_data.path_exist == false) throw BAD_REQUEST_400;
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
-
   // delete the target file
   if (m_response_data.file_exist == true)
     // error deleting file
@@ -244,9 +244,9 @@ DeleteMethodHandler& DeleteMethodHandler::operator=(
 }
 void DeleteMethodHandler::methodRun()
 {
+  if (m_response_data.path_exist == false) throw BAD_REQUEST_400;
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
-
   if (m_response_data.file_exist == true)
     // error deleting file
     if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
@@ -277,6 +277,7 @@ PutMethodHandler& PutMethodHandler::operator=(PutMethodHandler const& obj)
 }
 void PutMethodHandler::methodRun()
 {
+  if (m_response_data.path_exist == false) throw BAD_REQUEST_400;
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
 

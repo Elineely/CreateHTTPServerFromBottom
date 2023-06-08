@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 
-//canonical
+// canonical
 Response::Response()
 {
   accepted_method = "";
@@ -14,7 +14,7 @@ Response::Response()
   root_path = "";
   cgi_bin_path = "";
   uploaded_path = "";
-  status_code  = OK_200;
+  status_code = OK_200;
   redirection_exist = false;
   auto_index = false;
   file_exist = false;
@@ -33,7 +33,7 @@ Response::Response(const Response& obj)
   root_path = obj.root_path;
   cgi_bin_path = obj.cgi_bin_path;
   uploaded_path = obj.uploaded_path;
-  status_code  = obj.status_code;
+  status_code = obj.status_code;
   redirection_exist = obj.redirection_exist;
   auto_index = obj.auto_index;
   file_exist = obj.file_exist;
@@ -45,7 +45,7 @@ Response::Response(const Response& obj)
   response_message = obj.response_message;
 }
 
-Response::~Response(){}
+Response::~Response() {}
 
 Response& Response::operator=(const Response& obj)
 {
@@ -58,7 +58,7 @@ Response& Response::operator=(const Response& obj)
     root_path = obj.root_path;
     cgi_bin_path = obj.cgi_bin_path;
     uploaded_path = obj.uploaded_path;
-    status_code  = obj.status_code;
+    status_code = obj.status_code;
     redirection_exist = obj.redirection_exist;
     auto_index = obj.auto_index;
     file_exist = obj.file_exist;
@@ -66,7 +66,7 @@ Response& Response::operator=(const Response& obj)
     body = obj.body;
     cgi_flag = obj.cgi_flag;
     read_pipe_fd = obj.read_pipe_fd;
-    cgi_child_pid = obj.cgi_child_pid; 
+    cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
   }
   return (*this);
@@ -116,8 +116,7 @@ void ResponseGenerator::cgiDataProcess()
     cgi_status_code = cgi_data.substr(status_begin + 8, 3);
     ss << cgi_status_code;
     ss >> error_code;
-    m_response.status_code = static_cast<StatusCode>(error_code);
-    throw m_response.status_code;
+    throw(static_cast<StatusCode>(error_code));
   }
 
   // generate content-type header in case of cgi
@@ -141,7 +140,7 @@ void ResponseGenerator::cgiDataProcess()
 ResponseGenerator::ResponseGenerator() {}
 ResponseGenerator::ResponseGenerator(Request& request_data,
                                      Response& response_data)
-                                     // : m_request(request_data), m_response(response_data)
+// : m_request(request_data), m_response(response_data)
 {
   m_request = request_data;
   m_response = response_data;
@@ -209,7 +208,7 @@ void ResponseGenerator::generateContentType()
 
 void ResponseGenerator::generateContentLength()
 {
-  if (m_response.body.size() <= 0) return;
+  if (m_response.body.size() < 0) return;
 
   std::stringstream ss;
   std::string body_length;
@@ -229,17 +228,17 @@ void ResponseGenerator::generateServer()
   appendStrToResponse_message("Server:");
   appendStrToResponse_message("Cute_webserv/1.0 (");
   std::string my_os;
-  #if defined(_WIN32)
-    my_os = "Windows";
-  #elif defined(__linux__)
-    my_os = "Linux";
-  #elif defined(__APPLE__) && defined(__MACH__)
-    my_os = "Mac OS";
-  #elif defined(__FreeBSD__)
-    my_os = "FreeBSD";
-  #else
-    my_os = "Unknown OS";
-  #endif
+#if defined(_WIN32)
+  my_os = "Windows";
+#elif defined(__linux__)
+  my_os = "Linux";
+#elif defined(__APPLE__) && defined(__MACH__)
+  my_os = "Mac OS";
+#elif defined(__FreeBSD__)
+  my_os = "FreeBSD";
+#else
+  my_os = "Unknown OS";
+#endif
   appendStrToResponse_message(my_os);
   appendStrToResponse_message(")");
   appendStrToResponse_message("\r\n");
@@ -279,7 +278,7 @@ void ResponseGenerator::generateErrorBody()
   appendStrToBody(statusCodeToString());
   appendStrToBody(" ");
   appendStrToBody(status_str.getStatusStr(m_response.status_code));
-  appendStrToBody("</h1></center>\r\n");
+  appendStrToBody("</h1></center></body>\r\n</html>");
 }
 
 void ResponseGenerator::setStartLine()
@@ -328,6 +327,8 @@ std::vector<char> ResponseGenerator::generateResponseMessage()
 {
   try
   {
+    if (m_response.status_code != OK_200 && m_response.status_code != FOUND_302)
+      throw(m_response.status_code);
     cgiDataProcess();
     setStartLine();
     setHeaders();
@@ -335,6 +336,7 @@ std::vector<char> ResponseGenerator::generateResponseMessage()
   }
   catch (StatusCode code)
   {
+    m_response.status_code = code;
     generateErrorResponseMessage();
   }
 
