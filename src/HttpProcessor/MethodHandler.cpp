@@ -34,10 +34,10 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
 {
   size_t pos = m_request_data.uri.find("//");
   if (pos != std::string::npos)
-   m_request_data.uri.erase(m_request_data.uri.end() - 1);
-  std::vector<FileInfo> fileList; 
+    m_request_data.uri.erase(m_request_data.uri.end() - 1);
+  std::vector<FileInfo> fileList;
   DIR* dir;
-  struct dirent* entry; 
+  struct dirent* entry;
   dir = opendir(target_directory.c_str());
   if (dir == NULL) throw INTERNAL_SERVER_ERROR_500;
   entry = readdir(dir);
@@ -79,9 +79,10 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   {
     std::string date = generateDate((*it).date);
     std::string size = generateSize((*it).size);
-    autoindex << "\t\t\t<tr><td><a href=\"" << (m_request_data.uri == "/" ? "" : m_request_data.uri ) << "/" <<(*it).name << "\">" << (*it).name
-              << "</a></td><td>" << date << "</td><td>" << size
-              << "</td></tr>\n";
+    autoindex << "\t\t\t<tr><td><a href=\""
+              << (m_request_data.uri == "/" ? "" : m_request_data.uri) << "/"
+              << (*it).name << "\">" << (*it).name << "</a></td><td>" << date
+              << "</td><td>" << size << "</td></tr>\n";
   }
   autoindex << "\t\t</table>\n"
             << "\t</body>\n"
@@ -165,7 +166,7 @@ GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
 }
 void GetMethodHandler::methodRun()
 {
-  if (m_response_data.path_exist ==false) throw NOT_FOUND_404;
+  if (m_response_data.path_exist == false) throw NOT_FOUND_404;
   if (m_response_data.auto_index == true)
   {
     if (m_response_data.file_exist)

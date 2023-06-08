@@ -25,9 +25,9 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
     m_response_data.status_code = code_num;
     return;
   }
-  PathFinder path_finder(request_data, server_data, m_response_data);
   try
   {
+    PathFinder path_finder(request_data, server_data, m_response_data);
     if (m_request_data.method == "GET" &&
         m_response_data.accepted_method.find("GET") != std::string::npos)
     {

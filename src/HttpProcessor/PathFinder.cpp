@@ -1,4 +1,5 @@
 #include "PathFinder.hpp"
+
 #include "Log.hpp"
 // #include "./PathTest/PathFinder.hpp" // for test
 
@@ -138,14 +139,13 @@ void PathFinder::test_print_basics(Response& c)
 
 void PathFinder::setRootPath(std::string root_path, Response& response_data)
 {
-    response_data.root_path = root_path;
+  response_data.root_path = root_path;
 }
 
 void PathFinder::setBasic(std::string method, std::string root,
                           std::string index, std::string auto_index,
                           std::string upload, std::string redirection,
-                          std::string root_path,
-                          Response& response_data)
+                          std::string root_path, Response& response_data)
 {
   LOG_DEBUG("Default server block (root: %s, index: %s)", root.c_str(),
             index.c_str());
@@ -165,6 +165,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
   t_location current_location;
 
   locationBlock = request_data.uri;
+  if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
 
   std::map<std::string, t_location>::iterator temp_location;
   if ((locationBlock) == "/" || (locationBlock) == "")  // default block
@@ -172,8 +173,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     current_location = server_data.locations.find("/")->second;
     setBasic(current_location.accepted_method, current_location.root + "/",
              current_location.index, current_location.auto_index,
-             current_location.uploaded_path, current_location.redirection, current_location.root,
-             response_data);
+             current_location.uploaded_path, current_location.redirection,
+             current_location.root, response_data);
     if (response_data.auto_index == true)
     {
       response_data.file_name = "";
@@ -193,13 +194,15 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     {
       current_location = server_data.locations.find("/")->second;
       if (checkExist(current_location.root + locationBlock))
-      { // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
+      {  // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치
+         // auto 인덱스 하려면 꼭 필요
         if (is_directory(current_location.root + locationBlock))
         {
-          setBasic(current_location.accepted_method, current_location.root + locationBlock + "/",
-               current_location.index, current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
+          setBasic(current_location.accepted_method,
+                   current_location.root + locationBlock + "/",
+                   current_location.index, current_location.auto_index,
+                   current_location.uploaded_path, current_location.redirection,
+                   current_location.root, response_data);
           if (response_data.auto_index == true)
           {
             response_data.file_name = "";
@@ -208,18 +211,19 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
         }
         else
         {
-           setBasic(current_location.accepted_method, current_location.root + "/",
-               locationBlock.substr(1), current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
+          setBasic(current_location.accepted_method,
+                   current_location.root + "/", locationBlock.substr(1),
+                   current_location.auto_index, current_location.uploaded_path,
+                   current_location.redirection, current_location.root,
+                   response_data);
         }
       }
       else
       {
-      // 들어온 블록이름이 location에 존재하지 않음.
-      response_data.path_exist = false;
-      response_data.file_exist = false;
-      response_data.auto_index = false;
+        // 들어온 블록이름이 location에 존재하지 않음.
+        response_data.path_exist = false;
+        response_data.file_exist = false;
+        response_data.auto_index = false;
       }
     }
     else
@@ -227,8 +231,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       current_location = temp_location->second;
       setBasic(current_location.accepted_method, current_location.root + "/",
                current_location.index, current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
+               current_location.uploaded_path, current_location.redirection,
+               current_location.root, response_data);
       if (response_data.auto_index == true)
       {
         response_data.file_name = "";
@@ -246,37 +250,45 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
         (locationBlock).substr(0, (locationBlock).find("/", 1));
     temp_location = server_data.locations.find(location_key);
     if (temp_location == server_data.locations.end())
-    {  // "/??(location에 없음)/b/c/d" 경우 + "/(기본디렉토리)/(그 안의 디렉토리)/그 안의 파일"
-       current_location = server_data.locations.find("/")->second;
-      if (checkExist(current_location.root + "/" + locationBlock))
-      { //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto 인덱스 하려면 꼭 필요
+    {  // "/??(location에 없음)/b/c/d" 경우 + "/(기본디렉토리)/(그 안의
+       // 디렉토리)/그 안의 파일"
+      current_location = server_data.locations.find("/")->second;
+      if (checkExist(current_location.root + locationBlock))
+      {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
+         //  인덱스 하려면 꼭 필요
         std::string rest_of_uri =
             (locationBlock).substr((locationBlock).find("/"));
         std::cout << rest_of_uri << std::endl;
         std::string entire_path = current_location.root + rest_of_uri;
         pos_last = entire_path.rfind("/");
         if (!is_directory(current_location.root + locationBlock))
-        {// 파일로 끝나는 경로가 온 경우
+        {  // 파일로 끝나는 경로가 온 경우
           setBasic(current_location.accepted_method,
-               entire_path.substr(0, pos_last + 1),
-               entire_path.substr(pos_last + 1), current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
-          return ;
+                   entire_path.substr(0, pos_last + 1),
+                   entire_path.substr(pos_last + 1),
+                   current_location.auto_index, current_location.uploaded_path,
+                   current_location.redirection, current_location.root,
+                   response_data);
+          return;
         }
         // 디렉토리로 끝나는 경우가 온 경우
-        setBasic(current_location.accepted_method, current_location.root + "/",
-               current_location.index, current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
-         if (response_data.auto_index == true)
+        setBasic(current_location.accepted_method,
+                 current_location.root + locationBlock, current_location.index,
+                 current_location.auto_index, current_location.uploaded_path,
+                 current_location.redirection, current_location.root,
+                 response_data);
+        if (response_data.auto_index == true)
         {
           response_data.file_name = "";
           response_data.file_exist = false;
         }
       }
       else
-      { // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
+      {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
+        setBasic(current_location.accepted_method, "", "",
+                 current_location.auto_index, current_location.uploaded_path,
+                 current_location.redirection, current_location.root,
+                 response_data);
         response_data.path_exist = false;
         response_data.file_exist = false;
         response_data.auto_index = false;
@@ -292,8 +304,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     {
       setBasic(current_location.accepted_method, entire_path + "/",
                current_location.index, current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
+               current_location.uploaded_path, current_location.redirection,
+               current_location.root, response_data);
       if (response_data.auto_index == true)
       {
         response_data.file_name = "";
@@ -306,8 +318,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection, current_location.root,
-               response_data);
+               current_location.uploaded_path, current_location.redirection,
+               current_location.root, response_data);
     }
   }
 }
