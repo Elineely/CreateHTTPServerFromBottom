@@ -18,7 +18,8 @@ class PathFinder
   bool checkExist(const std::string& path_or_file);
   bool is_directory(const std::string& path);
   void setRoot(std::string root, Response& response_data);
-  void setIndex(std::string root, std::string index, Response& response_data);
+  void setIndex(std::string root, std::string file_name, std::string index_name,
+                          Response& response_data);
   void setAutoIndex(std::string auto_index, Response& response_data);
   bool setCgi(std::string locationBlock, t_server server_data,
               Response& response_data);
@@ -26,10 +27,11 @@ class PathFinder
   void setRedirection(std::string redirection, Response& response_data);
   void setUpload(std::string upload, Response& response_data);
   void setRootPath(std::string root_path, Response& response_data);
-  void setBasic(std::string method, std::string root, std::string index,
-                std::string auto_index, std::string upload,
-                std::string redirection, std::string root_path,
-                Response& response_data);
+  void setBasic(std::string method, std::string root,
+                std::string file_name, std::string index_name, 
+                std::string auto_index,
+                std::string upload, std::string redirection,
+                std::string root_path, Response& response_data);
   void test_print_location(t_location& c);
   void test_print_basics(Response& c);
 
