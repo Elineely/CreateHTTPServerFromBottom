@@ -190,15 +190,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
              "" , current_location.index, current_location.auto_index,
              current_location.uploaded_path, current_location.redirection,
              current_location.root, response_data);
-    // if (response_data.auto_index == true)
-    // {
-    //   response_data.file_name = "";
-    //   response_data.file_exist = false;
-    // }
     return;
   }
-  // if (locationBlock[locationBlock.length() - 1] == '/')
-  //   throw BAD_REQUEST_400;
   if (setCgi((locationBlock), server_data, response_data))
   {
     return;
@@ -220,11 +213,6 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                    "" , current_location.index, current_location.auto_index,
                    current_location.uploaded_path, current_location.redirection,
                    current_location.root, response_data);
-          // if (response_data.auto_index == true)
-          // {
-          //   response_data.file_name = "";
-          //   response_data.file_exist = false;
-          // }
         }
         else
         {
@@ -239,9 +227,9 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       else
       {
         // 들어온 블록이름이 location에 존재하지 않음.
-        response_data.path_exist = false;
-        response_data.file_exist = false;
-        response_data.auto_index = false;
+        // response_data.path_exist = false;
+        // response_data.file_exist = false;
+        // response_data.auto_index = false;
       }
     }
     else
@@ -251,11 +239,6 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                "", current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
-      // if (response_data.auto_index == true)
-      // {
-      //   response_data.file_name = "";
-      //   response_data.file_exist = false;
-      // }
     }
   }
   else
@@ -291,28 +274,21 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
           return;
         }
         // 디렉토리로 끝나는 경우가 온 경우
+        if (locationBlock[locationBlock.length() - 1] != '/')
+          locationBlock += "/"; //디렉토리 뒤 '/'
         setBasic(current_location.accepted_method,
                  current_location.root + locationBlock,
                  "", current_location.index,
                  current_location.auto_index, current_location.uploaded_path,
                  current_location.redirection, current_location.root,
                  response_data);
-        // if (response_data.auto_index == true)
-        // {
-        //   response_data.file_name = "";
-        //   response_data.file_exist = false;
-        // }
       }
       else
       {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
-        setBasic(current_location.accepted_method, "", "",
-                 current_location.index,
+        setBasic(current_location.accepted_method, "", "", "",
                  current_location.auto_index, current_location.uploaded_path,
                  current_location.redirection, current_location.root,
                  response_data);
-        response_data.path_exist = false;
-        response_data.file_exist = false;
-        response_data.auto_index = false;
       }
       return;
     }
@@ -323,15 +299,12 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
     pos_last = entire_path.rfind("/");
     if (is_directory(entire_path))  //"a/b/c/d(존재하는 디렉토리)"
     {
+      if (entire_path[entire_path.length() - 1] == '/')
+          entire_path.pop_back(); //디렉토리뒤 '/'
       setBasic(current_location.accepted_method, entire_path + "/",
                "", current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
-      // if (response_data.auto_index == true)
-      // {
-      //   response_data.file_name = "";
-      //   response_data.file_exist = false;
-      // }
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
