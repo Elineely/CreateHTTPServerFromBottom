@@ -32,6 +32,9 @@ bool MethodHandler::fileInfoCompare(const FileInfo& fileInfo1,
 }
 void MethodHandler::autoIndexToBody(std::string target_directory)
 {
+  if (m_response_data.file_path !=
+      m_response_data.file_path + m_response_data.file_name)
+    throw NOT_FOUND_404;
   size_t pos = m_request_data.uri.find("//");
   if (pos != std::string::npos)
     m_request_data.uri.erase(m_request_data.uri.end() - 1);
