@@ -1,5 +1,8 @@
 #include "Parser.hpp"
 
+#include <stdio.h>
+#include <unistd.h>
+
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -7,8 +10,6 @@
 
 #include "Log.hpp"
 #include "utils.hpp"
-#include <unistd.h>
-#include <stdio.h>
 // Default Constructor
 Parser::Parser(void) : m_max_body_size(0) {}
 
@@ -70,7 +71,8 @@ void Parser::parseFirstLine(void)
   // 1. HTTP Method 탐색
   idx1 = input.find_first_of(' ', 0);
   method = input.substr(0, idx1);
-  if (method != "GET" && method != "POST" && method != "DELETE" && method != "HEAD" && method != "PUT")
+  if (method != "GET" && method != "POST" && method != "DELETE" &&
+      method != "HEAD" && method != "PUT")
   {
     m_data.status = BAD_REQUEST_400;
     throw std::invalid_argument("Method is not acceptable");
@@ -128,11 +130,12 @@ bool Parser::findNewlineInPool(void)
   const char* find;
   const char* target;
 
-  std::map<std::string, std::string>::iterator content_length_it = 
-                                        m_data.headers.find("content-length");
-  
+  std::map<std::string, std::string>::iterator content_length_it =
+      m_data.headers.find("content-length");
+
   find = NULL;
-  for (size_t idx = m_pool.offset; idx <= m_pool.total_line.size() - 2; idx += 1)
+  for (size_t idx = m_pool.offset; idx <= m_pool.total_line.size() - 2;
+       idx += 1)
   {
     if (m_pool.total_line[idx] != '\r')
     {
@@ -141,7 +144,7 @@ bool Parser::findNewlineInPool(void)
     if (std::strncmp(&m_pool.total_line[idx], "\r\n", 2) == 0)
     {
       find = &m_pool.total_line[idx];
-      break ;
+      break;
     }
   }
 
@@ -161,11 +164,20 @@ bool Parser::findNewlineInPool(void)
   }
   if (std::strncmp(target, "\r\n\r\n", 4) == 0)
   {
+    std::map<std::string, std::string>::iterator transfer_encoding_it =
+        m_data.headers.find("transfer-encoding");
     if ((m_data.method == "POST" || m_data.method == "PUT") &&
-        (content_length_it != m_data.headers.end() ||
-         m_data.headers["transfer-encoding"] == "chunked"))
+        (transfer_encoding_it != m_data.headers.end() ||
+         transfer_encoding_it->second == "chunked"))
     {
       m_data.validation_phase = ON_BODY;
+      if (transfer_encoding_it->second == "chunked")
+      {
+        m_data.validation_phase = ON_CHUNKED_BODY;
+        m_pool.offset = m_pool.prev_offset + 2;
+        m_pool.prev_offset = m_pool.offset;
+        return (true);
+      }
     }
     else
     {
@@ -185,7 +197,7 @@ void Parser::parseHeaders(void)
   do
   {
     // '\r\n' 을 포함해서 저장
-    std::string input(&m_pool.total_line[m_pool.prev_offset], 
+    std::string input(&m_pool.total_line[m_pool.prev_offset],
                       m_pool.offset - m_pool.prev_offset);
     std::string key;
     std::string value;
@@ -229,10 +241,12 @@ void Parser::parseBody(void)
     ++m_pool.offset;
   }
 
-  std::cout << "content_length: " <<content_length << std::endl;
+  sleep(1);
+
+  std::cout << "content_length: " << content_length << std::endl;
   std::cout << "m_data.body.size(): " << m_data.body.size() << std::endl;
   std::cout << "m_data.body : " << std::endl;
-  for(int i = 0; i < m_data.body.size(); ++i)
+  for (int i = 0; i < m_data.body.size(); ++i)
   {
     std::cout << m_data.body[i];
   }
@@ -241,7 +255,7 @@ void Parser::parseBody(void)
   std::cout << "m_pool.line_len: " << m_pool.line_len << std::endl;
   if (static_cast<size_t>(content_length) > m_data.body.size())
   {
-    return ;
+    return;
   }
 
   if (static_cast<size_t>(content_length) < m_data.body.size())
@@ -258,16 +272,20 @@ void Parser::parseChunkedBody(void)
 {
   while (true)
   {
+    if (m_pool.prev_offset + 2 >= m_pool.line_len)
+    {
+      break;
+    }
     char* body_curr =
         &m_pool.total_line[0] + m_pool.prev_offset;  // 마지막 파싱 위치
-    char* find = std::strstr(body_curr, "\r\n");
-    if (find == NULL)
+    char* newline = std::strstr(body_curr, "\r\n");
+    if (newline == NULL)
     {
       break;
     }
 
     std::string str_chunk_size(body_curr,
-                               static_cast<size_t>(find - body_curr));
+                               static_cast<size_t>(newline - body_curr));
     long long chunk_size = std::stoll(str_chunk_size);
     if (str_chunk_size != "0" && chunk_size <= 0)
     {
@@ -275,19 +293,26 @@ void Parser::parseChunkedBody(void)
       throw std::invalid_argument("Chunk size should be positive value");
     }
 
-    char* next_newline = std::strstr(find + 2, "\r\n");
+    // Chunked body end
+    if (std::strncmp(newline, "\r\n\r\n", 4) == 0)
+    {
+      m_data.validation_phase = COMPLETE;
+      break;
+    }
+
+    char* next_newline = std::strstr(newline + 2, "\r\n");
     if (next_newline == NULL)
     {
       break;
     }
 
-    if (static_cast<long long>(next_newline - (find + 2)) != chunk_size)
+    if (static_cast<long long>(next_newline - (newline + 2)) != chunk_size)
     {
       m_data.status = BAD_REQUEST_400;
       throw std::invalid_argument("Chunk body should be equal with chunk size");
     }
 
-    for (char* ptr = find + 2; ptr < next_newline; ptr += 1)
+    for (char* ptr = newline + 2; ptr < next_newline; ptr += 1)
     {
       m_data.body.push_back(*ptr);
     }
@@ -302,6 +327,7 @@ void Parser::readBuffer(char* buf, int recv_size)
 {
   try
   {
+    std::cout << buf << std::endl;
     if (m_data.validation_phase == COMPLETE)
     {
       return;
@@ -328,28 +354,38 @@ void Parser::readBuffer(char* buf, int recv_size)
           parseHeaders();
           break;
         case ON_BODY:
-          if (m_data.headers.find("content-length") != m_data.headers.end())
-          {
-            parseBody();
-          }
-          else if (m_data.headers["transfer-encoding"] == "chunked")
-          {
-            parseChunkedBody();
-          }
+          parseBody();
           break;
+        case ON_CHUNKED_BODY:
+          parseChunkedBody();
         default:
           break;
       }
 
-      std::map<std::string, std::string>::iterator content_length_it = m_data.headers.find("content-length");
+      if (m_data.validation_phase == COMPLETE)
+      {
+        return;
+      }
+
+      // Chunked body 로 들어왔지만, 아직 클라이언트로부터 데이터를 다 받지 못한 경우
+      if (m_data.validation_phase == ON_CHUNKED_BODY &&
+          m_pool.prev_offset + 2 >= m_pool.line_len)
+      {
+        return ;
+      }
+
+      std::map<std::string, std::string>::iterator content_length_it =
+          m_data.headers.find("content-length");
       if (content_length_it != m_data.headers.end())
       {
-        long long content_length = std::strtoll((content_length_it->second).c_str(), NULL, 10);
+        long long content_length =
+            std::strtoll((content_length_it->second).c_str(), NULL, 10);
         if (content_length < 0)
         {
           m_data.status = BAD_REQUEST_400;
           m_data.validation_phase = COMPLETE;
-          throw std::invalid_argument("Content-length should be positive value");
+          throw std::invalid_argument(
+              "Content-length should be positive value");
         }
         if (m_data.body.size() > m_max_body_size)
         {
@@ -366,8 +402,9 @@ void Parser::readBuffer(char* buf, int recv_size)
         continue;
       }
 
-      if ((findNewlineInPool() == false && m_data.validation_phase == COMPLETE) 
-          || m_data.validation_phase == ON_BODY)
+      if ((findNewlineInPool() == false &&
+           m_data.validation_phase == COMPLETE) ||
+          m_data.validation_phase == ON_BODY)
       {
         LOG_DEBUG("BREAK");
         break;
