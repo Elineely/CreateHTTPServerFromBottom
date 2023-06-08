@@ -6,6 +6,7 @@ enum ValidationStatus
   READY,
   ON_HEADER,
   ON_BODY,
+  ON_CHUNKED_BODY,
   COMPLETE
 };
 
