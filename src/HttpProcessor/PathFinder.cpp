@@ -92,22 +92,47 @@ void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
 bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
                         Response& response_data)
 {
-  std::size_t pos_last = locationBlock.find_last_of(".");
-  if (pos_last == std::string::npos) return (false);
-  if (locationBlock.substr(locationBlock.find_last_of(".")) == ".py")
-  {
+
+  std::size_t pos_dot = locationBlock.find_last_of(".");
+  if (pos_dot == std::string::npos) return (false); //uri 내부 .이 없는 경우
+  std::size_t pos_slash = (locationBlock).rfind("/");
+  // if (pos_slash == std::string::npos) return (false); //uri 내부 /가 없는 경우
+  std::string location_key = locationBlock.substr(pos_slash + 1); //마지막 블럭 자르기
+  pos_dot = location_key.find_last_of(".");
+  if (pos_dot == std::string::npos) return (false); //마지막 블럭 내에 .이 없는 경우
+  location_key = location_key.substr(pos_dot); //.이 있는 경우 확장자를 location_key로 설정
+  if (server_data.locations.find(location_key) == server_data.locations.end())
+    return false; //uri로 들어온 확장자가 config location에 존재하지 않을 때.
+  t_location current_location = server_data.locations.find(location_key)->second;
+  if (current_location.ourcgi_pass == "" || current_location.ourcgi_index == "")
+    return false; //블록에 ourcgi_pass와 ourcgi_index가 모두 있어야 cgi
+  if (!checkExist(current_location.ourcgi_pass) || is_directory(current_location.ourcgi_pass))
+    throw BAD_GATEWAY_502; //ourcgi_pass에 입력된 파일이 없는 경우 혹은 넘어온 경로가 디렉토리일 경우 error
+  else
+  { //cgi 일때 response 값 설정
     response_data.cgi_flag = true;
-    t_location current_location = server_data.locations.find(".py")->second;
     response_data.cgi_bin_path = current_location.ourcgi_pass;
     response_data.root_path = current_location.root;
     response_data.uploaded_path =
-        current_location.uploaded_path;  // 경로 존재하는지
+        current_location.uploaded_path;
     setIndex(current_location.root + "/", current_location.ourcgi_index, current_location.index,
              response_data);
     setMethod(current_location.accepted_method, response_data);
     return true;
   }
-  return false;
+  // if (locationBlock.substr(locationBlock.find_last_of(".")) == ".py")
+  // {
+  //   response_data.cgi_flag = true;
+  //   t_location current_location = server_data.locations.find(".py")->second;
+  //   response_data.cgi_bin_path = current_location.ourcgi_pass;
+  //   response_data.root_path = current_location.root;
+  //   response_data.uploaded_path =
+  //       current_location.uploaded_path;  // 경로 존재하는지
+  //   setIndex(current_location.root + "/", current_location.ourcgi_index, current_location.index,
+  //            response_data);
+  //   setMethod(current_location.accepted_method, response_data);
+  //   return true;
+  // }
 }
 
 void PathFinder::setRedirection(std::string redirection,
@@ -194,8 +219,12 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
   }
   if (setCgi((locationBlock), server_data, response_data))
   {
+    LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
+            response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
     return;
   }
+  LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
+            response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
   std::size_t pos_last = (locationBlock).rfind("/");
   if (pos_last == 0)  // '/a'처럼 location 블록이름만 들어온 경우
   {
@@ -226,10 +255,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       }
       else
       {
+        throw NOT_FOUND_404;
         // 들어온 블록이름이 location에 존재하지 않음.
-        // response_data.path_exist = false;
-        // response_data.file_exist = false;
-        // response_data.auto_index = false;
       }
     }
     else
