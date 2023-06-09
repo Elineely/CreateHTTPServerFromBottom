@@ -92,16 +92,16 @@ size_t Parser::findNewline(const char* buf, size_t offset)
 
 void Parser::parseFirstLine(void)
 {
-  LOG_DEBUG("parse_FIrstLine");
   size_t crlf_idx;
 
   crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
   if (crlf_idx == 0)
   {
-    return ;
+    LOG_INFO("Need more buffer");
+    throw std::invalid_argument("Need more buffer in parseFirstLine");
   }
   m_pool.offset = crlf_idx + 2;
-  
+
   std::string input(&m_pool.total_line[0], crlf_idx); // \r\n 은 제외하고 input 에 저장
   std::string method;
   std::string uri;
@@ -185,8 +185,8 @@ void Parser::parseBody(void)
   }
 
   long long content_length =
-    std::strtoll(m_request.headers["content-length"].c_str(), NULL, 10);
-  
+      std::strtoll(m_request.headers["content-length"].c_str(), NULL, 10);
+
   if (content_length == m_request.body.size())
   {
     m_request.validation_phase = COMPLETE;
@@ -209,10 +209,15 @@ ssize_t Parser::parseChunkedBodyLength(void)
     m_request.validation_phase = COMPLETE;
     return (-1);
   }
-  std::string str_chunk_size(&m_pool.total_line[m_pool.offset], crlf_idx);
+  else if (crlf_idx == 0)
+  {
+    return (-1);
+  }
+  std::string str_chunk_size(&m_pool.total_line[m_pool.offset],
+                             crlf_idx - m_pool.offset);
   long long chunk_size = std::strtoll(str_chunk_size.c_str(), NULL, 10);
 
-  m_pool.offset += 2;
+  m_pool.offset = crlf_idx + 2;
   if (chunk_size < 0)
   {
     m_request.status = BAD_REQUEST_400;
@@ -225,36 +230,20 @@ void Parser::parseChunkedBody(ssize_t chunked_body_size)
 {
   if (chunked_body_size == -1)
   {
-    return ;
+    return;
   }
-
-  /*
-  
-  5\r\n
-  hello\r\n
-  0\r\n\r\n
-
-  */
 
   if (m_pool.line_len - m_pool.offset < chunked_body_size)
   {
-    return ;
+    return;
   }
-  size_t crlf_idx;
 
-  crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
-  if (crlf_idx == 0)
-  {
-    return ;
-  }
-  for (size_t idx = m_pool.offset; idx < crlf_idx; ++idx)
+  for (size_t idx = m_pool.offset; idx < m_pool.offset + chunked_body_size; ++idx)
   {
     m_request.body.push_back(m_pool.total_line[idx]);
     m_pool.offset += 1;
   }
-  
 }
-
 
 void Parser::parseHeaders(void)
 {
@@ -266,7 +255,12 @@ void Parser::parseHeaders(void)
     m_request.validation_phase = ON_BODY;
     checkBodyType();
     m_pool.offset = m_pool.offset + 2;
-    return ; 
+    return;
+  }
+  else if (crlf_idx == 0)
+  {
+    LOG_INFO("Need more buffer");
+    throw std::invalid_argument("Need more buffer in parseHeaders");
   }
   // \r\n 은 제외하고 input 에 저장
   std::string input(&m_pool.total_line[m_pool.offset], crlf_idx - m_pool.offset);
