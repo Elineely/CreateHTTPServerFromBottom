@@ -27,8 +27,6 @@ void Server::serverReadEvent(struct kevent *current_event)
       static_cast<t_event_udata *>(current_event->udata);
   t_event_udata *udata = new t_event_udata(CLIENT, current_udata->m_server);
 
-  // udata->m_server = current_udata->m_server;
-
   AddEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }
