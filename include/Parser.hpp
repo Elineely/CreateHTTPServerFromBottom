@@ -32,7 +32,6 @@ class Parser
   struct Request& get_request(void);
 
  private:
-
   // Member Variables
   struct Request m_request;
   struct RequestPool m_pool;
@@ -45,9 +44,7 @@ class Parser
   void parseFirstLine(void);
   void parseHeaders(void);
   void parseBody(void);
-  ssize_t parseChunkedBodyLength(void);
-  void parseChunkedBody(ssize_t chunked_body_size);
-
+  void parseChunkedBody();
 };
 
 #endif
