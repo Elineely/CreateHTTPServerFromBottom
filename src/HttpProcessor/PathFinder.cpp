@@ -56,29 +56,20 @@ void PathFinder::setIndex(std::string root, std::string file_name, std::string i
   // 요청받은 파일 name을 기록할 필요가 있다.
   response_data.file_name =  file_name;
   if (file_name == "")
-  {
     response_data.file_exist = false;
-  }
   else if (checkExist(root + file_name))
-  {
     response_data.file_exist = true;
-  }
   else
-  {
     response_data.file_exist = false;
-  }
   if (index_name == "")
-  {
     response_data.index_exist = false;
-  }
   else if (checkExist(root + index_name))
   {
     response_data.index_exist = true;
+    response_data.index_name = index_name;
   }
   else
-  {
     response_data.index_exist = false;
-  }
 }
 
 void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
@@ -133,6 +124,7 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
   //   setMethod(current_location.accepted_method, response_data);
   //   return true;
   // }
+  // return false;
 }
 
 void PathFinder::setRedirection(std::string redirection,
@@ -255,8 +247,8 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
       }
       else
       {
-        throw NOT_FOUND_404;
         // 들어온 블록이름이 location에 존재하지 않음.
+        throw NOT_FOUND_404;
       }
     }
     else
