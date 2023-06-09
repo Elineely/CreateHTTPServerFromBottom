@@ -1,0 +1,139 @@
+<html>
+	<head>
+		<h1>Hi I'm only for tester!!! Ha!!!! Ha!!!! Ha!!!!</h1>
+		<script>
+			const sendPostFile = () => 
+			{
+				const fileInput = document.getElementById('fileInput');
+				const file = fileInput.files[0];
+				const path = "./upload/";
+				console.log(file.name);
+				
+				fetch(path + file.name, {
+				method: 'POST',
+				body: file
+				})
+				.then(response => {
+					// Handle the response
+				})
+				.catch(error => {
+					// Handle errors
+				});
+			}
+		
+			const sendGetRequest = () => {
+				console.log("GET");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "GET",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						// location.reload();
+						alert(response.ok);
+					} else {
+						window.alert("Error !", response.status);
+					}
+				})
+				.catch(error => {
+					console.log(error);
+					window.alert("error catch", error);
+				})
+			}
+
+			const sendPostRequest = () => {
+				console.log("POST");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./cgi/hello.py", {
+					method: "POST",
+					body: ""
+				}).
+				then(response => {
+					console.log(response);
+					if (response.ok) {
+						// location.reload();
+						alert(response.ok);
+						console.log("POST success!!");
+					} else {
+						window.alert("Error !", response.status);
+					}
+				})
+				.catch(error => {
+					console.log(error);
+					window.alert("error catch", error);
+				})
+			};
+
+			const sendDeleteRequest = () => {
+				console.log("DELETE");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "DELETE",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						alert(response.ok);
+					} else {
+						window.alert("Error !", response.status);
+					}
+				})
+				.catch(error => {
+					window.alert("error catch", error);
+				})
+			}
+
+			const sendPutRequest = () => {
+				console.log("PUT");
+				if (window.confirm("Do you want to upload file?") === false) {
+					return ;
+				}
+				fetch("./index.html", {
+					method: "PUT",
+					body: "hello"
+				}).
+				then(response => {
+					if (response.ok) {
+						location.reload();
+					} else {
+						window.alert("Error !", response.status);
+					}
+				})
+				.catch(error => {
+					window.alert("error catch", error);
+				})
+			}
+
+			
+		</script>
+	</head>
+	<body>
+		<marquee> HELLO WORLD</marquee>
+		<h1>
+			i am joonhan the tamjeong.
+			<tr>
+				<td>
+					<input type='button' onClick="sendGetRequest()" value='GET'/>
+				</td>
+				<td>	
+					<input type='button' onClick="sendPostRequest()" value='POST'/>
+				</td>
+				<td>
+					<input type='button' onClick="sendDeleteRequest()" value='DELETE'/>
+				</td>
+				<td>
+					<input type='button' onClick="sendPutRequest()" value='PUT'/>
+				</td>
+			</tr>
+		</h1>
+			<input type="file" name="png" id="fileInput" />
+			<input type="submit" onclick="sendPostFile()"/>
+	</body>
+</html> 

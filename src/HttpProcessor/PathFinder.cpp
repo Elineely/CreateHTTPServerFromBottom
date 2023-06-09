@@ -87,6 +87,10 @@ void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
   {
     response_data.auto_index = true;
   }
+  else
+  {
+    response_data.auto_index = false;
+  }
 }
 
 bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
