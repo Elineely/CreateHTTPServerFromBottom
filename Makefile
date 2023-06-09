@@ -19,7 +19,11 @@ SRC_CGI_HANDLER_DIR					:=	CgiHandler/
 SRC_CGI_HANDLER_FILES				:=	CgiHandler.cpp
 
 SRC_PARSER_DIR						:=	Parser/
-SRC_PARSER_FILES					:=	Parser.cpp
+SRC_PARSER_FILES					:=	Parser.cpp				\
+										parseHeaders.cpp		\
+										parseFirstLine.cpp		\
+										parseBody.cpp			\
+										parseChunkedBody.cpp
 
 SRC_RESPONSE_GENERATOR_DIR			:= ResponseGenerator/
 SRC_RESPONSE_GENERATOR_FILES		:=	Mime.cpp \
