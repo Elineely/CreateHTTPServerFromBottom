@@ -149,10 +149,7 @@ void Parser::readBuffer(char* buf, int recv_size)
         }
         case ON_CHUNKED_BODY:
         {
-          ssize_t chunked_body_size;
-
-          chunked_body_size = parseChunkedBodyLength();
-          parseChunkedBody(chunked_body_size);
+          parseChunkedBody();
           break;
         }
         default:
