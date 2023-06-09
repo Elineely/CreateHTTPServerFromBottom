@@ -91,7 +91,7 @@ void Parser::checkBodyType(void)
   std::map<std::string, std::string>::iterator it;
   std::map<std::string, std::string>::iterator end_it = m_request.headers.end();
 
-  if (m_request.method == "GET" || m_request.method == "DELETE")
+  if (m_request.method == "GET" || m_request.method == "DELETE" || m_request.method == "HEAD")
   {
     m_request.validation_phase = COMPLETE;
     return;
