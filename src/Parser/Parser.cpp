@@ -46,10 +46,7 @@ Parser& Parser::operator=(Parser const& rhs)
 }
 
 // Public member functions
-struct Request& Parser::get_request(void)
-{
-  return m_request;
-}
+struct Request& Parser::get_request(void) { return m_request; }
 
 ValidationStatus Parser::get_validation_phase(void)
 {
@@ -91,7 +88,8 @@ void Parser::checkBodyType(void)
   std::map<std::string, std::string>::iterator it;
   std::map<std::string, std::string>::iterator end_it = m_request.headers.end();
 
-  if (m_request.method == "GET" || m_request.method == "DELETE" || m_request.method == "HEAD")
+  if (m_request.method == "GET" || m_request.method == "DELETE" ||
+      m_request.method == "HEAD" || m_request.method == "PATCH")
   {
     m_request.validation_phase = COMPLETE;
     return;
@@ -156,7 +154,8 @@ void Parser::readBuffer(char* buf, int recv_size)
           break;
       }
 
-      if (m_request.validation_phase == COMPLETE || m_pool.line_len == m_pool.offset)
+      if (m_request.validation_phase == COMPLETE ||
+          m_pool.line_len == m_pool.offset)
       {
         return;
       }
