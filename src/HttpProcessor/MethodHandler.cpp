@@ -77,6 +77,9 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   autoindex
       << "\t\t<table>\n"
       << "\t\t\t<tr><th>Name</th><th>Last Modified</th><th>Size</th></tr>\n";
+  if ((m_request_data.uri != "/") &&
+      (m_request_data.uri[m_request_data.uri.length() - 1] == '/'))
+    m_request_data.uri.pop_back();
   for (std::vector<FileInfo>::iterator it = fileList.begin();
        it != fileList.end(); ++it)
   {
@@ -170,17 +173,18 @@ GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
 void GetMethodHandler::methodRun()
 {
   if (m_response_data.path_exist == false) throw NOT_FOUND_404;
-  if (m_response_data.auto_index == true)
-  {
-    if (m_response_data.file_exist)
-      fileToBody(m_response_data.file_path + m_response_data.file_name);
-    else
-      autoIndexToBody(m_response_data.file_path);
-  }
+  if (m_response_data.file_exist == true)
+    fileToBody(m_response_data.file_path + m_response_data.file_name);
   else
   {
-    if (!m_response_data.file_exist) throw NOT_FOUND_404;
-    fileToBody(m_response_data.file_path + m_response_data.file_name);
+    if (m_response_data.file_name != "")
+      throw NOT_FOUND_404;
+    else if (m_response_data.index_exist == true)
+      fileToBody(m_response_data.file_path + m_response_data.index_name);
+    else if (m_response_data.auto_index == true)
+      autoIndexToBody(m_response_data.file_path);
+    else
+      throw NOT_FOUND_404;
   }
 }
 
