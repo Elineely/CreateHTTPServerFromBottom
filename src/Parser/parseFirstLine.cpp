@@ -1,6 +1,5 @@
-#include "Parser.hpp"
-
 #include "Log.hpp"
+#include "Parser.hpp"
 #include "utils.hpp"
 
 void Parser::parseFirstLine(void)
@@ -15,7 +14,8 @@ void Parser::parseFirstLine(void)
   }
   m_pool.offset = crlf_idx + 2;
 
-  std::string input(&m_pool.total_line[0], crlf_idx); // \r\n 은 제외하고 input 에 저장
+  std::string input(&m_pool.total_line[0],
+                    crlf_idx);  // \r\n 은 제외하고 input 에 저장
   std::string method;
   std::string uri;
   std::string http_version;
@@ -28,8 +28,7 @@ void Parser::parseFirstLine(void)
   if (method != "GET" && method != "POST" && method != "DELETE" &&
       method != "HEAD" && method != "PUT")
   {
-    m_request.status = BAD_REQUEST_400;
-    throw std::invalid_argument("Method is not acceptable");
+    m_request.status = METHOD_NOT_ALLOWED_405;
   }
 
   // 2. URI 탐색
