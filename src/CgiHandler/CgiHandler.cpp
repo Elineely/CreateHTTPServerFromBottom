@@ -38,6 +38,11 @@ void CgiHandler::setCgiEnv(void)
   // m_response_data.cgi_bin_path = "post_python.py";
 
   // 수정 필요 ----------------
+  std::map<std::string, std::string>::iterator it = m_request_data.headers.begin();
+  for (; it != m_request_data.headers.end(); ++it)
+  {
+    std::cout << it->first << ": " << it->second << std::endl;
+  }
   std::string defualt_cgi_script(m_response_data.file_name);
 
   // 값이 없는 경우는 빈 값으로 두면 생략하는 것과 같은 효과
@@ -53,7 +58,7 @@ void CgiHandler::setCgiEnv(void)
   // 클라이언트의 도메인 네임. 없으면 NULL이거나, REMOTE_ADDR의 값으로 대체
   // m_env_list.push_back("REMOTE_HOST=127.0.0.1");
   m_env_list.push_back("REQUEST_METHOD=" + m_request_data.method);
-  m_env_list.push_back("X_SECRET_HEADER_FOR_TEST=1");
+  // m_env_list.push_back("X_SECRET_HEADER_FOR_TEST=1");
 
   if (m_response_data.cgi_bin_path == "")
   {
@@ -86,6 +91,11 @@ void CgiHandler::setCgiEnv(void)
   {
     m_env_list.push_back("CONTENT_TYPE=" +
                          m_request_data.headers["content-type"]);
+  }
+  if (m_request_data.headers["x-secret-header-for-test"] != "")
+  {
+    m_env_list.push_back("X_SECRET_HEADER_FOR_TEST=1");
+    m_env_list.push_back("HTTP_X_SECRET_HEADER_FOR_TEST=1");
   }
 
   // m_env_list.push_back("X_FILE_PATH=" + m_response_data.file_path);
@@ -294,28 +304,28 @@ PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
 
 void PostCgiHandler::pipeAndFork()
 {
-  if (pipe(m_to_child_fds) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to create m_to_child_fds pipe");
-    throw PipeForkException();
-  }
+  // if (pipe(m_to_child_fds) == RETURN_ERROR)
+  // {
+  //   LOG_ERROR("Failed to create m_to_child_fds pipe");
+  //   throw PipeForkException();
+  // }
 
-  if (pipe(m_to_parent_fds) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to create m_to_parent_fds pipe");
-    close(m_to_child_fds[READ]);
-    close(m_to_child_fds[WRITE]);
-    throw PipeForkException();
-  }
+  // if (pipe(m_to_parent_fds) == RETURN_ERROR)
+  // {
+  //   LOG_ERROR("Failed to create m_to_parent_fds pipe");
+  //   close(m_to_child_fds[READ]);
+  //   close(m_to_child_fds[WRITE]);
+  //   throw PipeForkException();
+  // }
 
   m_pid = fork();
   if (m_pid == RETURN_ERROR)
   {
     LOG_ERROR("Failed to fork");
-    close(m_to_child_fds[READ]);
-    close(m_to_child_fds[WRITE]);
-    close(m_to_parent_fds[READ]);
-    close(m_to_parent_fds[WRITE]);
+    // close(m_to_child_fds[READ]);
+    // close(m_to_child_fds[WRITE]);
+    // close(m_to_parent_fds[READ]);
+    // close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
   }
 }
@@ -348,32 +358,35 @@ void PostCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
-    int input_file_fd = open("./tmp_file", O_RDWR | O_CREAT, 0644);
-    int output_file_fd = open("./output", O_RDWR | O_CREAT, 0644);
+    int input_file_fd = open("./tmp_file", O_RDWR | O_CREAT | O_TRUNC, 0644);
+    int output_file_fd = open("./output", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     write(input_file_fd, &m_request_data.body[0], m_request_data.body.size());
-    lseek(input_file_fd, 0, SEEK_SET);
+    close(input_file_fd);
+    input_file_fd = open("./tmp_file", O_RDONLY, 0644);
+    m_input_file_fd = input_file_fd;
+    m_output_file_fd = output_file_fd;
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
     {
-      close(m_to_child_fds[WRITE]);
-      close(m_to_child_fds[READ]);
-      close(m_to_parent_fds[WRITE]);
-      close(m_to_parent_fds[READ]);
-      m_input_file_fd = input_file_fd;
-      m_output_file_fd = output_file_fd;
+      // close(m_to_child_fds[WRITE]);
+      // close(m_to_child_fds[READ]);
+      // close(m_to_parent_fds[WRITE]);
+      // close(m_to_parent_fds[READ]);
       executeCgi();
     }
     else
     {
-      close(m_to_child_fds[WRITE]);
-      close(m_to_child_fds[READ]);
-      close(m_to_parent_fds[WRITE]);
-      close(m_to_parent_fds[READ]);
-      close(m_input_file_fd);
+      // close(m_to_child_fds[WRITE]);
+      // close(m_to_child_fds[READ]);
+      // close(m_to_parent_fds[WRITE]);
+      // close(m_to_parent_fds[READ]);
+      close(input_file_fd);
+      close(output_file_fd);
 
-      m_response_data.read_pipe_fd = output_file_fd;
+      LOG_DEBUG("output_file_fd: %d", output_file_fd);
+      // m_response_data.read_pipe_fd = output_file_fd;
       m_response_data.cgi_child_pid = m_pid;
     }
   }

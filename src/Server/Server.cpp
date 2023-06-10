@@ -81,9 +81,9 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
     else if (type == CLIENT)
       return CLIENT_WRITE;
   }
-  if (current_event->filter == EVFILT_VNODE)
+  if (current_event->filter == EVFILT_PROC)
   {
-    if (type == PIPE)
+    if (type == PIPE && current_event->fflags & NOTE_EXIT)
       return PIPE_READ;
   }
   return NOTHING;
