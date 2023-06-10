@@ -213,15 +213,30 @@ PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
 }
 void PostMethodHandler::methodRun()
 {
-  if (m_response_data.path_exist == false) throw BAD_REQUEST_400;
+  if (m_response_data.path_exist == false)
+  {
+    throw BAD_REQUEST_400;
+  }
   std::string target_file(m_response_data.file_path +
-                          m_response_data.file_name);
+                          m_response_data.file_name + "tmp_file");
   // delete the target file
   if (m_response_data.file_exist == true)
+  {
     // error deleting file
-    if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
+    if (std::remove(&target_file[0]) != 0)
+    {
+      throw INTERNAL_SERVER_ERROR_500;
+    }
+  }
+  if (m_request_data.body.size() == 0)
+  {
+    return;
+  }
   std::ofstream new_file_stream(target_file, std::ios::binary);
-  if (!new_file_stream) throw INTERNAL_SERVER_ERROR_500;
+  if (!new_file_stream)
+  {
+    throw INTERNAL_SERVER_ERROR_500;
+  }
   new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
   new_file_stream.close();
 }
