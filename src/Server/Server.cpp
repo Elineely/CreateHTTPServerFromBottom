@@ -81,12 +81,17 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
     else if (type == CLIENT)
       return CLIENT_WRITE;
   }
+  if (current_event->filter == EVFILT_VNODE)
+  {
+    if (type == PIPE)
+      return PIPE_READ;
+  }
   return NOTHING;
 }
 
 const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
-Server::Server(const Config &server_conf)
+Server::Server(const Config &server_conf) : m_count(0)
 {
   setServers(server_conf, servers);
   LOG_INFO("Successfully set servers");

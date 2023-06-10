@@ -1,6 +1,8 @@
 // #include "CgiHandler.hpp"
 #include "../../include/CgiHandler.hpp"
 
+#include <fcntl.h>
+
 #include "Log.hpp"
 
 #define SUCCESS 0
@@ -194,25 +196,11 @@ void GetCgiHandler::pipeAndFork()
 
 void GetCgiHandler::executeCgi()
 {
-  close(m_to_parent_fds[READ]);
-  close(m_to_child_fds[WRITE]);
+  dup2(m_input_file_fd, STDIN_FILENO);
+  dup2(m_output_file_fd, STDOUT_FILENO);
 
-  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to dup2(%d, %d)", m_to_child_fds[WRITE], STDIN_FILENO);
-    close(m_to_child_fds[WRITE]);
-    throw PipeForkException();
-  }
-  close(m_to_child_fds[READ]);
-
-  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to dup2(%d, %d)", m_to_parent_fds[WRITE], STDOUT_FILENO);
-    close(m_to_parent_fds[WRITE]);
-    throw PipeForkException();
-  }
-  close(m_to_parent_fds[WRITE]);
-
+  close(m_input_file_fd);
+  close(m_output_file_fd);
   setCgiEnv();
   // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   // std::string cgi_file = m_response_data.root_path + "/" +
@@ -234,19 +222,30 @@ void GetCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
+    int input_file_fd = open("./tmp_file", O_RDWR | O_CREAT, 0644);
+    int output_file_fd = open("./output", O_RDWR | O_CREAT, 0644);
+
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
     {
+      close(m_to_child_fds[WRITE]);
+      close(m_to_child_fds[READ]);
+      close(m_to_parent_fds[WRITE]);
+      close(m_to_parent_fds[READ]);
+      m_input_file_fd = input_file_fd;
+      m_output_file_fd = output_file_fd;
       executeCgi();
     }
     else
     {
-      close(m_to_child_fds[READ]);
       close(m_to_child_fds[WRITE]);
+      close(m_to_child_fds[READ]);
       close(m_to_parent_fds[WRITE]);
+      close(m_to_parent_fds[READ]);
+      close(input_file_fd);
 
-      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      m_response_data.read_pipe_fd = output_file_fd;
       m_response_data.cgi_child_pid = m_pid;
     }
   }
@@ -323,27 +322,11 @@ void PostCgiHandler::pipeAndFork()
 
 void PostCgiHandler::executeCgi()
 {
-  close(m_to_parent_fds[READ]);
-  close(m_to_child_fds[WRITE]);
+  dup2(m_input_file_fd, STDIN_FILENO);
+  dup2(m_output_file_fd, STDOUT_FILENO);
 
-  // 부모 프로세스로부터 받은 데이터를 cgi에 표준 입력으로 넘겨주는 dup2
-  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to dup2(%d, %d)", m_to_child_fds[READ], STDIN_FILENO);
-    close(m_to_child_fds[READ]);
-    close(m_to_parent_fds[WRITE]);
-    throw PipeForkException();
-  }
-  close(m_to_child_fds[READ]);
-
-  // cgi의 표준 출력 반환값을 부모 프로세스에 넘겨주는 dup2
-  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to dup2(%d, %d)", m_to_parent_fds[WRITE], STDOUT_FILENO);
-    close(m_to_parent_fds[WRITE]);
-    throw PipeForkException();
-  }
-  close(m_to_parent_fds[WRITE]);
+  close(m_input_file_fd);
+  close(m_output_file_fd);
 
   setCgiEnv();
   // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
@@ -365,21 +348,32 @@ void PostCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
+    int input_file_fd = open("./tmp_file", O_RDWR | O_CREAT, 0644);
+    int output_file_fd = open("./output", O_RDWR | O_CREAT, 0644);
+
+    write(input_file_fd, &m_request_data.body[0], m_request_data.body.size());
+    lseek(input_file_fd, 0, SEEK_SET);
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
     {
+      close(m_to_child_fds[WRITE]);
+      close(m_to_child_fds[READ]);
+      close(m_to_parent_fds[WRITE]);
+      close(m_to_parent_fds[READ]);
+      m_input_file_fd = input_file_fd;
+      m_output_file_fd = output_file_fd;
       executeCgi();
     }
     else
     {
+      close(m_to_child_fds[WRITE]);
       close(m_to_child_fds[READ]);
       close(m_to_parent_fds[WRITE]);
+      close(m_to_parent_fds[READ]);
+      close(m_input_file_fd);
 
-      write(m_to_child_fds[WRITE], &m_request_data.body[idx], m_request_data.body.size());
-      close(m_to_child_fds[WRITE]);
-
-      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      m_response_data.read_pipe_fd = output_file_fd;
       m_response_data.cgi_child_pid = m_pid;
     }
   }

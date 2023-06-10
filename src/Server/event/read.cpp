@@ -54,7 +54,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   }
 
 
-  struct Request &request = current_udata->m_parser.get_request(); 
+  struct Request &request = current_udata->m_parser.get_request();
   struct Response response;
 
   // http_processor 호출
@@ -84,9 +84,9 @@ void Server::clientReadEvent(struct kevent *current_event)
 
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
     AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd,
-                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_VNODE, EV_ADD | EV_ENABLE, NOTE_WRITE | NOTE_EXTEND, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
-                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10,
+                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 30,
                          udata2);
     Parser new_parser(current_udata->m_server.max_body_size[0]);
     current_udata->m_parser = new_parser;
@@ -116,13 +116,20 @@ void Server::clientReadEvent(struct kevent *current_event)
 void Server::pipeReadEvent(struct kevent *current_event)
 {
   LOG_INFO("💧 PIPE READ EVENT 💧");
+  if (m_count == 0)
+  {
+    lseek(current_event->ident, 0, SEEK_SET);
+    m_count += 1;
+    std::cout << "Rewind file descriptor" << std::endl;
+  }
 
   char buf[BUF_SIZE];
   std::memset(buf, 0, BUF_SIZE);
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);
 
-  ssize_t read_byte = read(current_udata->m_pipe_read_fd, buf, BUF_SIZE);
+  ssize_t read_byte = read(current_event->ident, buf, BUF_SIZE);
+  std::cout << "read_byte: " << read_byte << std::endl;
   if (read_byte > 0)
   {
     for (int i=0; i<read_byte; ++i)
@@ -132,13 +139,14 @@ void Server::pipeReadEvent(struct kevent *current_event)
     return;
   }
   wait(NULL);
-  if (current_event->flags & EV_EOF)
-  {
+  close(current_event->ident);
+  // if (current_event->fflags & NOTE_FUNLOCK)
+  // {
     LOG_INFO("💩 PIPE EOF EVENT 💩");
 
     close(current_event->ident);
     std::vector<char> response_message;
-    
+
     current_udata->m_response.body = current_udata->m_result;
     ResponseGenerator ok(current_udata->m_parser.get_request(), current_udata->m_response);
     response_message = ok.generateResponseMessage();
@@ -151,5 +159,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
     delete current_udata->m_other_udata;
     delete current_udata;
-  }
+    unlink("./tmp_file");
+    unlink("./output");
+  // }
 }
