@@ -115,7 +115,7 @@ void ResponseGenerator::cgiDataProcess()
   }
   status_begin = cgi_data.find("Status: ");
   status_end = cgi_data.find("\r\n", status_begin);
-  if (status_begin != std::string::npos && status_end != std::string::npos)
+  if (status_begin == std::string::npos && status_end == std::string::npos)
   {
     std::stringstream ss;
     int error_code;
@@ -203,7 +203,10 @@ void ResponseGenerator::generateReasonPhrase()
 void ResponseGenerator::generateContentType()
 {
   if (m_response.cgi_flag == true)
+  {
     appendStrToResponse_message(m_cgi_content_type);
+    appendStrToResponse_message("\r\n");
+  }
   else
   {
     appendStrToResponse_message("Content-Type:");
