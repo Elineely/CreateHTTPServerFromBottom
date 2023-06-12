@@ -21,6 +21,7 @@ struct t_location
   std::string uploaded_path;
   std::string accepted_method;
   std::string redirection;
+  std::string max_body_size;
 };
 
 struct t_server
@@ -31,6 +32,7 @@ struct t_server
   std::vector<std::string> root;
   std::vector<std::string> max_header_size;
   std::vector<std::string> max_body_size;
+  std::vector<std::string> error_page;
   std::map<std::string, t_location> locations;
 };
 
@@ -63,7 +65,7 @@ class Config
   t_location get_location_expand(std::ifstream &config_file,
                                  std::string config_file_name,
                                  content_list_type vaild_content_list,
-                                 int content_size);
+                                 int content_size, std::string server_max_size);
   void showServerConf();
 };
 
