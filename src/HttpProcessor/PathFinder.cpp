@@ -190,6 +190,19 @@ void PathFinder::setBasic(std::string method, std::string root,
             response_data.file_exist, response_data.index_exist);
 }
 
+void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
+{
+  checkMaxSize(request_data, std::stoll(max_body_size, NULL, 10));
+}
+
+void PathFinder::checkMaxSize(Request request_data, long long max_body_size)
+{
+  if (max_body_size < 0)
+    throw BAD_REQUEST_400;
+  if (request_data.body.size() > max_body_size)
+    throw BAD_REQUEST_400;
+}
+
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)
 {
@@ -207,6 +220,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
              "" , current_location.index, current_location.auto_index,
              current_location.uploaded_path, current_location.redirection,
              current_location.root, response_data);
+    setMaxSize(request_data, current_location.max_body_size);
     return;
   }
   if (setCgi((locationBlock), server_data, response_data))
@@ -234,6 +248,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                    "" , current_location.index, current_location.auto_index,
                    current_location.uploaded_path, current_location.redirection,
                    current_location.root, response_data);
+          setMaxSize(request_data, current_location.max_body_size);
         }
         else
         {
@@ -243,6 +258,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                    current_location.auto_index, current_location.uploaded_path,
                    current_location.redirection, current_location.root,
                    response_data);
+          setMaxSize(request_data, current_location.max_body_size);
         }
       }
       else
@@ -258,6 +274,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                "", current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
+      setMaxSize(request_data, current_location.max_body_size);
     }
   }
   else
@@ -290,6 +307,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                    current_location.auto_index, current_location.uploaded_path,
                    current_location.redirection, current_location.root,
                    response_data);
+          setMaxSize(request_data, current_location.max_body_size);
           return;
         }
         // 디렉토리로 끝나는 경우가 온 경우
@@ -301,6 +319,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                  current_location.auto_index, current_location.uploaded_path,
                  current_location.redirection, current_location.root,
                  response_data);
+        setMaxSize(request_data, current_location.max_body_size);
       }
       else
       {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
@@ -308,6 +327,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                  current_location.auto_index, current_location.uploaded_path,
                  current_location.redirection, current_location.root,
                  response_data);
+          setMaxSize(request_data, current_location.max_body_size);
       }
       return;
     }
@@ -324,6 +344,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                "", current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
+      setMaxSize(request_data, current_location.max_body_size);
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
@@ -334,6 +355,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
+      setMaxSize(request_data, current_location.max_body_size);
     }
   }
 }

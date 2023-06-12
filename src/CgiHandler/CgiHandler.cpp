@@ -54,11 +54,11 @@ void CgiHandler::setCgiEnv(void)
 
   if (m_response_data.cgi_bin_path == "")
   {
-    m_env_list.push_back("SCRIPT_NAME=" + defualt_cgi_script);
+    m_env_list.push_back("SCRIPT_NAME=" + m_response_data.index_name);
   }
   else
   {
-    m_env_list.push_back("SCRIPT_NAME=" + m_response_data.cgi_bin_path);
+    m_env_list.push_back("SCRIPT_NAME=" + m_response_data.index_name);
     // m_env_list.push_back("SCRIPT_NAME=" + m_response_data.file_name);
   }
 
@@ -194,7 +194,8 @@ void GetCgiHandler::executeCgi()
   close(m_to_parent_fds[WRITE]);
 
   setCgiEnv();
-  std::string cgi_file = m_response_data.root_path + "/" + m_response_data.file_name;
+  std::string cgi_file = m_response_data.file_name;
+  // std::string cgi_file = m_response_data.root_path + "/" + m_response_data.file_name;
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
