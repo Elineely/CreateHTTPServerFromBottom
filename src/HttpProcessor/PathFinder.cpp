@@ -313,15 +313,6 @@ void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_da
         }
         // // 디렉토리로 끝나는 경우가 온 경우
         endWithDirectory(locationBlock, current_location, response_data, request_data);
-        // if (locationBlock[locationBlock.length() - 1] != '/')
-        //   locationBlock += "/"; //디렉토리 뒤 '/'
-        // setBasic(current_location.accepted_method,
-        //          current_location.root + locationBlock,
-        //          "", current_location.index,
-        //          current_location.auto_index, current_location.uploaded_path,
-        //          current_location.redirection, current_location.root,
-        //          response_data);
-        // setMaxSize(request_data, current_location.max_body_size);
       }
       else
       {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
