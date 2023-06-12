@@ -197,9 +197,11 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
   t_location current_location;
 
   locationBlock = request_data.uri;
+  //잘못된 uri 예외 처리
   if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
 
   std::map<std::string, t_location>::iterator temp_location;
+  // '/' location
   if ((locationBlock) == "/" || (locationBlock) == "")  // default block
   {
     current_location = server_data.locations.find("/")->second;
@@ -209,14 +211,17 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
              current_location.root, response_data);
     return;
   }
+
+  //cgi 체크
   if (setCgi((locationBlock), server_data, response_data))
   {
-    LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
-            response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
+    // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
+    //         response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
     return;
   }
-  LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
-            response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
+  // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
+  //           response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
+  
   std::size_t pos_last = (locationBlock).rfind("/");
   if (pos_last == 0)  // '/a'처럼 location 블록이름만 들어온 경우
   {
