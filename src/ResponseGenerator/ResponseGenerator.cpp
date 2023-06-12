@@ -1,4 +1,5 @@
 #include "ResponseGenerator.hpp"
+#include "Log.hpp"
 
 #include <ctime>
 #include <fstream>
@@ -23,6 +24,7 @@ Response::Response()
   path_exist = false;
   cgi_flag = false;
   read_pipe_fd = -1;
+  write_pipe_fd = -1;
   cgi_child_pid = -1;
 }
 
@@ -54,6 +56,7 @@ Response& Response::operator=(const Response& obj)
     body = obj.body;
     cgi_flag = obj.cgi_flag;
     read_pipe_fd = obj.read_pipe_fd;
+    write_pipe_fd = obj.write_pipe_fd;
     cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
   }

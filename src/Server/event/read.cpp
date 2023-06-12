@@ -68,14 +68,16 @@ void Server::clientReadEvent(struct kevent *current_event)
     t_event_udata *udata = new t_event_udata(PIPE);
     t_event_udata *udata2 = new t_event_udata(PROCESS);
 
-    udata->m_pipe_read_fd = response.read_pipe_fd;
+    udata->m_read_pipe_fd = response.read_pipe_fd;
+    udata->m_write_pipe_fd = response.write_pipe_fd;
     udata->m_child_pid = response.cgi_child_pid;
     udata->m_client_sock = current_event->ident;
     udata->m_parser = current_udata->m_parser;
     udata->m_response = response;
     udata->m_other_udata = udata2;
 
-    udata2->m_pipe_read_fd = response.read_pipe_fd;
+    udata2->m_read_pipe_fd = response.read_pipe_fd;
+    udata2->m_write_pipe_fd = response.write_pipe_fd;
     udata2->m_child_pid = response.cgi_child_pid;
     udata2->m_client_sock = current_event->ident;
     udata2->m_parser = current_udata->m_parser;
@@ -83,10 +85,11 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata2->m_other_udata = udata;
 
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
+    fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
+    AddEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
-                         EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0, udata);
-    AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
-                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 60,
+                         EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 600,
                          udata2);
     Parser new_parser(current_udata->m_server.max_body_size[0]);
     current_udata->m_parser = new_parser;
@@ -120,58 +123,38 @@ void Server::pipeReadEvent(struct kevent *current_event)
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);
 
-  if (current_event->fflags & NOTE_EXIT)
+  std::cout << "current_event->data:" << current_event->data << std::endl;
+  char buf[BUF_SIZE];
+  std::memset(buf, 0, BUF_SIZE);
+  ssize_t read_byte = read(current_event->ident, buf, BUF_SIZE);
+  std::cout << "read_byte: " << read_byte << std::endl;
+  if (read_byte > 0)
   {
-    LOG_INFO("💩 PIPE EOF EVENT 💩");
+    for (int i = 0; i < read_byte; ++i)
+    {
+      current_udata->m_result.push_back(buf[i]);
+    }
+    return;
+  }
+  wait(NULL);
+  if (current_event->flags & EV_EOF)
+  {
+    close(current_event->ident);
+    LOG_DEBUG("EOF reached");
+    std::vector<char> response_message;
 
-    wait(NULL);
+    current_udata->m_response.body = current_udata->m_result;
+    ResponseGenerator ok(current_udata->m_parser.get_request(),
+                         current_udata->m_response);
+    response_message = ok.generateResponseMessage();
+
+    t_event_udata *udata =
+        new t_event_udata(CLIENT, response_message, response_message.size());
+    AddEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
     delete current_udata->m_other_udata;
-
-    t_event_udata *udata = new t_event_udata(PIPE);
-    udata->m_pipe_read_fd = open("./output", O_RDONLY, 0644);
-    udata->m_client_sock = current_udata->m_client_sock;
-    udata->m_parser = current_udata->m_parser;
-    udata->m_response = current_udata->m_response;
     delete current_udata;
-    AddEventToChangeList(m_kqueue.change_list, udata->m_pipe_read_fd,
-                         EVFILT_READ, EV_ADD | EV_ENABLE | EV_EOF, 0, 0, udata);
-  }
-  if (current_event->filter == EVFILT_READ)
-  {
-    std::cout << "current_event->data:" << current_event->data << std::endl;
-    char buf[BUF_SIZE];
-    std::memset(buf, 0, BUF_SIZE);
-    ssize_t read_byte = read(current_event->ident, buf, BUF_SIZE);
-    std::cout << "read_byte: " << read_byte << std::endl;
-    if (read_byte > 0)
-    {
-      for (int i = 0; i < read_byte; ++i)
-      {
-        current_udata->m_result.push_back(buf[i]);
-      }
-    }
-    if (read_byte < BUF_SIZE)
-    {
-      std::cout << "reached eof" << std::endl;
-      close(current_event->ident);
-      std::vector<char> response_message;
-
-      current_udata->m_response.body = current_udata->m_result;
-      ResponseGenerator ok(current_udata->m_parser.get_request(),
-                          current_udata->m_response);
-      response_message = ok.generateResponseMessage();
-
-      t_event_udata *udata =
-          new t_event_udata(CLIENT, response_message, response_message.size());
-      AddEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-
-      delete current_udata;
-      unlink("./tmp_file");
-      unlink("./output");
-    }
-
   }
 }

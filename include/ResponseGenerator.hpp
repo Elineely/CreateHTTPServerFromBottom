@@ -30,6 +30,7 @@ struct Response
   std::string uploaded_path;
   std::vector<char> response_message;
   int read_pipe_fd;
+  int write_pipe_fd;
   int cgi_child_pid;
 
   Response();

@@ -80,11 +80,8 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
       return SERVER_WRITE;
     else if (type == CLIENT)
       return CLIENT_WRITE;
-  }
-  if (current_event->filter == EVFILT_PROC)
-  {
-    if (type == PIPE && current_event->fflags & NOTE_EXIT)
-      return PIPE_READ;
+    else if (type == PIPE)
+      return PIPE_WRITE;
   }
   return NOTHING;
 }
@@ -139,51 +136,57 @@ Server::Server(const Config &server_conf) : m_count(0)
         case SERVER_READ:
         {
           serverReadEvent(current_event);
+          break;
         }
-        break;
 
         case SERVER_ERROR:
         {
           serverErrorEvent(current_event);
+          break;
         }
-        break;
 
         case CLIENT_READ:
         {
           clientReadEvent(current_event);
+          break;
         }
-        break;
 
         case PIPE_READ:
         {
           pipeReadEvent(current_event);
+          break;
         }
-        break;
+
+        case PIPE_WRITE:
+        {
+          pipeWriteEvent(current_event);
+          break;
+        }
 
         case CGI_PROCESS_TIMEOUT:  // cgi
         {
           cgiProcessTimeoutEvent(current_event);
+          break;
         }
-        break;
 
         case CLIENT_WRITE:
         {
           clientWriteEvent(current_event);
+          break;
         }
-        break;
 
         case CLIENT_ERROR:
         {
           LOG_ERROR("🐛 Client socket error 🐛");
           disconnect_socket(current_event->ident);
+          break;
         }
-        break;
 
         default:
         {
           LOG_DEBUG("default status: %d", event_status);
+          break;
         }
-        break;
       }
     }
   }

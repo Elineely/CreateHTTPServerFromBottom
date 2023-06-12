@@ -1,5 +1,4 @@
-// #include "CgiHandler.hpp"
-#include "../../include/CgiHandler.hpp"
+#include "CgiHandler.hpp"
 
 #include <fcntl.h>
 
@@ -38,7 +37,8 @@ void CgiHandler::setCgiEnv(void)
   // m_response_data.cgi_bin_path = "post_python.py";
 
   // 수정 필요 ----------------
-  std::map<std::string, std::string>::iterator it = m_request_data.headers.begin();
+  std::map<std::string, std::string>::iterator it =
+      m_request_data.headers.begin();
   for (; it != m_request_data.headers.end(); ++it)
   {
     std::cout << it->first << ": " << it->second << std::endl;
@@ -94,7 +94,6 @@ void CgiHandler::setCgiEnv(void)
   }
   if (m_request_data.headers["x-secret-header-for-test"] != "")
   {
-    m_env_list.push_back("X_SECRET_HEADER_FOR_TEST=1");
     m_env_list.push_back("HTTP_X_SECRET_HEADER_FOR_TEST=1");
   }
 
@@ -206,11 +205,27 @@ void GetCgiHandler::pipeAndFork()
 
 void GetCgiHandler::executeCgi()
 {
-  dup2(m_input_file_fd, STDIN_FILENO);
-  dup2(m_output_file_fd, STDOUT_FILENO);
+  close(m_to_child_fds[WRITE]);
+  close(m_to_parent_fds[READ]);
 
-  close(m_input_file_fd);
-  close(m_output_file_fd);
+  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == -1)
+  {
+    LOG_ERROR("failed to dup2(%d, %d)", m_to_child_fds, STDIN_FILENO);
+    close(m_to_child_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    exit(EXIT_FAILURE);
+  }
+
+  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == -1)
+  {
+    LOG_ERROR("failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
+    close(m_to_child_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    exit(EXIT_FAILURE);
+  }
+
+  close(m_to_child_fds[READ]);
+  close(m_to_parent_fds[WRITE]);
   setCgiEnv();
   // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   // std::string cgi_file = m_response_data.root_path + "/" +
@@ -232,30 +247,19 @@ void GetCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
-    int input_file_fd = open("./tmp_file", O_RDWR | O_CREAT, 0644);
-    int output_file_fd = open("./output", O_RDWR | O_CREAT, 0644);
-
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
     {
-      close(m_to_child_fds[WRITE]);
-      close(m_to_child_fds[READ]);
-      close(m_to_parent_fds[WRITE]);
-      close(m_to_parent_fds[READ]);
-      m_input_file_fd = input_file_fd;
-      m_output_file_fd = output_file_fd;
       executeCgi();
     }
     else
     {
-      close(m_to_child_fds[WRITE]);
       close(m_to_child_fds[READ]);
       close(m_to_parent_fds[WRITE]);
-      close(m_to_parent_fds[READ]);
-      close(input_file_fd);
 
-      m_response_data.read_pipe_fd = output_file_fd;
+      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      m_response_data.write_pipe_fd = m_to_child_fds[WRITE];
       m_response_data.cgi_child_pid = m_pid;
     }
   }
@@ -304,39 +308,56 @@ PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
 
 void PostCgiHandler::pipeAndFork()
 {
-  // if (pipe(m_to_child_fds) == RETURN_ERROR)
-  // {
-  //   LOG_ERROR("Failed to create m_to_child_fds pipe");
-  //   throw PipeForkException();
-  // }
+  if (pipe(m_to_child_fds) == RETURN_ERROR)
+  {
+    LOG_ERROR("Failed to create m_to_child_fds pipe");
+    throw PipeForkException();
+  }
 
-  // if (pipe(m_to_parent_fds) == RETURN_ERROR)
-  // {
-  //   LOG_ERROR("Failed to create m_to_parent_fds pipe");
-  //   close(m_to_child_fds[READ]);
-  //   close(m_to_child_fds[WRITE]);
-  //   throw PipeForkException();
-  // }
+  if (pipe(m_to_parent_fds) == RETURN_ERROR)
+  {
+    LOG_ERROR("Failed to create m_to_parent_fds pipe");
+    close(m_to_child_fds[READ]);
+    close(m_to_child_fds[WRITE]);
+    throw PipeForkException();
+  }
 
   m_pid = fork();
   if (m_pid == RETURN_ERROR)
   {
     LOG_ERROR("Failed to fork");
-    // close(m_to_child_fds[READ]);
-    // close(m_to_child_fds[WRITE]);
-    // close(m_to_parent_fds[READ]);
-    // close(m_to_parent_fds[WRITE]);
+    close(m_to_child_fds[READ]);
+    close(m_to_child_fds[WRITE]);
+    close(m_to_parent_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
     throw PipeForkException();
   }
 }
 
 void PostCgiHandler::executeCgi()
 {
-  dup2(m_input_file_fd, STDIN_FILENO);
-  dup2(m_output_file_fd, STDOUT_FILENO);
 
-  close(m_input_file_fd);
-  close(m_output_file_fd);
+  close(m_to_child_fds[WRITE]);
+  if (dup2(m_to_child_fds[READ], STDIN_FILENO) == -1)
+  {
+    LOG_ERROR("failed to dup2(%d, %d)", m_to_child_fds, STDIN_FILENO);
+    close(m_to_child_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    exit(EXIT_FAILURE);
+  }
+  close(m_to_child_fds[READ]);
+
+  close(m_to_parent_fds[READ]);
+  if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == -1)
+  {
+    LOG_ERROR("failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
+    close(m_to_child_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    exit(EXIT_FAILURE);
+  }
+  close(m_to_parent_fds[WRITE]);
+
+
 
   setCgiEnv();
   // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
@@ -347,7 +368,7 @@ void PostCgiHandler::executeCgi()
   if (execve("./cgi_tester", const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    // LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
+    LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
     std::vector<char> error_message = makeErrorPage();
     write(STDOUT_FILENO, &error_message[0], error_message.size());
     exit(EXIT_FAILURE);
@@ -358,35 +379,19 @@ void PostCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
-    int input_file_fd = open("./tmp_file", O_RDWR | O_CREAT | O_TRUNC, 0644);
-    int output_file_fd = open("./output", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-
-    write(input_file_fd, &m_request_data.body[0], m_request_data.body.size());
-    close(input_file_fd);
-    input_file_fd = open("./tmp_file", O_RDONLY, 0644);
-    m_input_file_fd = input_file_fd;
-    m_output_file_fd = output_file_fd;
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
     {
-      // close(m_to_child_fds[WRITE]);
-      // close(m_to_child_fds[READ]);
-      // close(m_to_parent_fds[WRITE]);
-      // close(m_to_parent_fds[READ]);
       executeCgi();
     }
     else
     {
-      // close(m_to_child_fds[WRITE]);
-      // close(m_to_child_fds[READ]);
-      // close(m_to_parent_fds[WRITE]);
-      // close(m_to_parent_fds[READ]);
-      close(input_file_fd);
-      close(output_file_fd);
+      close(m_to_child_fds[READ]);
+      close(m_to_parent_fds[WRITE]);
 
-      LOG_DEBUG("output_file_fd: %d", output_file_fd);
-      // m_response_data.read_pipe_fd = output_file_fd;
+      m_response_data.read_pipe_fd = m_to_parent_fds[READ];
+      m_response_data.write_pipe_fd = m_to_child_fds[WRITE];
       m_response_data.cgi_child_pid = m_pid;
     }
   }

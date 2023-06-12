@@ -35,7 +35,7 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
       if (m_response_data.cgi_flag == true)
       {
         GetCgiHandler cgi_handler(m_request_data, m_response_data);
-      cgi_handler.outsourceCgiRequest();
+        cgi_handler.outsourceCgiRequest();
         m_response_data = cgi_handler.get_m_response_data();
       }
       else
