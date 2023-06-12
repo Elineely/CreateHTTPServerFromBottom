@@ -18,7 +18,6 @@ Parser::Parser(const std::string& max_body_size)
 
   iss >> value;
   m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
-  LOG_DEBUG("m_max_body_size: %d", m_max_body_size);
 }
 
 // Destructor

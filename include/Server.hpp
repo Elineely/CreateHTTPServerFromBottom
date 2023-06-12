@@ -37,7 +37,7 @@
 #include "ResponseGenerator.hpp"
 
 // Server 세팅
-#define BUF_SIZE 1024
+#define BUF_SIZE 65535
 #define MAX_EVENT_LIST_SIZE 8
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
@@ -161,6 +161,7 @@ class Server
   std::vector<t_multi_server> servers;
   t_kqueue m_kqueue;
   Config server; // TODO: 꼭 멤버변수로 가지고 있어야 하는가?
+  int m_count;
   Server();
 
  public:

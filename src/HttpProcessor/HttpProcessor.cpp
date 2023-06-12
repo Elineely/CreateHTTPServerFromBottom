@@ -12,6 +12,7 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
   m_request_data = request_data;
   m_server_data = server_data;
   // MethodHandler* method_handler;
+  LOG_DEBUG("request_data.status: %d", request_data.status);
   if (request_data.status == NO_PROBLEM) request_data.status = OK_200;
   try
   {

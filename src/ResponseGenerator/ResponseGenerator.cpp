@@ -28,25 +28,7 @@ Response::Response()
 
 Response::Response(const Response& obj)
 {
-  accepted_method = obj.accepted_method;
-  rediretion_location = obj.rediretion_location;
-  file_path = obj.file_path;
-  file_name = obj.file_name;
-  root_path = obj.root_path;
-  index_name = obj.index_name;
-  index_exist = obj.index_exist;
-  cgi_bin_path = obj.cgi_bin_path;
-  uploaded_path = obj.uploaded_path;
-  status_code = obj.status_code;
-  redirection_exist = obj.redirection_exist;
-  auto_index = obj.auto_index;
-  file_exist = obj.file_exist;
-  path_exist = obj.path_exist;
-  body = obj.body;
-  cgi_flag = obj.cgi_flag;
-  read_pipe_fd = obj.read_pipe_fd;
-  cgi_child_pid = obj.cgi_child_pid;
-  response_message = obj.response_message;
+  *this = obj;
 }
 
 Response::~Response() {}
@@ -115,7 +97,7 @@ void ResponseGenerator::cgiDataProcess()
   }
   status_begin = cgi_data.find("Status: ");
   status_end = cgi_data.find("\r\n", status_begin);
-  if (status_begin != std::string::npos && status_end != std::string::npos)
+  if (status_begin == std::string::npos && status_end == std::string::npos)
   {
     std::stringstream ss;
     int error_code;
@@ -203,7 +185,10 @@ void ResponseGenerator::generateReasonPhrase()
 void ResponseGenerator::generateContentType()
 {
   if (m_response.cgi_flag == true)
+  {
     appendStrToResponse_message(m_cgi_content_type);
+    appendStrToResponse_message("\r\n");
+  }
   else
   {
     appendStrToResponse_message("Content-Type:");
@@ -333,6 +318,7 @@ std::vector<char> ResponseGenerator::generateResponseMessage()
 {
   try
   {
+    LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
     if (m_response.status_code != OK_200 && m_response.status_code != FOUND_302)
       throw(m_response.status_code);
     cgiDataProcess();
@@ -342,6 +328,7 @@ std::vector<char> ResponseGenerator::generateResponseMessage()
   }
   catch (StatusCode code)
   {
+    LOG_ERROR("Error code: %d", code);
     m_response.status_code = code;
     generateErrorResponseMessage();
   }
