@@ -105,7 +105,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
       temp_locations.insert(std::pair<std::string, t_location>(
           split_content_line[1],
           get_location_expand(file, config_file_name, vaild_content_list,
-                              split_content_line.size(), server.max_body_size)));
+                              split_content_line.size(), temp_conf["max_body_size"][0])));
     }
     else
     {
@@ -123,6 +123,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.listen = temp_conf["listen"];
   server.max_body_size = temp_conf["max_body_size"];
   server.max_header_size = temp_conf["max_header_size"];
+  server.error_page = temp_conf["error_page"];
   server.locations = temp_locations;
 
   return server;

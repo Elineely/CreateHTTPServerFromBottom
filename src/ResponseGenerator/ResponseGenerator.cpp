@@ -1,4 +1,5 @@
 #include "ResponseGenerator.hpp"
+#include "Log.hpp"
 
 #include <ctime>
 #include <fstream>

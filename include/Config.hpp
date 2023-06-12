@@ -32,6 +32,7 @@ struct t_server
   std::vector<std::string> root;
   std::vector<std::string> max_header_size;
   std::vector<std::string> max_body_size;
+  std::vector<std::string> error_page;
   std::map<std::string, t_location> locations;
 };
 

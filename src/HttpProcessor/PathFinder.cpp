@@ -200,7 +200,7 @@ void PathFinder::checkMaxSize(Request request_data, long long max_body_size)
   if (max_body_size < 0)
     throw BAD_REQUEST_400;
   if (request_data.body.size() > max_body_size)
-    throw BAD_REQUEST_400;
+    throw PAYLOAD_TOO_LARGE_413;
 }
 
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
