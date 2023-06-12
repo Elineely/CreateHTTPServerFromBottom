@@ -137,35 +137,6 @@ void PathFinder::setRedirection(std::string redirection,
   }
 }
 
-void PathFinder::test_print_location(t_location& c)
-{
-  LOG_DEBUG("🧪 test_print_location 🧪");
-  LOG_DEBUG("language: %s", c.language.c_str());
-  LOG_DEBUG("root: %s", c.root.c_str());
-  LOG_DEBUG("auto_index: %d", c.auto_index.c_str());
-  LOG_DEBUG("index: %s", c.index.c_str());
-  LOG_DEBUG("ourcgi_pass: %s", c.ourcgi_pass.c_str());
-  LOG_DEBUG("ourcgi_index: %s", c.ourcgi_index.c_str());
-  LOG_DEBUG("uploaded_path: %s", c.uploaded_path.c_str());
-  LOG_DEBUG("accepted_method: %s", c.accepted_method.c_str());
-  LOG_DEBUG("🧪 test_print_location 🧪");
-}
-
-void PathFinder::test_print_basics(Response& c)
-{
-  LOG_DEBUG("🧪 test_print_basics 🧪");
-  LOG_DEBUG("accepted_method: %s", c.accepted_method.c_str());
-  LOG_DEBUG("auto_index: %d", c.auto_index);
-  LOG_DEBUG("file_exist: %d", c.file_exist);
-  LOG_DEBUG("file_name: %s", c.file_name.c_str());
-  LOG_DEBUG("path_exist: %d", c.path_exist);
-  LOG_DEBUG("file_path: %s", c.file_path.c_str());
-  LOG_DEBUG("cgi_flag: %d", c.cgi_flag);
-  LOG_DEBUG("cgi_bin_path: %s", c.cgi_bin_path.c_str());
-  LOG_DEBUG("uploaded_path: %s", c.uploaded_path.c_str());
-  LOG_DEBUG("🧪 test_print_basics 🧪");
-}
-
 void PathFinder::setRootPath(std::string root_path, Response& response_data)
 {
   response_data.root_path = root_path;
@@ -190,6 +161,23 @@ void PathFinder::setBasic(std::string method, std::string root,
             response_data.file_exist, response_data.index_exist);
 }
 
+bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
+                              Response& response_data)
+{
+  t_location current_location;
+
+  if ((locationBlock) == "/" || (locationBlock) == "")  // default block
+  {
+    current_location = server_data.locations.find("/")->second;
+    setBasic(current_location.accepted_method, current_location.root + "/",
+             "" , current_location.index, current_location.auto_index,
+             current_location.uploaded_path, current_location.redirection,
+             current_location.root, response_data);
+    return true;
+  }
+  return false;
+}
+
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)
 {
@@ -202,15 +190,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
 
   std::map<std::string, t_location>::iterator temp_location;
   // '/' location
-  if ((locationBlock) == "/" || (locationBlock) == "")  // default block
-  {
-    current_location = server_data.locations.find("/")->second;
-    setBasic(current_location.accepted_method, current_location.root + "/",
-             "" , current_location.index, current_location.auto_index,
-             current_location.uploaded_path, current_location.redirection,
-             current_location.root, response_data);
-    return;
-  }
+  if (isRootBlock(locationBlock, server_data, response_data)) return ;
 
   //cgi 체크
   if (setCgi((locationBlock), server_data, response_data))

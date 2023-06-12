@@ -32,8 +32,10 @@ class PathFinder
                 std::string auto_index,
                 std::string upload, std::string redirection,
                 std::string root_path, Response& response_data);
-  void test_print_location(t_location& c);
-  void test_print_basics(Response& c);
+
+  //functions for abstraction
+  bool isRootBlock(std::string locationBlock, t_server& server_data,
+                              Response& response_data);
 
  public:
  //main_constructor
