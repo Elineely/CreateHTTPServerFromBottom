@@ -184,11 +184,11 @@ bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
   if ((locationBlock) == "/" || (locationBlock) == "")  // default block
   {
     current_location = server_data.locations.find("/")->second;
+    setMaxSize(request_data, current_location.max_body_size);
     setBasic(current_location.accepted_method, current_location.root + "/",
              "" , current_location.index, current_location.auto_index,
              current_location.uploaded_path, current_location.redirection,
              current_location.root, response_data);
-    setMaxSize(request_data, current_location.max_body_size);
     return true;
   }
   return false;
@@ -223,22 +223,22 @@ void  PathFinder::oneSlashInUri(t_server& server_data,
          // auto 인덱스 하려면 꼭 필요
         if (is_directory(current_location.root + locationBlock))
         {
+          setMaxSize(request_data, current_location.max_body_size);
           setBasic(current_location.accepted_method,
                    current_location.root + locationBlock + "/",
                    "" , current_location.index, current_location.auto_index,
                    current_location.uploaded_path, current_location.redirection,
                    current_location.root, response_data);
-          setMaxSize(request_data, current_location.max_body_size);
         }
         else
         {
+          setMaxSize(request_data, current_location.max_body_size);
           setBasic(current_location.accepted_method,
                    current_location.root + "/", locationBlock.substr(1),
                    current_location.index,
                    current_location.auto_index, current_location.uploaded_path,
                    current_location.redirection, current_location.root,
                    response_data);
-          setMaxSize(request_data, current_location.max_body_size);
         }
       }
       else
@@ -250,12 +250,27 @@ void  PathFinder::oneSlashInUri(t_server& server_data,
     else
     {
       current_location = temp_location->second;
+      setMaxSize(request_data, current_location.max_body_size);
       setBasic(current_location.accepted_method, current_location.root + "/",
                "", current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
-      setMaxSize(request_data, current_location.max_body_size);
     }
+}
+
+void PathFinder::endWithDirectory(std::string locationBlock, t_location current_location,
+                  Response& response_data, Request& request_data)
+{
+  // // 디렉토리로 끝나는 경우가 온 경우
+        if (locationBlock[locationBlock.length() - 1] != '/')
+          locationBlock += "/"; //디렉토리 뒤 '/'
+        setMaxSize(request_data, current_location.max_body_size);
+        setBasic(current_location.accepted_method,
+                 current_location.root + locationBlock,
+                 "", current_location.index,
+                 current_location.auto_index, current_location.uploaded_path,
+                 current_location.redirection, current_location.root,
+                 response_data);
 }
 
 void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_data,
@@ -263,7 +278,6 @@ void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_da
 {
   // "/block_name/b/c/d", "/??(location에 없음)/b/c/d"
      //"a/b/c/d(디렉토리)", "/a/b/c/d/e(파일)"
-     // '/'로 끝나는 경우와 "/파일이름.txt(경로없이)"인 경우는 고려하지 않음.
      //   std::string path = "/a/b/c/d";
      // std::cout << "in this block" << std::endl;
     t_location current_location;
@@ -287,6 +301,7 @@ void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_da
         pos_last = entire_path.rfind("/");
         if (!is_directory(current_location.root + locationBlock))
         {  // 파일로 끝나는 경로가 온 경우
+          setMaxSize(request_data, current_location.max_body_size);
           setBasic(current_location.accepted_method,
                    entire_path.substr(0, pos_last + 1),
                    entire_path.substr(pos_last + 1),
@@ -294,27 +309,27 @@ void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_da
                    current_location.auto_index, current_location.uploaded_path,
                    current_location.redirection, current_location.root,
                    response_data);
-          setMaxSize(request_data, current_location.max_body_size);
           return;
         }
-        // 디렉토리로 끝나는 경우가 온 경우
-        if (locationBlock[locationBlock.length() - 1] != '/')
-          locationBlock += "/"; //디렉토리 뒤 '/'
-        setBasic(current_location.accepted_method,
-                 current_location.root + locationBlock,
-                 "", current_location.index,
-                 current_location.auto_index, current_location.uploaded_path,
-                 current_location.redirection, current_location.root,
-                 response_data);
-        setMaxSize(request_data, current_location.max_body_size);
+        // // 디렉토리로 끝나는 경우가 온 경우
+        endWithDirectory(locationBlock, current_location, response_data, request_data);
+        // if (locationBlock[locationBlock.length() - 1] != '/')
+        //   locationBlock += "/"; //디렉토리 뒤 '/'
+        // setBasic(current_location.accepted_method,
+        //          current_location.root + locationBlock,
+        //          "", current_location.index,
+        //          current_location.auto_index, current_location.uploaded_path,
+        //          current_location.redirection, current_location.root,
+        //          response_data);
+        // setMaxSize(request_data, current_location.max_body_size);
       }
       else
       {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
+        setMaxSize(request_data, current_location.max_body_size);
         setBasic(current_location.accepted_method, "", "", "",
                  current_location.auto_index, current_location.uploaded_path,
                  current_location.redirection, current_location.root,
                  response_data);
-          setMaxSize(request_data, current_location.max_body_size);
       }
       return;
     }
@@ -327,22 +342,22 @@ void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_da
     {
       if (entire_path[entire_path.length() - 1] == '/')
           entire_path.pop_back(); //디렉토리뒤 '/'
+      setMaxSize(request_data, current_location.max_body_size);
       setBasic(current_location.accepted_method, entire_path + "/",
                "", current_location.index, current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
-      setMaxSize(request_data, current_location.max_body_size);
     }
     else
     {  //"/a/b/c/d/e(파일)" 경우
       LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
+      setMaxSize(request_data, current_location.max_body_size);
       setBasic(current_location.accepted_method,
                entire_path.substr(0, pos_last + 1),
                entire_path.substr(pos_last + 1), current_location.index,
                current_location.auto_index,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
-      setMaxSize(request_data, current_location.max_body_size);
     }
 }
 

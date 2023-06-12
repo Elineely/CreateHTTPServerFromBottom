@@ -46,6 +46,8 @@ class PathFinder
                               Response& response_data, Request& request_data);
   void manySlashesInUri(std::string locationBlock, t_server& server_data,
                               Response& response_data, Request& request_data);
+  void endWithDirectory(std::string locationBlock, t_location current_location,
+                  Response& response_data, Request& request_data);
 
  public:
  //main_constructor
