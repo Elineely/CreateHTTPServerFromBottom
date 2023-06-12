@@ -36,6 +36,12 @@ class PathFinder
   //functions for abstraction
   bool isRootBlock(std::string locationBlock, t_server& server_data,
                               Response& response_data);
+  bool isCgiBlock(std::string locationBlock, t_server& server_data,
+                              Response& response_data);
+  void oneSlashInUri(t_server& server_data, std::string locationBlock,
+                              Response& response_data);
+  void manySlashesInUri(std::string locationBlock, t_server& server_data,
+                              Response& response_data);
 
  public:
  //main_constructor

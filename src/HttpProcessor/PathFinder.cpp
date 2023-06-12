@@ -161,6 +161,8 @@ void PathFinder::setBasic(std::string method, std::string root,
             response_data.file_exist, response_data.index_exist);
 }
 
+//functions for abstraction 
+
 bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
                               Response& response_data)
 {
@@ -178,33 +180,26 @@ bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
   return false;
 }
 
-PathFinder::PathFinder(Request& request_data, t_server& server_data,
-                       Response& response_data)
+bool PathFinder::isCgiBlock(std::string locationBlock, t_server& server_data,
+                              Response& response_data)
 {
-  std::string locationBlock;
-  t_location current_location;
-
-  locationBlock = request_data.uri;
-  //잘못된 uri 예외 처리
-  if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
-
-  std::map<std::string, t_location>::iterator temp_location;
-  // '/' location
-  if (isRootBlock(locationBlock, server_data, response_data)) return ;
-
-  //cgi 체크
-  if (setCgi((locationBlock), server_data, response_data))
+if (setCgi((locationBlock), server_data, response_data))
   {
-    // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
-    //         response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
-    return;
+    LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
+            response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
+    return true;
   }
-  // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
-  //           response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
-  
-  std::size_t pos_last = (locationBlock).rfind("/");
-  if (pos_last == 0)  // '/a'처럼 location 블록이름만 들어온 경우
-  {
+  LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)", response_data.cgi_flag,
+            response_data.cgi_bin_path.c_str(), response_data.index_name.c_str());
+  return false;
+}
+
+void  PathFinder::oneSlashInUri(t_server& server_data,
+                              std::string locationBlock, Response& response_data)
+{
+    t_location current_location;
+    std::map<std::string, t_location>::iterator temp_location;
+    
     temp_location = server_data.locations.find(locationBlock);
     if (temp_location == server_data.locations.end())
     {
@@ -244,13 +239,20 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
     }
-  }
-  else
-  {  // "/block_name/b/c/d", "/??(location에 없음)/b/c/d"
+}
+
+void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_data,
+                                 Response& response_data)
+{
+  // "/block_name/b/c/d", "/??(location에 없음)/b/c/d"
      //"a/b/c/d(디렉토리)", "/a/b/c/d/e(파일)"
      // '/'로 끝나는 경우와 "/파일이름.txt(경로없이)"인 경우는 고려하지 않음.
      //   std::string path = "/a/b/c/d";
      // std::cout << "in this block" << std::endl;
+    t_location current_location;
+    std::map<std::string, t_location>::iterator temp_location;
+    std::size_t pos_last;
+
     std::string location_key =
         (locationBlock).substr(0, (locationBlock).find("/", 1));
     temp_location = server_data.locations.find(location_key);
@@ -320,5 +322,107 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
                current_location.uploaded_path, current_location.redirection,
                current_location.root, response_data);
     }
+}
+
+
+PathFinder::PathFinder(Request& request_data, t_server& server_data,
+                       Response& response_data)
+{
+  std::string locationBlock;
+  t_location current_location;
+
+  locationBlock = request_data.uri;
+  //잘못된 uri 예외 처리
+  if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
+
+  std::map<std::string, t_location>::iterator temp_location;
+
+  // '/' location
+  if (isRootBlock(locationBlock, server_data, response_data)) return ;
+  //cgi 체크
+  if (isCgiBlock(locationBlock, server_data, response_data)) return ;
+  
+  std::size_t pos_last = (locationBlock).rfind("/");
+  if (pos_last == 0)  // '/a'처럼 location 블록이름만 들어온 경우
+  {
+    oneSlashInUri(server_data, locationBlock, response_data);
+  }
+  else
+  {
+    
+  // "/block_name/b/c/d", "/??(location에 없음)/b/c/d"
+  //    //"a/b/c/d(디렉토리)", "/a/b/c/d/e(파일)"
+  //    // '/'로 끝나는 경우와 "/파일이름.txt(경로없이)"인 경우는 고려하지 않음.
+  //    //   std::string path = "/a/b/c/d";
+  //    // std::cout << "in this block" << std::endl;
+  //   std::string location_key =
+  //       (locationBlock).substr(0, (locationBlock).find("/", 1));
+  //   temp_location = server_data.locations.find(location_key);
+  //   if (temp_location == server_data.locations.end())
+  //   {  // "/??(location에 없음)/b/c/d" 경우 + "/(기본디렉토리)/(그 안의
+  //      // 디렉토리)/그 안의 파일"
+  //     current_location = server_data.locations.find("/")->second;
+  //     if (checkExist(current_location.root + locationBlock))
+  //     {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
+  //        //  인덱스 하려면 꼭 필요
+  //       std::string rest_of_uri =
+  //           (locationBlock).substr((locationBlock).find("/"));
+  //       std::cout << rest_of_uri << std::endl;
+  //       std::string entire_path = current_location.root + rest_of_uri;
+  //       pos_last = entire_path.rfind("/");
+  //       if (!is_directory(current_location.root + locationBlock))
+  //       {  // 파일로 끝나는 경로가 온 경우
+  //         setBasic(current_location.accepted_method,
+  //                  entire_path.substr(0, pos_last + 1),
+  //                  entire_path.substr(pos_last + 1),
+  //                  current_location.index,
+  //                  current_location.auto_index, current_location.uploaded_path,
+  //                  current_location.redirection, current_location.root,
+  //                  response_data);
+  //         return;
+  //       }
+  //       // 디렉토리로 끝나는 경우가 온 경우
+  //       if (locationBlock[locationBlock.length() - 1] != '/')
+  //         locationBlock += "/"; //디렉토리 뒤 '/'
+  //       setBasic(current_location.accepted_method,
+  //                current_location.root + locationBlock,
+  //                "", current_location.index,
+  //                current_location.auto_index, current_location.uploaded_path,
+  //                current_location.redirection, current_location.root,
+  //                response_data);
+  //     }
+  //     else
+  //     {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
+  //       setBasic(current_location.accepted_method, "", "", "",
+  //                current_location.auto_index, current_location.uploaded_path,
+  //                current_location.redirection, current_location.root,
+  //                response_data);
+  //     }
+  //     return;
+  //   }
+  //   current_location = temp_location->second;
+  //   std::string rest_of_uri =
+  //       (locationBlock).substr((locationBlock).find("/", 1));
+  //   std::string entire_path = current_location.root + rest_of_uri;
+  //   pos_last = entire_path.rfind("/");
+  //   if (is_directory(entire_path))  //"a/b/c/d(존재하는 디렉토리)"
+  //   {
+  //     if (entire_path[entire_path.length() - 1] == '/')
+  //         entire_path.pop_back(); //디렉토리뒤 '/'
+  //     setBasic(current_location.accepted_method, entire_path + "/",
+  //              "", current_location.index, current_location.auto_index,
+  //              current_location.uploaded_path, current_location.redirection,
+  //              current_location.root, response_data);
+  //   }
+  //   else
+  //   {  //"/a/b/c/d/e(파일)" 경우
+  //     LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
+  //     setBasic(current_location.accepted_method,
+  //              entire_path.substr(0, pos_last + 1),
+  //              entire_path.substr(pos_last + 1), current_location.index,
+  //              current_location.auto_index,
+  //              current_location.uploaded_path, current_location.redirection,
+  //              current_location.root, response_data);
+  //   }
   }
 }
