@@ -32,16 +32,20 @@ class PathFinder
                 std::string auto_index,
                 std::string upload, std::string redirection,
                 std::string root_path, Response& response_data);
+  void setMaxSize(Request request_data, std::string max_body_size);
+  void checkMaxSize(Request request_data, long long max_body_size);
+
+
 
   //functions for abstraction
   bool isRootBlock(std::string locationBlock, t_server& server_data,
-                              Response& response_data);
+                              Response& response_data, Request& request_data);
   bool isCgiBlock(std::string locationBlock, t_server& server_data,
                               Response& response_data);
   void oneSlashInUri(t_server& server_data, std::string locationBlock,
-                              Response& response_data);
+                              Response& response_data, Request& request_data);
   void manySlashesInUri(std::string locationBlock, t_server& server_data,
-                              Response& response_data);
+                              Response& response_data, Request& request_data);
 
  public:
  //main_constructor
