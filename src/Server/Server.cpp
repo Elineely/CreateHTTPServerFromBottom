@@ -18,29 +18,6 @@ void Server::AddEventToChangeList(
   change_list.push_back(temp_event);
 }
 
-char *Server::getHttpCharMessages(void)
-{
-  char *return_buff = (char *)malloc(1000000);
-  int file_length;
-  std::string file_buff;
-  std::ifstream test_file("./test_message");
-  std::string line;
-
-  while (getline(test_file, line))
-  {
-    file_buff.append(line);
-  }
-  test_file.close();
-  file_length = ft_strlen(file_buff.c_str());
-  sprintf(return_buff,
-          "HTTP/1.1 200 OK\r\nServer:Linux Web Server \r\nDate: Wed, "
-          "03 May "
-          "2023 05:53:31 GM \r\nContent-length:%d\r\n"
-          "Content-Type:text/plain\r\n\r\n%s",
-          file_length, file_buff.c_str());
-  return return_buff;
-}
-
 void Server::disconnect_socket(int socket) { close(socket); }
 
 int is_server_sock(std::vector<t_multi_server> servers, int sock)
