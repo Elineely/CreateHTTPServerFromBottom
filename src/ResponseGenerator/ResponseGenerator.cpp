@@ -27,6 +27,7 @@ Response::Response()
   read_pipe_fd = -1;
   write_pipe_fd = -1;
   cgi_child_pid = -1;
+  error_redircetion = "";
 }
 
 Response::Response(const Response& obj) { *this = obj; }
@@ -57,6 +58,7 @@ Response& Response::operator=(const Response& obj)
     write_pipe_fd = obj.write_pipe_fd;
     cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
+    error_redircetion = obj.error_redircetion;
   }
   return (*this);
 }

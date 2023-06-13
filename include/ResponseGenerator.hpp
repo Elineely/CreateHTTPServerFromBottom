@@ -32,6 +32,7 @@ struct Response
   int read_pipe_fd;
   int write_pipe_fd;
   int cgi_child_pid;
+  std::string error_redirection;
 
   Response();
   Response(const Response& obj);
