@@ -3,7 +3,7 @@
 #include "Log.hpp"
 // #include "./PathTest/PathFinder.hpp" // for test
 
-#include <iostream>
+// #include <iostream>
 
 PathFinder::PathFinder() {}
 
@@ -221,15 +221,8 @@ void  PathFinder::oneSlashInUri(t_server& server_data,
       if (checkExist(current_location.root + locationBlock))
       {  // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치
          // auto 인덱스 하려면 꼭 필요
-        if (is_directory(current_location.root + locationBlock))
-        {
-          setMaxSize(request_data, current_location.max_body_size);
-          setBasic(current_location.accepted_method,
-                   current_location.root + locationBlock + "/",
-                   "" , current_location.index, current_location.auto_index,
-                   current_location.uploaded_path, current_location.redirection,
-                   current_location.root, response_data);
-        }
+        if (isEndWithDirectory(locationBlock, current_location,
+            response_data, request_data)) return;
         else
         {
           setMaxSize(request_data, current_location.max_body_size);
@@ -249,6 +242,7 @@ void  PathFinder::oneSlashInUri(t_server& server_data,
     }
     else
     {
+      //location 이름이 들어옴
       current_location = temp_location->second;
       setMaxSize(request_data, current_location.max_body_size);
       setBasic(current_location.accepted_method, current_location.root + "/",
@@ -258,108 +252,128 @@ void  PathFinder::oneSlashInUri(t_server& server_data,
     }
 }
 
-void PathFinder::endWithDirectory(std::string locationBlock, t_location current_location,
+bool PathFinder::isEndWithDirectory(std::string locationBlock, t_location current_location,
                   Response& response_data, Request& request_data)
 {
-  // // 디렉토리로 끝나는 경우가 온 경우
-        if (locationBlock[locationBlock.length() - 1] != '/')
-          locationBlock += "/"; //디렉토리 뒤 '/'
-        setMaxSize(request_data, current_location.max_body_size);
-        setBasic(current_location.accepted_method,
-                 current_location.root + locationBlock,
-                 "", current_location.index,
-                 current_location.auto_index, current_location.uploaded_path,
-                 current_location.redirection, current_location.root,
-                 response_data);
+  // 디렉토리로 끝나는 경우가 온 경우
+   if (is_directory(current_location.root + locationBlock))  //"a/b/c/d(존재하는 디렉토리)"
+    {
+      if (locationBlock[locationBlock.length() - 1] != '/')
+        locationBlock += "/"; //디렉토리 뒤 '/'
+      setMaxSize(request_data, current_location.max_body_size);
+      setBasic(current_location.accepted_method,
+                current_location.root + locationBlock,
+                "", current_location.index,
+                current_location.auto_index, current_location.uploaded_path,
+                current_location.redirection, current_location.root,
+                response_data);
+      return true;
+    }
+    return false;
+}
+
+bool PathFinder::isEndWithExistDirectory(std::string entire_path, Request& request_data,
+                  t_location current_location, Response& response_data)
+{
+  if (is_directory(entire_path))  //"a/b/c/d(존재하는 디렉토리)"
+    {
+      if (entire_path[entire_path.length() - 1] == '/')
+          entire_path.pop_back(); //디렉토리뒤 '/'
+      setMaxSize(request_data, current_location.max_body_size);
+      setBasic(current_location.accepted_method, entire_path + "/",
+              "", current_location.index, current_location.auto_index,
+              current_location.uploaded_path, current_location.redirection,
+              current_location.root, response_data);
+          return true;
+    }
+  return false;
+}
+
+bool PathFinder::isEndWithFileName(std::string entire_path, Request& request_data, t_location current_location,
+                  Response& response_data)
+{
+  size_t pos_last = entire_path.rfind("/");
+  //"/a/b/c/d/e(파일)" 경우
+  LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
+  setMaxSize(request_data, current_location.max_body_size);
+  setBasic(current_location.accepted_method,
+            entire_path.substr(0, pos_last + 1),
+            entire_path.substr(pos_last + 1), current_location.index,
+            current_location.auto_index,
+            current_location.uploaded_path, current_location.redirection,
+            current_location.root, response_data);
+}
+
+bool PathFinder::firstBlockIsNotLocation(t_server& server_data, std::string location_key,
+                  t_location current_location, std::string locationBlock, 
+                  Response& response_data, Request& request_data)
+{
+  std::map<std::string, t_location>::iterator temp_location;
+  std::size_t pos_last;
+
+  temp_location = server_data.locations.find(location_key);
+  if (temp_location == server_data.locations.end())
+  {  //(기본디렉토리)/(내부 디렉토리)/내부 파일"
+    current_location = server_data.locations.find("/")->second;
+    if (checkExist(current_location.root + locationBlock))
+    {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
+        //  인덱스 하려면 꼭 필요
+      std::string rest_of_uri = (locationBlock).substr((locationBlock).find("/"));
+      std::string entire_path = current_location.root + rest_of_uri;
+      pos_last = entire_path.rfind("/");
+      if (isEndWithDirectory(locationBlock, current_location, response_data, request_data)) return true;
+      else 
+        isEndWithFileName(entire_path, request_data, current_location, response_data);
+    }
+    else
+    {  // 존재하지 않는 블럭 && (디폴트 폴더 내부 파일아님 && 디렉토리도 아님)
+      //"/??(location에 없음)/b/c/d" 경우
+      throw NOT_FOUND_404;
+    }
+    return true;
+  }
+  return false;
+}
+
+void PathFinder::firstBlockIsLocation(std::string location_key, t_server& server_data,
+                    std::string locationBlock, Request& request_data, Response& response_data)
+{
+    std::map<std::string, t_location>::iterator temp_location = server_data.locations.find(location_key);
+    t_location current_location = temp_location->second;
+    std::string rest_of_uri =
+        (locationBlock).substr((locationBlock).find("/", 1));
+    std::string entire_path = current_location.root + rest_of_uri;
+    std::size_t pos_last = entire_path.rfind("/");
+
+    if (isEndWithExistDirectory(entire_path, request_data, current_location,
+                      response_data)) return ;
+    else
+      isEndWithFileName(entire_path, request_data, current_location, response_data);
 }
 
 void PathFinder::manySlashesInUri(std::string locationBlock, t_server& server_data,
                                  Response& response_data, Request& request_data)
 {
   // "/block_name/b/c/d", "/??(location에 없음)/b/c/d"
-     //"a/b/c/d(디렉토리)", "/a/b/c/d/e(파일)"
-     //   std::string path = "/a/b/c/d";
-     // std::cout << "in this block" << std::endl;
+  //"a/b/c/d(디렉토리)", "/a/b/c/d/e(파일)"
     t_location current_location;
     std::map<std::string, t_location>::iterator temp_location;
     std::size_t pos_last;
 
     std::string location_key =
         (locationBlock).substr(0, (locationBlock).find("/", 1));
-    temp_location = server_data.locations.find(location_key);
-    if (temp_location == server_data.locations.end())
-    {  // "/??(location에 없음)/b/c/d" 경우 + "/(기본디렉토리)/(그 안의
-       // 디렉토리)/그 안의 파일"
-      current_location = server_data.locations.find("/")->second;
-      if (checkExist(current_location.root + locationBlock))
-      {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
-         //  인덱스 하려면 꼭 필요
-        std::string rest_of_uri =
-            (locationBlock).substr((locationBlock).find("/"));
-        std::cout << rest_of_uri << std::endl;
-        std::string entire_path = current_location.root + rest_of_uri;
-        pos_last = entire_path.rfind("/");
-        if (!is_directory(current_location.root + locationBlock))
-        {  // 파일로 끝나는 경로가 온 경우
-          setMaxSize(request_data, current_location.max_body_size);
-          setBasic(current_location.accepted_method,
-                   entire_path.substr(0, pos_last + 1),
-                   entire_path.substr(pos_last + 1),
-                   current_location.index,
-                   current_location.auto_index, current_location.uploaded_path,
-                   current_location.redirection, current_location.root,
-                   response_data);
-          return;
-        }
-        // // 디렉토리로 끝나는 경우가 온 경우
-        endWithDirectory(locationBlock, current_location, response_data, request_data);
-      }
-      else
-      {  // 존재하지 않는 블럭 && 디폴트 폴더 내부 파일 or 디렉토리도 아님
-        setMaxSize(request_data, current_location.max_body_size);
-        setBasic(current_location.accepted_method, "", "", "",
-                 current_location.auto_index, current_location.uploaded_path,
-                 current_location.redirection, current_location.root,
-                 response_data);
-      }
-      return;
-    }
-    current_location = temp_location->second;
-    std::string rest_of_uri =
-        (locationBlock).substr((locationBlock).find("/", 1));
-    std::string entire_path = current_location.root + rest_of_uri;
-    pos_last = entire_path.rfind("/");
-    if (is_directory(entire_path))  //"a/b/c/d(존재하는 디렉토리)"
-    {
-      if (entire_path[entire_path.length() - 1] == '/')
-          entire_path.pop_back(); //디렉토리뒤 '/'
-      setMaxSize(request_data, current_location.max_body_size);
-      setBasic(current_location.accepted_method, entire_path + "/",
-               "", current_location.index, current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection,
-               current_location.root, response_data);
-    }
+    if (firstBlockIsNotLocation(server_data, location_key, current_location,
+             locationBlock, response_data, request_data)) return ;
     else
-    {  //"/a/b/c/d/e(파일)" 경우
-      LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
-      setMaxSize(request_data, current_location.max_body_size);
-      setBasic(current_location.accepted_method,
-               entire_path.substr(0, pos_last + 1),
-               entire_path.substr(pos_last + 1), current_location.index,
-               current_location.auto_index,
-               current_location.uploaded_path, current_location.redirection,
-               current_location.root, response_data);
-    }
+      firstBlockIsLocation(location_key, server_data, locationBlock,
+                   request_data, response_data);
 }
 
 
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)
 {
-  std::string locationBlock;
-  t_location current_location;
-
-  locationBlock = request_data.uri;
+  std::string locationBlock = request_data.uri;
 
   if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
 
