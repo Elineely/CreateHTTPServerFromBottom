@@ -16,7 +16,10 @@ SRC_HTTPPROCESSOR_FILES				:=	HttpProcessor.cpp \
 										PathFinder.cpp
 
 SRC_CGI_HANDLER_DIR					:=	CgiHandler/
-SRC_CGI_HANDLER_FILES				:=	CgiHandler.cpp
+SRC_CGI_HANDLER_FILES				:=	CgiHandler.cpp 		\
+										env.cpp 			\
+										GetCgiHandler.cpp	\
+										PostCgiHandler.cpp
 
 SRC_PARSER_DIR						:=	Parser/
 SRC_PARSER_FILES					:=	Parser.cpp				\
@@ -56,9 +59,6 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 SRC_LOG_DIR				:=	Log/
 SRC_LOG_FILES			:=	Log.cpp
 
-SRC_TEMP_DIR			:= temp/
-SRC_TEMP_FILES			:= beforeHttpProcessor.cpp
-
 SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_INIT_DIR), $(SRC_INIT_FILES))		\
 							$(addprefix $(SRC_CONFIG_DIR), $(SRC_CONFIG_FILES))	\
@@ -68,8 +68,7 @@ SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
 							$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
 							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
-							$(addprefix $(SRC_LOG_DIR), $(SRC_LOG_FILES)) \
-							$(addprefix $(SRC_TEMP_DIR), $(SRC_TEMP_FILES))
+							$(addprefix $(SRC_LOG_DIR), $(SRC_LOG_FILES))
 
 SRCS					:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
