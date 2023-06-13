@@ -66,7 +66,6 @@ void Server::clientReadEvent(struct kevent *current_event)
   {
     // Set up the event structure
     t_event_udata *udata = new t_event_udata(PIPE);
-    t_event_udata *udata1 = new t_event_udata(PIPE);
     t_event_udata *udata2 = new t_event_udata(PROCESS);
 
     udata->m_read_pipe_fd = response.read_pipe_fd;
@@ -77,14 +76,6 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata->m_response = response;
     udata->m_other_udata = udata2;
 
-    udata1->m_read_pipe_fd = response.read_pipe_fd;
-    udata1->m_write_pipe_fd = response.write_pipe_fd;
-    udata1->m_child_pid = response.cgi_child_pid;
-    udata1->m_client_sock = current_event->ident;
-    udata1->m_parser = current_udata->m_parser;
-    udata1->m_response = response;
-    udata1->m_other_udata = udata2;
-
     udata2->m_read_pipe_fd = response.read_pipe_fd;
     udata2->m_write_pipe_fd = response.write_pipe_fd;
     udata2->m_child_pid = response.cgi_child_pid;
@@ -93,16 +84,31 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata2->m_response = response;
     udata2->m_other_udata = udata;
 
+
+    if (request.method == "POST")
+    {
+      t_event_udata *udata1 = new t_event_udata(PIPE);
+      udata1->m_read_pipe_fd = response.read_pipe_fd;
+      udata1->m_write_pipe_fd = response.write_pipe_fd;
+      udata1->m_child_pid = response.cgi_child_pid;
+      udata1->m_client_sock = current_event->ident;
+      udata1->m_parser = current_udata->m_parser;
+      udata1->m_response = response;
+      udata1->m_other_udata = udata2;
+      fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
+      AddEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
+                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata1);
+    }
+
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
-    fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
     AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd,
-                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata1);
-    AddEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
                          EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 600,
                          udata2);
-    Parser new_parser(current_udata->m_server.max_body_size[0]);
+
+    // 동일한 클라이언트의 다음 요청 받 위해 parser 초기화
+    Parser new_parser;
     current_udata->m_parser = new_parser;
   }
   else
@@ -123,7 +129,7 @@ void Server::clientReadEvent(struct kevent *current_event)
 
     AddEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    Parser new_parser(current_udata->m_server.max_body_size[0]);
+    Parser new_parser;
     current_udata->m_parser = new_parser;
   }
 }
@@ -134,22 +140,35 @@ void Server::pipeReadEvent(struct kevent *current_event)
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);
 
-  std::cout << "current_event->data:" << current_event->data << std::endl;
-  char buf[BUF_SIZE];
-  std::memset(buf, 0, BUF_SIZE);
-  ssize_t read_byte = read(current_event->ident, buf, BUF_SIZE);
+  char temp_buf[BUF_SIZE];
+  ssize_t read_byte = read(current_event->ident, temp_buf, BUF_SIZE);
   std::cout << "read_byte: " << read_byte << std::endl;
+  
+  char *buf = new char[read_byte]();
+  std::memmove(buf, temp_buf, read_byte);
+
   if (read_byte > 0)
   {
-    for (int i = 0; i < read_byte; ++i)
-    {
-      current_udata->m_result.push_back(buf[i]);
-    }
+    current_udata->m_read_buffer.push_back(buf);
+    current_udata->m_read_bytes.push_back(read_byte);
+    current_udata->m_total_read_byte += read_byte;
     return;
   }
   wait(NULL);
   if (current_event->flags & EV_EOF)
   {
+    current_udata->m_result.reserve(current_udata->m_total_read_byte);
+    for (int i=0; i<current_udata->m_read_buffer.size(); ++i)
+    {
+
+      for (int j=0; j<current_udata->m_read_bytes[i]; ++j)
+      {
+        current_udata->m_result.push_back(current_udata->m_read_buffer[i][j]);
+      }
+      delete current_udata->m_read_buffer[i];
+    }
+
+    
     close(current_event->ident);
     LOG_DEBUG("EOF reached");
     std::vector<char> response_message;
