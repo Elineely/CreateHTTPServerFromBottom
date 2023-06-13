@@ -397,12 +397,29 @@ void PathFinder::manySlashesInUri(std::string locationBlock,
                          response_data);
 }
 
+void  PathFinder::setErrorPage(Request& request_data, t_server server_data, Response& response_data)
+{
+  std::string host = request_data.headers.find("host")->second;
+  std::string page_uri = server_data.error_page[0];
+  std::string root_path = (server_data.locations.find("/")->second).root + "/";
+
+  if (!checkExist(root_path + page_uri))
+  {
+    throw NOT_FOUND_404;
+  }
+  root_path = root_path.substr(1);
+  std::string total_url = host + root_path + page_uri;
+  response_data.error_redirection = total_url;
+};
+
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)
 {
   std::string locationBlock = request_data.uri;
 
   if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
+
+  setErrorPage(request_data, server_data, response_data);
 
   if (isRootBlock(locationBlock, server_data, response_data, request_data))
     return;
