@@ -1,9 +1,12 @@
 #include "Server.hpp"
 
 #include "Log.hpp"
-#include "beforeHttpProcessor.hpp"
 
-void Server::AddEventToChangeList(
+void Server::disconnectSocket(int socket) { close(socket); }
+
+const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
+
+void Server::addEventToChangeList(
     std::vector<struct kevent> &change_list,
     uintptr_t ident, /* identifier for this event */
     int16_t filter,  /* filter for event */
@@ -16,17 +19,6 @@ void Server::AddEventToChangeList(
 
   EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
   change_list.push_back(temp_event);
-}
-
-void Server::disconnect_socket(int socket) { close(socket); }
-
-int is_server_sock(std::vector<t_multi_server> servers, int sock)
-{
-  for (int i = 0; i < servers.size(); ++i)
-  {
-    if (servers[i].server_sock == sock) return 1;
-  }
-  return 0;
 }
 
 e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
@@ -63,9 +55,17 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
   return NOTHING;
 }
 
-const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
+void Server::serverSocketEventAdd(std::vector<t_multi_server> &servers)
+{
+  for (int i = 0; i < servers.size(); ++i)
+  {
+    t_event_udata *udata = new t_event_udata(SERVER, servers[i].config);
+    addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
+  }
+}
 
-Server::Server(const Config &server_conf) : m_count(0)
+Server::Server(const Config &server_conf)
 {
   setServers(server_conf, servers);
   LOG_INFO("Successfully set servers");
@@ -80,18 +80,36 @@ Server::Server(const Config &server_conf) : m_count(0)
   LOG_INFO("Successfully listen server socket");
 
   m_kqueue.kq = getKqueue();
-  LOG_INFO("Successfully listen server socket");
+  LOG_INFO("Successfully create kqueue");
 
+  serverSocketEventAdd(servers);
+}
+
+Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
+
+Server::Server(const Server &other)
+{
+  std::cout << "Server Constructor Call" << std::endl;
+  *this = other;
+}
+
+Server::~Server() { std::cout << "Server Destructor Call" << std::endl; }
+
+Server &Server::operator=(const Server &other)
+{
+  if (this == &other) return *this;
+  LOG_DEBUG("Server Assignment Operator Call");
+  return *this;
+}
+
+void Server::start(void)
+{
   int current_events;
   e_kqueue_event event_status;
   struct kevent *current_event;
   t_event_udata *current_udata;
-  for (int i = 0; i < servers.size(); ++i)
-  {
-    t_event_udata *udata = new t_event_udata(SERVER, servers[i].config);
-    AddEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
-                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
-  }
+
+  Log::start();
   while (1)
   {
     current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0],
@@ -155,7 +173,7 @@ Server::Server(const Config &server_conf) : m_count(0)
         case CLIENT_ERROR:
         {
           LOG_ERROR("🐛 Client socket error 🐛");
-          disconnect_socket(current_event->ident);
+          disconnectSocket(current_event->ident);
           break;
         }
 
@@ -173,21 +191,4 @@ Server::Server(const Config &server_conf) : m_count(0)
     close(servers[i].server_sock);
   }
   return;
-}
-
-Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
-
-Server::Server(const Server &other)
-{
-  std::cout << "Server Constructor Call" << std::endl;
-  *this = other;
-}
-
-Server::~Server() { std::cout << "Server Destructor Call" << std::endl; }
-
-Server &Server::operator=(const Server &other)
-{
-  if (this == &other) return *this;
-  LOG_DEBUG("Server Assignment Operator Call");
-  return *this;
 }

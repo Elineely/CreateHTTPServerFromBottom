@@ -67,7 +67,7 @@ struct t_kqueue
   std::map<int, std::string> socket_clients;
 };
 
-void AddEventToChangeList(std::vector<struct kevent> &change_list,
+void addEventToChangeList(std::vector<struct kevent> &change_list,
                           uintptr_t ident, /* identifier for this event */
                           int16_t filter,  /* filter for event */
                           uint16_t flags,  /* general flags */
@@ -154,9 +154,9 @@ void executeChildProcess(t_kqueue &m_kqueue)
     close(pipe_fd[WRITE]);
 
     // Set up the event structure
-    AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_TIMER,
+    addEventToChangeList(m_kqueue.change_list, pid, EVFILT_TIMER,
                          EV_ADD | EV_ONESHOT, NOTE_SECONDS, 10, NULL);
-    AddEventToChangeList(m_kqueue.change_list, pid, EVFILT_PROC, EV_ADD,
+    addEventToChangeList(m_kqueue.change_list, pid, EVFILT_PROC, EV_ADD,
                          NOTE_EXIT, 0, NULL);
 
     while (1)
@@ -196,7 +196,7 @@ void executeChildProcess(t_kqueue &m_kqueue)
           close(pipe_fd[READ]);
           wait(NULL);
 
-          AddEventToChangeList(m_kqueue.change_list, current_event.ident,
+          addEventToChangeList(m_kqueue.change_list, current_event.ident,
                                EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
         }
         else if (current_event.filter == EVFILT_TIMER)
@@ -206,7 +206,7 @@ void executeChildProcess(t_kqueue &m_kqueue)
           std::cout << "kill result: " << result << std::endl;
           wait(NULL);
 
-          AddEventToChangeList(m_kqueue.change_list, current_event.ident,
+          addEventToChangeList(m_kqueue.change_list, current_event.ident,
                                EVFILT_PROC, EV_DELETE, 0, 0, NULL);
         }
       }

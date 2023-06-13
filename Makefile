@@ -40,6 +40,7 @@ SRC_SERVER_FILES		:=	Server.cpp 				\
 							socket/bind.cpp			\
 							socket/kqueue.cpp		\
 							socket/setServers.cpp 	\
+							socket/accept.cpp		\
 							event/error.cpp 		\
 							event/read.cpp 			\
 							event/timer.cpp 		\

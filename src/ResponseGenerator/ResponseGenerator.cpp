@@ -1,9 +1,10 @@
 #include "ResponseGenerator.hpp"
-#include "Log.hpp"
 
 #include <ctime>
 #include <fstream>
 #include <string>
+
+#include "Log.hpp"
 
 // canonical
 Response::Response()
@@ -28,10 +29,7 @@ Response::Response()
   cgi_child_pid = -1;
 }
 
-Response::Response(const Response& obj)
-{
-  *this = obj;
-}
+Response::Response(const Response& obj) { *this = obj; }
 
 Response::~Response() {}
 
@@ -128,13 +126,10 @@ void ResponseGenerator::cgiDataProcess()
   m_cgi_body = cgi_body;
 }
 
-ResponseGenerator::ResponseGenerator() {}
 ResponseGenerator::ResponseGenerator(Request& request_data,
                                      Response& response_data)
-// : m_request(request_data), m_response(response_data)
+    : m_request(request_data), m_response(response_data)
 {
-  m_request = request_data;
-  m_response = response_data;
   if (response_data.auto_index == true && m_response.file_exist == false)
     m_target_file = "autoindex.html";
   else
@@ -149,9 +144,8 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
 }
 
 ResponseGenerator::ResponseGenerator(const ResponseGenerator& obj)
+    : m_request(obj.m_request), m_response(obj.m_response)
 {
-  m_request = obj.m_request;
-  m_response = obj.m_response;
   m_target_file = obj.m_response.file_path + obj.m_response.file_name;
 }
 
@@ -317,7 +311,7 @@ std::vector<char> ResponseGenerator::generateErrorResponseMessage()
   return (m_response.response_message);
 }
 
-std::vector<char> ResponseGenerator::generateResponseMessage()
+std::vector<char>& ResponseGenerator::generateResponseMessage()
 {
   try
   {
