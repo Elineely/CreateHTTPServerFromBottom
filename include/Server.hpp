@@ -36,7 +36,7 @@
 #include "ResponseGenerator.hpp"
 
 // Server 세팅
-#define BUF_SIZE 65535
+#define BUF_SIZE 650000
 #define MAX_EVENT_LIST_SIZE 8
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
@@ -115,6 +115,9 @@ struct t_event_udata
   int m_server_sock;
   size_t m_pipe_write_offset;
   pid_t m_child_pid;
+  size_t m_total_read_byte;
+  std::vector<size_t> m_read_bytes;
+  std::vector<char *> m_read_buffer;
   std::vector<char> m_result;
   t_response_write m_response_write;
   t_server m_server;
@@ -123,22 +126,23 @@ struct t_event_udata
   struct t_event_udata *m_other_udata;
 
   t_event_udata(e_event_type type)
-      : m_type(type), m_other_udata(NULL), m_pipe_write_offset(0)
+      : m_type(type), m_other_udata(NULL), m_pipe_write_offset(0), m_total_read_byte(0)
   {
   }
   t_event_udata(e_event_type type, std::vector<char> message, size_t length)
       : m_type(type),
         m_response_write(message, length),
         m_other_udata(NULL),
-        m_pipe_write_offset(0)
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
   t_event_udata(e_event_type type, t_server config)
       : m_type(type),
         m_server(config),
-        m_parser(config.max_body_size[0]),
         m_other_udata(NULL),
-        m_pipe_write_offset(0)
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
 
@@ -149,9 +153,9 @@ struct t_event_udata
         m_client_sock(client_sock),
         m_child_pid(pid),
         m_server(config),
-        m_parser(m_server.max_body_size[0]),
         m_other_udata(NULL),
-        m_pipe_write_offset(0)
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
 
