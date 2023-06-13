@@ -32,10 +32,31 @@ class PathFinder
                 std::string auto_index,
                 std::string upload, std::string redirection,
                 std::string root_path, Response& response_data);
-  void test_print_location(t_location& c);
-  void test_print_basics(Response& c);
-  void checkMaxSize(Request request_data, long long max_body_size);
   void setMaxSize(Request request_data, std::string max_body_size);
+  void checkMaxSize(Request request_data, long long max_body_size);
+
+
+
+  //functions for abstraction
+  bool isRootBlock(std::string locationBlock, t_server& server_data,
+                              Response& response_data, Request& request_data);
+  bool isCgiBlock(std::string locationBlock, t_server& server_data,
+                              Response& response_data);
+  void oneSlashInUri(t_server& server_data, std::string locationBlock,
+                              Response& response_data, Request& request_data);
+  void manySlashesInUri(std::string locationBlock, t_server& server_data,
+                              Response& response_data, Request& request_data);
+  bool isEndWithDirectory(std::string locationBlock, t_location current_location,
+                  Response& response_data, Request& request_data);
+  bool isEndWithExistDirectory(std::string entire_path, Request& request_data,
+                  t_location current_location, Response& response_data);
+  bool isEndWithFileName(std::string entire_path, Request& request_data, t_location current_location,
+                  Response& response_data);
+  bool firstBlockIsNotLocation(t_server& server_data, std::string location_key,
+                  t_location current_location, std::string locationBlock, 
+                  Response& response_data, Request& request_data);
+  void firstBlockIsLocation(std::string location_key, t_server& server_data,
+                    std::string locationBlock, Request& request_data, Response& response_data);
 
  public:
  //main_constructor
