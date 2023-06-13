@@ -143,7 +143,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
   char temp_buf[BUF_SIZE];
   ssize_t read_byte = read(current_event->ident, temp_buf, BUF_SIZE);
   std::cout << "read_byte: " << read_byte << std::endl;
-  
+
   char *buf = new char[read_byte]();
   std::memmove(buf, temp_buf, read_byte);
 
@@ -168,7 +168,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
       delete current_udata->m_read_buffer[i];
     }
 
-    
+
     close(current_event->ident);
     LOG_DEBUG("EOF reached");
     std::vector<char> response_message;
@@ -185,6 +185,6 @@ void Server::pipeReadEvent(struct kevent *current_event)
     AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
     delete current_udata->m_other_udata;
-    // delete current_udata;
+    delete current_udata;
   }
 }
