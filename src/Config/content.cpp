@@ -29,7 +29,7 @@ void configErrorExit(const char *error_message, int current_line, int exit_flag)
 t_location Config::get_location_expand(std::ifstream &config_file,
                                        std::string config_file_name,
                                        content_list_type vaild_content_list,
-                                       int content_size)
+                                       int content_size, std::string server_max_size)
 {
   if (isContentCount(content_size, 3))
   {
@@ -68,6 +68,11 @@ t_location Config::get_location_expand(std::ifstream &config_file,
   temp_location.uploaded_path = temp_location_map["uploaded_path"];
   temp_location.accepted_method = temp_location_map["accepted_method"];
   temp_location.redirection = temp_location_map["redirection"];
+  temp_location.max_body_size = server_max_size;
+  if ( temp_location_map["max_body_size"] != "")
+  {
+    temp_location.max_body_size =  temp_location_map["max_body_size"];
+  }
 
   return temp_location;
 }
@@ -100,7 +105,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
       temp_locations.insert(std::pair<std::string, t_location>(
           split_content_line[1],
           get_location_expand(file, config_file_name, vaild_content_list,
-                              split_content_line.size())));
+                              split_content_line.size(), temp_conf["max_body_size"][0])));
     }
     else
     {
@@ -118,6 +123,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.listen = temp_conf["listen"];
   server.max_body_size = temp_conf["max_body_size"];
   server.max_header_size = temp_conf["max_header_size"];
+  server.error_page = temp_conf["error_page"];
   server.locations = temp_locations;
 
   return server;

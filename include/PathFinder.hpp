@@ -34,6 +34,8 @@ class PathFinder
                 std::string root_path, Response& response_data);
   void test_print_location(t_location& c);
   void test_print_basics(Response& c);
+  void checkMaxSize(Request request_data, long long max_body_size);
+  void setMaxSize(Request request_data, std::string max_body_size);
 
  public:
  //main_constructor

@@ -32,7 +32,7 @@
 
 // Paser header
 #include "Config.hpp"
-#include "Parser.hpp"
+#include "Parser.hpp"                               
 #include "ResponseGenerator.hpp"
 
 // Server 세팅
@@ -40,7 +40,7 @@
 #define MAX_EVENT_LIST_SIZE 8
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
-#define BACK_LOG 5
+#define BACK_LOG SOMAXCONN
 
 // 실행프로그램 기준으로 상대 경로를 정의한다
 #define DEFAULT_SERVER_FILE "./server.conf"

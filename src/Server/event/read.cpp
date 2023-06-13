@@ -66,6 +66,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   {
     // Set up the event structure
     t_event_udata *udata = new t_event_udata(PIPE);
+    t_event_udata *udata1 = new t_event_udata(PIPE);
     t_event_udata *udata2 = new t_event_udata(PROCESS);
 
     udata->m_read_pipe_fd = response.read_pipe_fd;
@@ -75,6 +76,14 @@ void Server::clientReadEvent(struct kevent *current_event)
     udata->m_parser = current_udata->m_parser;
     udata->m_response = response;
     udata->m_other_udata = udata2;
+
+    udata1->m_read_pipe_fd = response.read_pipe_fd;
+    udata1->m_write_pipe_fd = response.write_pipe_fd;
+    udata1->m_child_pid = response.cgi_child_pid;
+    udata1->m_client_sock = current_event->ident;
+    udata1->m_parser = current_udata->m_parser;
+    udata1->m_response = response;
+    udata1->m_other_udata = udata2;
 
     udata2->m_read_pipe_fd = response.read_pipe_fd;
     udata2->m_write_pipe_fd = response.write_pipe_fd;
@@ -86,6 +95,8 @@ void Server::clientReadEvent(struct kevent *current_event)
 
     fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
     fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
+    AddEventToChangeList(m_kqueue.change_list, response.read_pipe_fd,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata1);
     AddEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     AddEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
@@ -155,6 +166,6 @@ void Server::pipeReadEvent(struct kevent *current_event)
     AddEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
     delete current_udata->m_other_udata;
-    delete current_udata;
+    // delete current_udata;
   }
 }

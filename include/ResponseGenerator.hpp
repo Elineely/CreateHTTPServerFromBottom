@@ -78,13 +78,14 @@ class ResponseGenerator
   void setBody();
 
   ResponseGenerator();
+  std::vector<char> generateErrorResponseMessage();
+
  public:
   ResponseGenerator(const ResponseGenerator& obj);
   ResponseGenerator(Request& request_data, Response& response_data);
   ~ResponseGenerator();
   ResponseGenerator& operator=(const ResponseGenerator& obj);
 
-  std::vector<char> generateErrorResponseMessage();
   std::vector<char> generateResponseMessage();
 };
 
