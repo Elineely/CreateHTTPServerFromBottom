@@ -94,6 +94,7 @@ void CgiHandler::setCgiEnv(void)
   }
   if (m_request_data.headers["x-secret-header-for-test"] != "")
   {
+    m_env_list.push_back("X_SECRET_HEADER_FOR_TEST=1");
     m_env_list.push_back("HTTP_X_SECRET_HEADER_FOR_TEST=1");
   }
 
@@ -256,6 +257,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
     else
     {
       close(m_to_child_fds[READ]);
+      close(m_to_child_fds[WRITE]);
       close(m_to_parent_fds[WRITE]);
 
       m_response_data.read_pipe_fd = m_to_parent_fds[READ];
