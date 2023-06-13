@@ -1,17 +1,6 @@
 #include "CgiHandler.hpp"
-#include "Log.hpp"
 
-#define SUCCESS 0
-#define RETURN_ERROR -1
-
-#define READ 0
-#define WRITE 1
-
-#define CHILD_PROCESS 0
-
-/* ******************** */
-/* PostCgiHandler class */
-/* ******************** */
+// canonical form
 
 PostCgiHandler::PostCgiHandler() {}
 
@@ -20,8 +9,6 @@ PostCgiHandler::~PostCgiHandler() {}
 PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
     : CgiHandler(request_data, response_data)
 {
-  // m_request_data = request_data;
-  // m_response_data = response_data;
 }
 
 PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj) { *this = obj; }
@@ -45,38 +32,10 @@ PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
 
 // member functions
 
-void PostCgiHandler::pipeAndFork()
-{
-  if (pipe(m_to_child_fds) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to create m_to_child_fds pipe");
-    throw PipeForkException();
-  }
-
-  if (pipe(m_to_parent_fds) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to create m_to_parent_fds pipe");
-    close(m_to_child_fds[READ]);
-    close(m_to_child_fds[WRITE]);
-    throw PipeForkException();
-  }
-
-  m_pid = fork();
-  if (m_pid == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to fork");
-    close(m_to_child_fds[READ]);
-    close(m_to_child_fds[WRITE]);
-    close(m_to_parent_fds[READ]);
-    close(m_to_parent_fds[WRITE]);
-    throw PipeForkException();
-  }
-}
-
 void PostCgiHandler::executeCgi()
 {
-
   close(m_to_child_fds[WRITE]);
+
   if (dup2(m_to_child_fds[READ], STDIN_FILENO) == -1)
   {
     LOG_ERROR("failed to dup2(%d, %d)", m_to_child_fds, STDIN_FILENO);
@@ -95,8 +54,6 @@ void PostCgiHandler::executeCgi()
     exit(EXIT_FAILURE);
   }
   close(m_to_parent_fds[WRITE]);
-
-
 
   setCgiEnv();
   // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
