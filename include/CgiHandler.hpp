@@ -9,11 +9,19 @@
 
 #include "Request.hpp"
 #include "ResponseGenerator.hpp"
+#include "Log.hpp"
 
+#define SUCCESS 0
+#define RETURN_ERROR -1
 
-/* ************************ */
-/* CgiHandler virtual class */
-/* ************************ */
+#define READ 0
+#define WRITE 1
+
+#define CHILD_PROCESS 0
+
+/* **************** */
+/* CgiHandler class */
+/* **************** */
 
 class CgiHandler
 {
@@ -34,10 +42,10 @@ class CgiHandler
   pid_t m_pid;
 
   // member functions
+  void pipeAndFork(void);
   void setCgiEnv(void);
   std::vector<char> makeErrorPage(void);
 
-  virtual void pipeAndFork(void) = 0;
   virtual void executeCgi(void) = 0;
 
  public:
@@ -89,7 +97,6 @@ class GetCgiHandler : public CgiHandler
   virtual void outsourceCgiRequest(void);
 
  private:
-  virtual void pipeAndFork(void);
   virtual void executeCgi(void);
 };
 
@@ -110,7 +117,6 @@ class PostCgiHandler : public CgiHandler
   virtual void outsourceCgiRequest(void);
 
  private:
-  virtual void pipeAndFork(void);
   virtual void executeCgi(void);
 };
 

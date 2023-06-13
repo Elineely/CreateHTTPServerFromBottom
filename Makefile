@@ -17,7 +17,6 @@ SRC_HTTPPROCESSOR_FILES				:=	HttpProcessor.cpp \
 
 SRC_CGI_HANDLER_DIR					:=	CgiHandler/
 SRC_CGI_HANDLER_FILES				:=	CgiHandler.cpp 		\
-										env.cpp 			\
 										GetCgiHandler.cpp	\
 										PostCgiHandler.cpp
 

@@ -1,17 +1,6 @@
 #include "CgiHandler.hpp"
-#include "Log.hpp"
 
-#define SUCCESS 0
-#define RETURN_ERROR -1
-
-#define READ 0
-#define WRITE 1
-
-#define CHILD_PROCESS 0
-
-/* ******************* */
-/* GetCgiHandler class */
-/* ******************* */
+// canonical form
 
 GetCgiHandler::GetCgiHandler() {}
 
@@ -22,8 +11,7 @@ GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
 
 GetCgiHandler::~GetCgiHandler() {}
 
-// GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj)
-// {}
+GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj) { *this = obj; }
 
 GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
 {
@@ -43,34 +31,6 @@ GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
 }
 
 // member functions
-
-void GetCgiHandler::pipeAndFork()
-{
-  if (pipe(m_to_child_fds) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to create m_to_child_fds pipe");
-    throw PipeForkException();
-  }
-
-  if (pipe(m_to_parent_fds) == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to create m_to_parent_fds pipe");
-    close(m_to_child_fds[READ]);
-    close(m_to_child_fds[WRITE]);
-    throw PipeForkException();
-  }
-
-  m_pid = fork();
-  if (m_pid == RETURN_ERROR)
-  {
-    LOG_ERROR("Failed to fork");
-    close(m_to_child_fds[READ]);
-    close(m_to_child_fds[WRITE]);
-    close(m_to_parent_fds[READ]);
-    close(m_to_parent_fds[WRITE]);
-    throw PipeForkException();
-  }
-}
 
 void GetCgiHandler::executeCgi()
 {
@@ -95,6 +55,7 @@ void GetCgiHandler::executeCgi()
 
   close(m_to_child_fds[READ]);
   close(m_to_parent_fds[WRITE]);
+
   setCgiEnv();
   // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   // std::string cgi_file = m_response_data.root_path + "/" +
