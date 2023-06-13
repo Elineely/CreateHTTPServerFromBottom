@@ -32,12 +32,11 @@
 
 // Paser header
 #include "Config.hpp"
-#include "Parser.hpp"
-
+#include "Parser.hpp"                               
 #include "ResponseGenerator.hpp"
 
 // Server 세팅
-#define BUF_SIZE 65535
+#define BUF_SIZE 650000
 #define MAX_EVENT_LIST_SIZE 8
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
@@ -66,6 +65,7 @@ enum e_kqueue_event
   CGI_PROCESS_TIMEOUT,
   SERVER_EOF,
   CLIENT_EOF,
+  PIPE_WRITE,
   PIPE_READ,
   PIPE_EOF,
   NOTHING
@@ -109,10 +109,15 @@ struct t_response_write
 struct t_event_udata
 {
   e_event_type m_type;
-  int m_pipe_read_fd;
+  int m_read_pipe_fd;
+  int m_write_pipe_fd;
   int m_client_sock;
   int m_server_sock;
+  size_t m_pipe_write_offset;
   pid_t m_child_pid;
+  size_t m_total_read_byte;
+  std::vector<size_t> m_read_bytes;
+  std::vector<char *> m_read_buffer;
   std::vector<char> m_result;
   t_response_write m_response_write;
   t_server m_server;
@@ -120,28 +125,37 @@ struct t_event_udata
   Response m_response;
   struct t_event_udata *m_other_udata;
 
-  t_event_udata(e_event_type type) : m_type(type), m_other_udata(NULL) {}
+  t_event_udata(e_event_type type)
+      : m_type(type), m_other_udata(NULL), m_pipe_write_offset(0), m_total_read_byte(0)
+  {
+  }
   t_event_udata(e_event_type type, std::vector<char> message, size_t length)
-      : m_type(type), m_response_write(message, length), m_other_udata(NULL)
+      : m_type(type),
+        m_response_write(message, length),
+        m_other_udata(NULL),
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
   t_event_udata(e_event_type type, t_server config)
       : m_type(type),
         m_server(config),
-        m_parser(config.max_body_size[0]),
-        m_other_udata(NULL)
+        m_other_udata(NULL),
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
 
-  t_event_udata(e_event_type type, int pipe_read_fd, int client_sock, pid_t pid,
+  t_event_udata(e_event_type type, int read_pipe_fd, int client_sock, pid_t pid,
                 t_server config)
       : m_type(type),
-        m_pipe_read_fd(pipe_read_fd),
+        m_read_pipe_fd(read_pipe_fd),
         m_client_sock(client_sock),
         m_child_pid(pid),
         m_server(config),
-        m_parser(m_server.max_body_size[0]),
-        m_other_udata(NULL)
+        m_other_udata(NULL),
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
 
@@ -160,7 +174,7 @@ class Server
  private:
   std::vector<t_multi_server> servers;
   t_kqueue m_kqueue;
-  Config server; // TODO: 꼭 멤버변수로 가지고 있어야 하는가?
+  Config server;  // TODO: 꼭 멤버변수로 가지고 있어야 하는가?
   int m_count;
   Server();
 
@@ -189,6 +203,7 @@ class Server
   void serverReadEvent(struct kevent *current_event);
   void serverErrorEvent(struct kevent *current_event);
 
+  void pipeWriteEvent(struct kevent *current_event);
   void pipeReadEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);

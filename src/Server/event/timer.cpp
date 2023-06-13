@@ -9,7 +9,8 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   t_event_udata *current_udata =
       static_cast<t_event_udata *>(current_event->udata);
 
-  close(current_udata->m_pipe_read_fd);
+  close(current_udata->m_read_pipe_fd);
+  close(current_udata->m_write_pipe_fd);
   int result = kill(current_event->ident, SIGTERM);
   waitpid(current_event->ident, NULL, 0);
 

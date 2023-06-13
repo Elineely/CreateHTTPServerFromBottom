@@ -8,17 +8,7 @@
 #include "utils.hpp"
 
 // Default Constructor
-Parser::Parser(void) : m_max_body_size(0) {}
-
-// Constructor
-Parser::Parser(const std::string& max_body_size)
-{
-  std::istringstream iss(max_body_size);
-  size_t value;
-
-  iss >> value;
-  m_max_body_size = value * MB_TO_BYTE;  // Binary 기준으로 변환
-}
+Parser::Parser(void) {}
 
 // Destructor
 Parser::~Parser(void) {}
@@ -39,7 +29,6 @@ Parser& Parser::operator=(Parser const& rhs)
   {
     m_request = rhs.m_request;
     m_pool = rhs.m_pool;
-    m_max_body_size = rhs.m_max_body_size;
   }
   return *this;
 }
@@ -153,8 +142,7 @@ void Parser::readBuffer(char* buf, int recv_size)
           break;
       }
 
-      if (m_request.validation_phase == COMPLETE ||
-          m_pool.line_len == m_pool.offset)
+      if (m_request.validation_phase == COMPLETE)
       {
         return;
       }

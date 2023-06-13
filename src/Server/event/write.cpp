@@ -1,5 +1,5 @@
-#include "Server.hpp"
 #include "Log.hpp"
+#include "Server.hpp"
 
 void Server::clientWriteEvent(struct kevent *current_event)
 {
@@ -24,5 +24,54 @@ void Server::clientWriteEvent(struct kevent *current_event)
   }
   AddEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
+                       
   delete udata;
+}
+
+void Server::pipeWriteEvent(struct kevent *current_event)
+{
+  LOG_INFO("🛎 PIPE WRITE EVENT 🛎");
+
+  t_event_udata *current_udata;
+  int possible_write_length;
+  size_t request_body_size;
+  size_t pipe_write_length;
+  size_t pipe_write_offset;
+  ssize_t write_byte;
+
+  current_udata = static_cast<t_event_udata *>(current_event->udata);
+  struct Request& current_request = current_udata->m_parser.get_request();
+  possible_write_length = current_event->data;
+  pipe_write_offset = current_udata->m_pipe_write_offset;
+  request_body_size = current_request.body.size();
+
+  if (possible_write_length > 0)
+  {
+    if (request_body_size - pipe_write_offset > possible_write_length)
+    {
+      pipe_write_length = possible_write_length;
+    }
+    else
+    {
+      pipe_write_length = request_body_size - pipe_write_offset;
+    }
+    write_byte =
+        write(current_udata->m_write_pipe_fd,
+              &current_request.body[pipe_write_offset], pipe_write_length);
+    
+    LOG_DEBUG("write_byte: %d", write_byte);
+    if (write_byte == -1)
+    {
+      LOG_ERROR("write error");
+    }
+    else
+    {
+      current_udata->m_pipe_write_offset += write_byte;
+    }
+  }
+
+  if (current_udata->m_pipe_write_offset == request_body_size)
+  {
+    close(current_udata->m_write_pipe_fd);
+  }
 }
