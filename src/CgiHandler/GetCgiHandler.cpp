@@ -57,12 +57,12 @@ void GetCgiHandler::executeCgi()
   close(m_to_parent_fds[WRITE]);
 
   setCgiEnv();
-  // const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
-  // std::string cgi_file = m_response_data.root_path + "/" +
-  // m_response_data.file_name;
-  const char* argv[] = {"./cgi_tester", NULL};
+  const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
+  std::string cgi_file = m_response_data.root_path + "/" +
+  m_response_data.file_name;
+  const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
-  if (execve("./cgi_tester", const_cast<char* const*>(argv),
+  if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
     // LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
