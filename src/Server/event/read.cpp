@@ -11,10 +11,18 @@ void Server::serverReadEvent(struct kevent *current_event)
   t_event_udata *current_udata;
   t_event_udata *udata;
 
+  current_udata = static_cast<t_event_udata *>(current_event->udata);
+  if (current_event->flags & EV_EOF)
+  {
+    disconnectSocket(current_event->ident);
+    if (current_udata->m_other_udata != NULL)
+      delete current_udata->m_other_udata;
+    delete current_event->udata;
+    return;
+  }
   client_sock = clientReadAccept(current_event);
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-  current_udata = static_cast<t_event_udata *>(current_event->udata);
   udata = new t_event_udata(CLIENT, current_udata->m_server);
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
@@ -101,7 +109,8 @@ void Server::clientReadEvent(struct kevent *current_event)
   if (current_event->flags & EV_EOF)
   {
     LOG_INFO("💥 Client socket(fd: %d) will be close 💥", current_event->ident);
-    t_event_udata* current_udata = static_cast<t_event_udata*>(current_event->udata);
+    t_event_udata *current_udata =
+        static_cast<t_event_udata *>(current_event->udata);
     if (current_udata->m_other_udata != NULL)
     {
       delete current_udata->m_other_udata;
