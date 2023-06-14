@@ -101,6 +101,12 @@ void Server::clientReadEvent(struct kevent *current_event)
   if (current_event->flags & EV_EOF)
   {
     LOG_INFO("💥 Client socket(fd: %d) will be close 💥", current_event->ident);
+    t_event_udata* current_udata = static_cast<t_event_udata*>(current_event->udata);
+    if (current_udata->m_other_udata != NULL)
+    {
+      delete current_udata->m_other_udata;
+    }
+    delete current_udata;
     disconnectSocket(current_event->ident);
     return;
   }
@@ -134,17 +140,18 @@ void Server::clientReadEvent(struct kevent *current_event)
 
 void Server::pipeReadEvent(struct kevent *current_event)
 {
-  ssize_t read_byte;
+  char *buf;
   char temp_buf[BUF_SIZE];
+  ssize_t read_byte;
   t_event_udata *current_udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   read_byte = read(current_event->ident, temp_buf, BUF_SIZE);
 
-  char *buf = new char[read_byte]();
-  std::memmove(buf, temp_buf, read_byte);
   if (read_byte > 0)
   {
+    buf = new char[read_byte]();
+    std::memmove(buf, temp_buf, read_byte);
     current_udata->m_read_buffer.push_back(buf);
     current_udata->m_read_bytes.push_back(read_byte);
     current_udata->m_total_read_byte += read_byte;
