@@ -66,6 +66,9 @@ class Config
                                  std::string config_file_name,
                                  content_list_type vaild_content_list,
                                  int content_size, std::string server_max_size);
+  bool isVaildServerBlock(t_server &server, int line_number);
+  bool isVaildLocationBlock(t_location &location, int line_number);
+
   void showServerConf();
 };
 

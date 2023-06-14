@@ -2,7 +2,8 @@
 
 #include "Log.hpp"
 
-void set_vaild_content_list(std::ifstream &content_file,
+void 
+set_vaild_content_list(std::ifstream &content_file,
                             content_list_type &vaild_content_list)
 {
   std::string read_line;
