@@ -1,5 +1,5 @@
-#include "Server.hpp"
 #include "Log.hpp"
+#include "Server.hpp"
 
 int Server::clientReadAccept(struct kevent *current_event)
 {
@@ -14,6 +14,16 @@ int Server::clientReadAccept(struct kevent *current_event)
     LOG_ERROR("Failed to accept client socket (strerror: %s)", strerror(errno));
     return (-1);
   }
-  LOG_INFO("🌵 Client Socket fd %d is created 🌵", client_sock);
+  struct linger
+  {
+    int l_onoff;
+    int l_linger;
+  };
+  struct linger _linger;
+
+  _linger.l_onoff = 1;
+  _linger.l_linger = 0;
+  setsockopt(client_sock, SOL_SOCKET, SO_LINGER, &_linger, sizeof(_linger));
+  // LOG_INFO("🌵 Client Socket fd %d is created 🌵", client_sock);
   return (client_sock);
 }
