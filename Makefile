@@ -48,9 +48,6 @@ SRC_SERVER_FILES		:=	Server.cpp 				\
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_split.cpp			\
-							ft_strdup.cpp			\
-							ft_strjoin.cpp			\
-							ft_strlen.cpp			\
 							ft_strtrim.cpp			\
 							ft_toLower.cpp			\
 							ft_error.cpp			\
