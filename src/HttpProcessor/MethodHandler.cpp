@@ -269,7 +269,10 @@ DeleteMethodHandler& DeleteMethodHandler::operator=(
 }
 void DeleteMethodHandler::methodRun()
 {
-  if (m_response_data.path_exist == false) throw BAD_REQUEST_400;
+  if (m_response_data.path_exist == false)
+  {
+    throw BAD_REQUEST_400;
+  }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
   if (m_response_data.file_exist == true)
@@ -302,7 +305,10 @@ PutMethodHandler& PutMethodHandler::operator=(PutMethodHandler const& obj)
 }
 void PutMethodHandler::methodRun()
 {
-  if (m_response_data.path_exist == false) throw BAD_REQUEST_400;
+  if (m_response_data.path_exist == false)
+  {
+    throw BAD_REQUEST_400;
+  }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
 
