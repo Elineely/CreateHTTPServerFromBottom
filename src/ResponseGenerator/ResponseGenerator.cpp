@@ -26,7 +26,7 @@ Response::Response()
   read_pipe_fd = -1;
   write_pipe_fd = -1;
   cgi_child_pid = -1;
-  error_redircetion = "";
+  error_redirection = "";
 }
 
 Response::Response(const Response& obj)
@@ -60,7 +60,7 @@ Response& Response::operator=(const Response& obj)
     write_pipe_fd = obj.write_pipe_fd;
     cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
-    error_redircetion = obj.error_redircetion;
+    error_redirection = obj.error_redirection;
   }
   return (*this);
 }
@@ -141,7 +141,8 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
     m_target_file = "autoindex.html";
   else
     m_target_file = response_data.file_path + response_data.file_name;
-  // Redirection 존재시
+  // Redirection 존재시 -->헤더??? GET으로 받았을 때만 redirection이 되나? 
+  // method handler쪽에 redirection시 로직이 존재하는지?
   if (m_response.redirection_exist == true)
   {
     m_response.status_code = FOUND_302;
