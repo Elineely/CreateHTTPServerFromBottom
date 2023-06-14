@@ -11,6 +11,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+// #include <dirent.h>
+#include <unistd.h>
+
 
 std::string MethodHandler::generateDate(const std::time_t& timestamp)
 {
@@ -217,10 +220,14 @@ void PostMethodHandler::methodRun()
   {
     throw BAD_REQUEST_400;
   }
-
-  // TODO: /post_body 일 때 파일 저장 안되는 현상 수정하기
+  if (m_response_data.file_exist == false && m_response_data.file_name == "")
+  {
+    m_response_data.file_name = "default.temp";
+    if (access(m_response_data.file_name.c_str(), F_OK) == 0)
+      m_response_data.file_exist = true;
+  }
   std::string target_file(m_response_data.file_path +
-                          m_response_data.file_name + "tmp_file");
+                          m_response_data.file_name);
   // delete the target file
   if (m_response_data.file_exist == true)
   {
@@ -308,6 +315,12 @@ void PutMethodHandler::methodRun()
   if (m_response_data.path_exist == false)
   {
     throw BAD_REQUEST_400;
+  }
+  if (m_response_data.file_exist == false && m_response_data.file_name == "")
+  {
+    m_response_data.file_name = "default.temp";
+    if (access(m_response_data.file_name.c_str(), F_OK) == 0)
+      m_response_data.file_exist = true;
   }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
