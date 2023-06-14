@@ -17,7 +17,7 @@ void Server::serverReadEvent(struct kevent *current_event)
     disconnectSocket(current_event->ident);
     if (current_udata->m_other_udata != NULL)
       delete current_udata->m_other_udata;
-    delete current_event->udata;
+    delete current_udata;
     return;
   }
   client_sock = clientReadAccept(current_event);
