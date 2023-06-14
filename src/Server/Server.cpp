@@ -55,7 +55,7 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
   return NOTHING;
 }
 
-void Server::serverSocketEventAdd(std::vector<t_multi_server> &servers)
+void Server::addServerSocketEvent(std::vector<t_multi_server> &servers)
 {
   for (int i = 0; i < servers.size(); ++i)
   {
@@ -82,7 +82,7 @@ Server::Server(const Config &server_conf)
   m_kqueue.kq = getKqueue();
   LOG_INFO("Successfully create kqueue");
 
-  serverSocketEventAdd(servers);
+  addServerSocketEvent(servers);
 }
 
 Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
@@ -97,8 +97,11 @@ Server::~Server() { std::cout << "Server Destructor Call" << std::endl; }
 
 Server &Server::operator=(const Server &other)
 {
-  if (this == &other) return *this;
-  LOG_DEBUG("Server Assignment Operator Call");
+  if (this != &other)
+  {
+    m_kqueue = other.m_kqueue;
+    servers = other.servers;
+  }
   return *this;
 }
 

@@ -205,7 +205,7 @@ class Server
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
   void disconnectSocket(int socket);
-  void serverSocketEventAdd(std::vector<t_multi_server> &servers);
+  void addServerSocketEvent(std::vector<t_multi_server> &servers);
 
   // read.cpp
   void serverReadEvent(struct kevent *current_event);
