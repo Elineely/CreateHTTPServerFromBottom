@@ -34,7 +34,7 @@ class PathFinder
                 std::string root_path, Response& response_data);
   void setMaxSize(Request request_data, std::string max_body_size);
   void checkMaxSize(Request request_data, long long max_body_size);
-  void  setErrorPage(Request& request_data, t_server server_data, Response& response_data);
+  void  setErrorPage(t_server server_data, Response& response_data);
 
   //functions for abstraction
   bool isRootBlock(std::string locationBlock, t_server& server_data,
@@ -49,7 +49,7 @@ class PathFinder
                   Response& response_data, Request& request_data);
   bool isEndWithExistDirectory(std::string entire_path, Request& request_data,
                   t_location current_location, Response& response_data);
-  bool isEndWithFileName(std::string entire_path, Request& request_data, t_location current_location,
+  void isEndWithFileName(std::string entire_path, Request& request_data, t_location current_location,
                   Response& response_data);
   bool firstBlockIsNotLocation(t_server& server_data, std::string location_key,
                   t_location current_location, std::string locationBlock, 

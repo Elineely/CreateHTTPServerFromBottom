@@ -170,7 +170,8 @@ void PathFinder::setBasic(std::string method, std::string root,
 
 void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
 {
-  checkMaxSize(request_data, std::stoll(max_body_size, NULL, 10));
+  checkMaxSize(request_data, std::atol(max_body_size.c_str()));
+  // checkMaxSize(request_data, std::stoll(max_body_size, NULL, 10));
 }
 
 void PathFinder::checkMaxSize(Request request_data, long long max_body_size)
@@ -306,7 +307,7 @@ bool PathFinder::isEndWithExistDirectory(std::string entire_path,
   return false;
 }
 
-bool PathFinder::isEndWithFileName(std::string entire_path,
+void PathFinder::isEndWithFileName(std::string entire_path,
                                    Request& request_data,
                                    t_location current_location,
                                    Response& response_data)
@@ -403,20 +404,16 @@ void PathFinder::manySlashesInUri(std::string locationBlock,
                          response_data);
 }
 
-void PathFinder::setErrorPage(Request& request_data, t_server server_data,
-                              Response& response_data)
+void  PathFinder::setErrorPage(t_server server_data, Response& response_data)
 {
-  std::string host = request_data.headers.find("host")->second;
-  std::string page_uri = server_data.error_page[0];
-  std::string root_path = (server_data.locations.find("/")->second).root + "/";
-
-  if (!checkExist(root_path + page_uri))
+  if (server_data.error_page.size() == 0)
   {
-    throw NOT_FOUND_404;
+    response_data.error_keyword = false;
+    return ;
   }
-  root_path = root_path.substr(1);
-  std::string total_url = host + root_path + page_uri;
-  response_data.error_redirection = total_url;
+  response_data.error_keyword = true;
+  if (checkExist(server_data.error_page[0]))
+    response_data.error_page_path = server_data.error_page[0];
 };
 
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
@@ -426,7 +423,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
 
   if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
 
-  setErrorPage(request_data, server_data, response_data);
+  setErrorPage(server_data, response_data);
 
   if (isRootBlock(locationBlock, server_data, response_data, request_data))
     return;

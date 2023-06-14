@@ -29,7 +29,8 @@ void Parser::parseChunkedBody(void)
 
   std::string str_chunk_size(&m_pool.total_line[m_pool.offset],
                              crlf_idx1 - m_pool.offset);
-  long long chunk_size = std::strtoll(str_chunk_size.c_str(), NULL, 10);
+  long chunk_size =  std::atol(str_chunk_size.c_str());
+  // long chunk_size = std::strtoll(str_chunk_size.c_str(), NULL, 10);
   for (size_t idx = crlf_idx1 + 2; idx < crlf_idx2; ++idx)
   {
     m_request.body.push_back(m_pool.total_line[idx]);
