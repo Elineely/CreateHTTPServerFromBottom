@@ -19,6 +19,8 @@ class HttpProcessor
 //   char* generateMessage(Response& obj);
 
  private:
+
+  void setErrorPage(t_server server_data, Response& response_data);
   HttpProcessor(void);
   struct Request m_request_data;
   struct Response m_response_data;

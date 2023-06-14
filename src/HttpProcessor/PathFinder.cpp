@@ -417,8 +417,6 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
 
   if (locationBlock.find("//") != std::string::npos) throw NOT_FOUND_404;
 
-  setErrorPage(server_data, response_data);
-
   if (isRootBlock(locationBlock, server_data, response_data, request_data))
     return;
   if (isCgiBlock(locationBlock, server_data, response_data)) return;
