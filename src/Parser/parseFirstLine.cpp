@@ -9,7 +9,7 @@ void Parser::parseFirstLine(void)
   crlf_idx = findNewline(&m_pool.total_line[0], m_pool.offset);
   if (crlf_idx == 0)
   {
-    LOG_INFO("Need more buffer");
+    // LOG_INFO("Need more buffer");
     throw std::invalid_argument("Need more buffer in parseFirstLine");
   }
   m_pool.offset = crlf_idx + 2;

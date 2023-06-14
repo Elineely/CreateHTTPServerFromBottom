@@ -23,5 +23,5 @@ void Parser::parseBody(void)
     m_request.status = BAD_REQUEST_400;
     m_request.validation_phase = COMPLETE;
   }
-  LOG_DEBUG("m_pool.line_len: %d, m_pool.offset: %d, content-length: %d, body_size: %d", m_pool.line_len, m_pool.offset, content_length, m_request.body.size());
+  // LOG_DEBUG("m_pool.line_len: %d, m_pool.offset: %d, content-length: %d, body_size: %d", m_pool.line_len, m_pool.offset, content_length, m_request.body.size());
 }
