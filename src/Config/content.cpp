@@ -26,6 +26,36 @@ void configErrorExit(const char *error_message, int current_line, int exit_flag)
   return;
 }
 
+bool Config::isVaildServerBlock(t_server &server, int line_number)
+{
+  if (server.listen.size() == 0)
+  {
+    LOG_ERROR("Invaild Server Content, does not have listen content Line number : %d", line_number);
+    return 1;
+  }
+  if (server.max_body_size.size() == 0)
+  {
+    LOG_ERROR("Invaild Server Content, does not have max_body_size content Line number : %d", line_number);
+    return 1;
+  }
+  return 0;
+}
+
+bool Config::isVaildLocationBlock(t_location &location, int line_number)
+{
+  if (location.root == "")
+  {
+    LOG_ERROR("Invaild Location, does not have root content Line number : %d", line_number);
+    return 1;
+  }
+  if (location.accepted_method == "")
+  {
+    LOG_ERROR("Invaild Location, does not have accepted_method content Line number : %d", line_number);
+    return 1;
+  }
+  return 0;
+}
+
 t_location Config::get_location_expand(std::ifstream &config_file,
                                        std::string config_file_name,
                                        content_list_type vaild_content_list,
@@ -73,7 +103,11 @@ t_location Config::get_location_expand(std::ifstream &config_file,
   {
     temp_location.max_body_size =  temp_location_map["max_body_size"];
   }
-
+  
+  if (isVaildLocationBlock(temp_location, current_line))
+  {
+    exit(EXIT_FAILURE);
+  }
   return temp_location;
 }
 
@@ -89,6 +123,8 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   while (getline(file, read_line, '\n'))
   {
     std::vector<std::string> split_content_line = ft_config_split(read_line);
+    if (split_content_line.size() == 0)
+      continue;
     if (split_content_line[0] == "}")
     {
       break;
@@ -126,6 +162,10 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.error_page = temp_conf["error_page"];
   server.locations = temp_locations;
 
+  if (isVaildServerBlock(server, current_line))
+  {
+    exit(EXIT_FAILURE);
+  }
   return server;
 }
 
