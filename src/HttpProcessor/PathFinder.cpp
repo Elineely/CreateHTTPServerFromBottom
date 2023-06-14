@@ -170,7 +170,8 @@ void PathFinder::setBasic(std::string method, std::string root,
 
 void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
 {
-  checkMaxSize(request_data, std::stoll(max_body_size, NULL, 10));
+  checkMaxSize(request_data, std::atol(max_body_size.c_str()));
+  // checkMaxSize(request_data, std::stoll(max_body_size, NULL, 10));
 }
 
 void PathFinder::checkMaxSize(Request request_data, long long max_body_size)
