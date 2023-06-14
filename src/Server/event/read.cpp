@@ -36,6 +36,11 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   char buff[BUF_SIZE];
 
   recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
+  if (recv_size == 0)
+  {
+    disconnectSocket(current_event->ident);
+    return ;
+  }
   current_udata->m_parser.readBuffer(buff, recv_size);
 }
 
