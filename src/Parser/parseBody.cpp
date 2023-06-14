@@ -2,6 +2,7 @@
 
 #include "Log.hpp"
 #include "utils.hpp"
+#include <stdlib.h>
 
 void Parser::parseBody(void)
 {
@@ -11,8 +12,9 @@ void Parser::parseBody(void)
     m_pool.offset += 1;
   }
 
-  long long content_length =
-      std::strtoll(m_request.headers["content-length"].c_str(), NULL, 10);
+  long content_length =
+    std::atol(m_request.headers["content-length"].c_str());
+    // std::strtoll(m_request.headers["content-length"].c_str(), NULL, 10);
 
   if (content_length == m_request.body.size())
   {
