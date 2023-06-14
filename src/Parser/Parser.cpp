@@ -141,11 +141,6 @@ void Parser::readBuffer(char* buf, int recv_size)
         default:
           break;
       }
-
-      if (m_request.validation_phase == COMPLETE)
-      {
-        return;
-      }
     }
   }
   catch (std::exception& e)
