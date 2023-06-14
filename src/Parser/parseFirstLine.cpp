@@ -59,6 +59,4 @@ void Parser::parseFirstLine(void)
   m_request.uri = uri;
   m_request.http_version = http_version;
   m_request.validation_phase = ON_HEADER;
-  LOG_DEBUG("request method: %s", method.c_str());
-  LOG_DEBUG("request uri: %s", uri.c_str());
 }
