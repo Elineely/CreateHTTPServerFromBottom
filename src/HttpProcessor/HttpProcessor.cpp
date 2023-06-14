@@ -3,6 +3,23 @@
 #include "CgiHandler.hpp"
 #include "Log.hpp"
 
+bool checkExist(const std::string& path_or_file)
+{
+  return (access(path_or_file.c_str(), F_OK) == 0);
+}
+
+void  HttpProcessor::setErrorPage(t_server server_data, Response& response_data)
+{
+  if (server_data.error_page.size() == 0)
+  {
+    response_data.error_keyword = false;
+    return ;
+  }
+  response_data.error_keyword = true;
+  if (checkExist(server_data.error_page[0]))
+    response_data.error_page_path = server_data.error_page[0];
+};
+
 HttpProcessor::HttpProcessor(void) {}
 
 HttpProcessor::~HttpProcessor(void) {}
@@ -11,8 +28,8 @@ HttpProcessor::HttpProcessor(Request& request_data, t_server& server_data)
 {
   m_request_data = request_data;
   m_server_data = server_data;
-  // MethodHandler* method_handler;
   LOG_DEBUG("request_data.status: %d", request_data.status);
+  setErrorPage(m_server_data, m_response_data);
   if (request_data.status == NO_PROBLEM) request_data.status = OK_200;
   try
   {

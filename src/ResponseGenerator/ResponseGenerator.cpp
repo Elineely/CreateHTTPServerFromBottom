@@ -266,18 +266,34 @@ void ResponseGenerator::generateLocation()
 
 void ResponseGenerator::generateErrorBody()
 {
-  appendStrToBody("<html>\r\n<head><title>");
-  appendStrToBody(statusCodeToString());
-  appendStrToBody(" ");
-  appendStrToBody(status_str.getStatusStr(m_response.status_code));
-  appendStrToBody(" ");
-  appendStrToBody("</title></head>\r\n");
-  appendStrToBody("<body>\r\n");
-  appendStrToBody("<center><h1>");
-  appendStrToBody(statusCodeToString());
-  appendStrToBody(" ");
-  appendStrToBody(status_str.getStatusStr(m_response.status_code));
-  appendStrToBody("</h1></center></body>\r\n</html>");
+  std::ifstream error_file(m_response.error_page_path);
+
+  if (m_response.error_keyword == true && m_response.error_page_path != "" && error_file.is_open() == true)
+  {
+    error_file.seekg(0, std::ios::end);
+    std::streampos file_size = error_file.tellg();
+    error_file.seekg(0, std::ios::beg);
+    std::vector<char> buffer(file_size);
+    error_file.read(&buffer[0], file_size);
+    m_response.body = buffer;
+    error_file.close();
+  }
+  else
+  {
+    appendStrToBody("<html>\r\n<head><title>");
+    appendStrToBody(statusCodeToString());
+    appendStrToBody(" ");
+    appendStrToBody(status_str.getStatusStr(m_response.status_code));
+    appendStrToBody(" ");
+    appendStrToBody("</title></head>\r\n");
+    appendStrToBody("<body>\r\n");
+    appendStrToBody("<center><h1>");
+    appendStrToBody(statusCodeToString());
+    appendStrToBody(" ");
+    appendStrToBody(status_str.getStatusStr(m_response.status_code));
+    appendStrToBody("</h1></center></body>\r\n</html>");
+    if (error_file.is_open()) error_file.close();
+  }
 }
 
 void ResponseGenerator::setStartLine()
