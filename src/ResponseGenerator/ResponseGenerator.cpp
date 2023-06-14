@@ -26,7 +26,8 @@ Response::Response()
   read_pipe_fd = -1;
   write_pipe_fd = -1;
   cgi_child_pid = -1;
-  error_redirection = "";
+  error_keyword = false;
+  error_page_path = "";
 }
 
 Response::Response(const Response& obj)
@@ -60,7 +61,8 @@ Response& Response::operator=(const Response& obj)
     write_pipe_fd = obj.write_pipe_fd;
     cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
-    error_redirection = obj.error_redirection;
+    error_keyword = obj.error_keyword;
+    error_page_path = obj.error_page_path;
   }
   return (*this);
 }
