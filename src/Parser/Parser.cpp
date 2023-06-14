@@ -47,7 +47,7 @@ void Parser::saveBufferInPool(char* buf, int recv_size)
   {
     throw std::invalid_argument("NULL string is not allowed");
   }
-  LOG_DEBUG("recv_size: %d", recv_size);
+  // LOG_DEBUG("recv_size: %d", recv_size);
   m_pool.line_len += recv_size;
   for (int idx = 0; idx < recv_size; idx += 1)
   {
@@ -108,7 +108,7 @@ void Parser::readBuffer(char* buf, int recv_size)
       return;
     }
 
-    LOG_DEBUG("recv_size: %d", recv_size);
+    // LOG_DEBUG("recv_size: %d", recv_size);
 
     // 클라이언트가 보낸 데이터를 RequestPool 에 저장
     saveBufferInPool(buf, recv_size);
@@ -141,15 +141,10 @@ void Parser::readBuffer(char* buf, int recv_size)
         default:
           break;
       }
-
-      if (m_request.validation_phase == COMPLETE)
-      {
-        return;
-      }
     }
   }
   catch (std::exception& e)
   {
-    LOG_ERROR("Parser readBuffer catches error (%s)", e.what());
+    // LOG_ERROR("Parser readBuffer catches error (%s)", e.what());
   }
 }

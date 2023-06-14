@@ -1,9 +1,10 @@
 #include "ResponseGenerator.hpp"
-#include "Log.hpp"
 
 #include <ctime>
 #include <fstream>
 #include <string>
+
+#include "Log.hpp"
 
 // canonical
 Response::Response()
@@ -30,10 +31,7 @@ Response::Response()
   error_page_path = "";
 }
 
-Response::Response(const Response& obj)
-{
-  *this = obj;
-}
+Response::Response(const Response& obj) { *this = obj; }
 
 Response::~Response() {}
 
@@ -132,18 +130,15 @@ void ResponseGenerator::cgiDataProcess()
   m_cgi_body = cgi_body;
 }
 
-ResponseGenerator::ResponseGenerator() {}
 ResponseGenerator::ResponseGenerator(Request& request_data,
                                      Response& response_data)
-// : m_request(request_data), m_response(response_data)
+    : m_request(request_data), m_response(response_data)
 {
-  m_request = request_data;
-  m_response = response_data;
   if (response_data.auto_index == true && m_response.file_exist == false)
     m_target_file = "autoindex.html";
   else
     m_target_file = response_data.file_path + response_data.file_name;
-  // Redirection 존재시 -->헤더??? GET으로 받았을 때만 redirection이 되나? 
+  // Redirection 존재시 -->헤더??? GET으로 받았을 때만 redirection이 되나?
   // method handler쪽에 redirection시 로직이 존재하는지?
   if (m_response.redirection_exist == true)
   {
@@ -154,9 +149,8 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
 }
 
 ResponseGenerator::ResponseGenerator(const ResponseGenerator& obj)
+    : m_request(obj.m_request), m_response(obj.m_response)
 {
-  m_request = obj.m_request;
-  m_response = obj.m_response;
   m_target_file = obj.m_response.file_path + obj.m_response.file_name;
 }
 
@@ -338,11 +332,11 @@ std::vector<char> ResponseGenerator::generateErrorResponseMessage()
   return (m_response.response_message);
 }
 
-std::vector<char> ResponseGenerator::generateResponseMessage()
+std::vector<char>& ResponseGenerator::generateResponseMessage()
 {
   try
   {
-    LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
+    // LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
     if (m_response.status_code != OK_200 && m_response.status_code != FOUND_302)
       throw(m_response.status_code);
     cgiDataProcess();

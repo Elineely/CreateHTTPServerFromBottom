@@ -42,11 +42,10 @@ Config::Config(std::string config_file_name,
   LOG_INFO("Successfully validate %s", config_file_name.c_str());
 }
 
-Config::Config() { std::cout << "Config Construct call" << std::endl; }
+Config::Config() { }
 
 Config::Config(const Config &other)
 {
-  std::cout << "Config Constructor Call" << std::endl;
   m_server_conf = other.m_server_conf;
 }
 

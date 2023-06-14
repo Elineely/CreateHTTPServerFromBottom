@@ -32,7 +32,7 @@
 
 // Paser header
 #include "Config.hpp"
-#include "Parser.hpp"                               
+#include "Parser.hpp"
 #include "ResponseGenerator.hpp"
 
 // Server 세팅
@@ -126,7 +126,10 @@ struct t_event_udata
   struct t_event_udata *m_other_udata;
 
   t_event_udata(e_event_type type)
-      : m_type(type), m_other_udata(NULL), m_pipe_write_offset(0), m_total_read_byte(0)
+      : m_type(type),
+        m_other_udata(NULL),
+        m_pipe_write_offset(0),
+        m_total_read_byte(0)
   {
   }
   t_event_udata(e_event_type type, std::vector<char> message, size_t length)
@@ -160,13 +163,7 @@ struct t_event_udata
   }
 
   ~t_event_udata()
-  {
-    // if (m_other_udata != NULL)
-    // {
-    //   std::cout << m_other_udata->m_child_pid << std::endl;
-    //   delete m_other_udata;
-    // }
-  }
+  {}
 };
 
 class Server
@@ -174,8 +171,6 @@ class Server
  private:
   std::vector<t_multi_server> servers;
   t_kqueue m_kqueue;
-  Config server;  // TODO: 꼭 멤버변수로 가지고 있어야 하는가?
-  int m_count;
   Server();
 
  public:
@@ -184,10 +179,11 @@ class Server
   ~Server();
   Server &operator=(const Server &a);
 
-  int getKqueue();
+  void start(void);
+  int getKqueue(void);
   const std::vector<t_multi_server> &get_servers(void);
 
-  void AddEventToChangeList(std::vector<struct kevent> &change_list,
+  void addEventToChangeList(std::vector<struct kevent> &change_list,
                             uintptr_t ident, int16_t filter, uint16_t flags,
                             uint32_t fflags, intptr_t data, void *udata);
   void setSocket(const Config &server_conf,
@@ -196,11 +192,11 @@ class Server
                   std::vector<t_multi_server> &servers);
   void startBind(std::vector<t_multi_server> &servers);
   void startListen(std::vector<t_multi_server> &servers, int back_log);
+  int clientReadAccept(struct kevent *current_event);
 
   void clientWriteEvent(struct kevent *current_event);
   void clientReadEvent(struct kevent *current_event);
 
-  void serverReadEvent(struct kevent *current_event);
   void serverErrorEvent(struct kevent *current_event);
 
   void pipeWriteEvent(struct kevent *current_event);
@@ -208,10 +204,20 @@ class Server
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
-  void disconnect_socket(int socket);
+  void disconnectSocket(int socket);
+  void addServerSocketEvent(std::vector<t_multi_server> &servers);
 
-  // TODO: 나중에 삭제하기
-  char *getHttpCharMessages(void);
+  // read.cpp
+  void serverReadEvent(struct kevent *current_event);
+  void readClientSocketBuffer(struct kevent *current_event,
+                              t_event_udata *current_udata);
+  void addCgiRequestEvent(struct kevent *current_event,
+                          t_event_udata *current_udata, struct Request &request,
+                          struct Response &response);
+  void addStaticRequestEvent(struct kevent *current_event,
+                             t_event_udata *current_udata,
+                             struct Request &request,
+                             struct Response &response);
 };
 
 #endif

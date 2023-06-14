@@ -41,14 +41,11 @@ struct Response
   Response& operator=(const Response& obj);
 };
 
-
 class ResponseGenerator
 {
  private:
-  Request m_request;
-  Response m_response;
-  // Request& m_request;
-  // Response& m_response;
+  Request& m_request;
+  Response& m_response;
   Mime mime;
   StatusStr status_str;
   std::string m_target_file;
@@ -88,7 +85,7 @@ class ResponseGenerator
   ~ResponseGenerator();
   ResponseGenerator& operator=(const ResponseGenerator& obj);
 
-  std::vector<char> generateResponseMessage();
+  std::vector<char>& generateResponseMessage();
 };
 
 #endif
