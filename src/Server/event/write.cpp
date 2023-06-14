@@ -5,14 +5,14 @@ void Server::clientWriteEvent(struct kevent *current_event)
 {
   LOG_INFO("✅ CLIENT WRITE EVENT ✅");
 
-  t_event_udata *udata;
+  t_event_udata *current_udata;
   t_event_udata *new_udata;
   t_event_udata *read_udata;
   t_response_write *response_write;
   char *message;
 
-  udata = static_cast<t_event_udata *>(current_event->udata);
-  response_write = &udata->m_response_write;
+  current_udata = static_cast<t_event_udata *>(current_event->udata);
+  response_write = &current_udata->m_response_write;
   message = &response_write->message[0];
   int send_byte = 0;
   send_byte = send(current_event->ident, message + response_write->offset,
@@ -25,7 +25,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
 
-  delete udata;
+  delete current_udata;
 }
 
 void Server::pipeWriteEvent(struct kevent *current_event)
@@ -59,7 +59,7 @@ void Server::pipeWriteEvent(struct kevent *current_event)
         write(current_udata->m_write_pipe_fd,
               &current_request.body[pipe_write_offset], pipe_write_length);
 
-    LOG_DEBUG("write_byte: %d", write_byte);
+    // LOG_DEBUG("write_byte: %d", write_byte);
     if (write_byte == -1)
     {
       LOG_ERROR("write error");
