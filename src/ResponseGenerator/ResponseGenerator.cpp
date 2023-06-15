@@ -140,8 +140,6 @@ ResponseGenerator::ResponseGenerator(Request& request_data,
     m_target_file = "autoindex.html";
   else
     m_target_file = response_data.file_path + response_data.file_name;
-  // Redirection 존재시 -->헤더??? GET으로 받았을 때만 redirection이 되나?
-  // method handler쪽에 redirection시 로직이 존재하는지?
   if (m_response.redirection_exist == true)
   {
     m_response.status_code = FOUND_302;
