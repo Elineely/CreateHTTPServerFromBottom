@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
-use strict;
-use warnings;
+# use strict;
+# use warnings;
 
 # Read the request method
 my $request_method = $ENV{'REQUEST_METHOD'};

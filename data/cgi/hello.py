@@ -12,5 +12,4 @@ upload_path = os.environ.get('X_UPLOAD_PATH', '')
 if request_method == "GET":
     print("GOTTA HOME!", end='')
 elif request_method == "POST":
-    print("upload path", upload_path)
     print("GOTTA POST!", end='')
