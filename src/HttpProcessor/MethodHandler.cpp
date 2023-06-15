@@ -55,6 +55,10 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
     if (stat(file_path.c_str(), &file_stat) != -1)
     {
       FileInfo fileData;
+      if (S_ISDIR(file_stat.st_mode))
+        fileData.is_dir = "/";
+      else
+        fileData.is_dir = "";
       fileData.name = file_name;
       fileData.date = file_stat.st_mtime;
       fileData.size = file_stat.st_size;
@@ -90,7 +94,7 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
     std::string size = generateSize((*it).size);
     autoindex << "\t\t\t<tr><td><a href=\""
               << (m_request_data.uri == "/" ? "" : m_request_data.uri) << "/"
-              << (*it).name << "\">" << (*it).name << "</a></td><td>" << date
+              << (*it).name << "\">" << (*it).name << (*it).is_dir << "</a></td><td>" << date
               << "</td><td>" << size << "</td></tr>\n";
   }
   autoindex << "\t\t</table>\n"

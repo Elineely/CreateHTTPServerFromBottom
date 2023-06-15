@@ -8,6 +8,7 @@
 // generate auto_index
 struct FileInfo
 {
+  std::string is_dir;
   std::string name;
   std::time_t date;
   long long int size;
