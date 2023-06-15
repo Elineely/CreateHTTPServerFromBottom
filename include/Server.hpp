@@ -52,6 +52,7 @@ enum e_event_type
   CLIENT,
   PIPE,
   PROCESS,
+  STATIC_FILE,
 };
 
 enum e_kqueue_event
@@ -68,6 +69,8 @@ enum e_kqueue_event
   PIPE_WRITE,
   PIPE_READ,
   PIPE_EOF,
+  STATIC_FILE_WRTIE,
+  STATIC_FILE_READ,
   NOTHING
 };
 
@@ -123,13 +126,16 @@ struct t_event_udata
   t_server m_server;
   Parser m_parser;
   Response m_response;
+  size_t m_static_write_offset;
+
   struct t_event_udata *m_other_udata;
 
   t_event_udata(e_event_type type)
       : m_type(type),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
-        m_total_read_byte(0)
+        m_total_read_byte(0),
+        m_static_write_offset(0)
   {
   }
   t_event_udata(e_event_type type, std::vector<char> message, size_t length)
@@ -137,7 +143,8 @@ struct t_event_udata
         m_response_write(message, length),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
-        m_total_read_byte(0)
+        m_total_read_byte(0),
+        m_static_write_offset(0)
   {
   }
   t_event_udata(e_event_type type, t_server config)
@@ -145,7 +152,8 @@ struct t_event_udata
         m_server(config),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
-        m_total_read_byte(0)
+        m_total_read_byte(0),
+        m_static_write_offset(0)
   {
   }
 
@@ -158,7 +166,8 @@ struct t_event_udata
         m_server(config),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
-        m_total_read_byte(0)
+        m_total_read_byte(0),
+        m_static_write_offset(0)
   {
   }
 
@@ -198,6 +207,9 @@ class Server
   void clientReadEvent(struct kevent *current_event);
 
   void serverErrorEvent(struct kevent *current_event);
+
+  void staticFileWriteEvent(struct kevent *current_event);
+  void staticFileReadEvent(struct kevent *current_event);
 
   void pipeWriteEvent(struct kevent *current_event);
   void pipeReadEvent(struct kevent *current_event);

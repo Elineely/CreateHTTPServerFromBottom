@@ -5,6 +5,8 @@
 #include "Request.hpp"
 #include "ResponseGenerator.hpp"
 
+#include <sys/types.h>
+
 // generate auto_index
 struct FileInfo
 {

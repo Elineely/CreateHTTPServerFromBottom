@@ -22,9 +22,9 @@ class HttpProcessor
 
   void setErrorPage(t_server server_data, Response& response_data);
   HttpProcessor(void);
-  struct Request m_request_data;
+  struct Request &m_request_data;
   struct Response m_response_data;
-  t_server m_server_data;
+  t_server &m_server_data;
   
   // MethodHandler* m_method_handler; //이제 필요 없음?
 //   char* m_response_message;

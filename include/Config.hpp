@@ -2,8 +2,8 @@
 #define CONFIG_HPP
 
 #include <algorithm>
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <vector>
@@ -33,6 +33,7 @@ struct t_server
   std::vector<std::string> max_header_size;
   std::vector<std::string> max_body_size;
   std::vector<std::string> error_page;
+  std::vector<char> error_page_body;
   std::map<std::string, t_location> locations;
 };
 

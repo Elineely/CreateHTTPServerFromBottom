@@ -92,22 +92,45 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
                        udata2);
 }
 
+
 void Server::addStaticRequestEvent(struct kevent *current_event,
                                    t_event_udata *current_udata,
                                    struct Request &request,
                                    struct Response &response)
 {
-  std::vector<char> response_message;
-  ResponseGenerator response_generator(request, response);
-  t_event_udata *udata;
+  if(response.static_write_fd != -1)
+  {
+    t_event_udata *udata = new t_event_udata(STATIC_FILE);
+    
+    udata->m_response = response;
+    addEventToChangeList(m_kqueue.change_list, current_udata->m_response.static_write_fd, EVFILT_WRITE,
+                        EV_ADD | EV_ENABLE, 0, 0, udata);
+  }
+  else if (response.static_read_fd != -1)
+  {
+    t_event_udata *udata = new t_event_udata(STATIC_FILE);
+    udata->m_parser = current_udata->m_parser;
+    udata->m_response = response;
+    addEventToChangeList(m_kqueue.change_list, current_udata->m_response.static_write_fd, EVFILT_READ,
+                        EV_ADD | EV_ENABLE, 0, 0, udata);
+  }
+  else
+  {
+    std::vector<char> response_message;
+    ResponseGenerator response_generator(request, response);
+    t_event_udata *udata;
 
-  response_message = response_generator.generateResponseMessage();
-  udata = new t_event_udata(CLIENT);
-  udata->m_response_write.message = response_message;
-  udata->m_response_write.length = response_message.size();
 
-  addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
-                       EV_ADD | EV_ENABLE, 0, 0, udata);
+  
+    response_message = response_generator.generateResponseMessage();
+    udata = new t_event_udata(CLIENT);
+    udata->m_response_write.message = response_message;
+    udata->m_response_write.length = response_message.size();
+
+    addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
+                        EV_ADD | EV_ENABLE, 0, 0, udata);
+  }
+ 
 }
 
 void Server::clientReadEvent(struct kevent *current_event)
@@ -201,4 +224,22 @@ void Server::pipeReadEvent(struct kevent *current_event)
     delete current_udata->m_other_udata;
     delete current_udata;
   }
+}
+
+void Server::staticFileReadEvent(struct kevent *current_event)
+{
+  
+  // 본인 이벤트 지우고 reponse에 맞는 이벤트 생성
+  std::vector<char> response_message;
+
+  ResponseGenerator response_generator(request, response);
+  t_event_udata *udata;
+
+  response_message = response_generator.generateResponseMessage();
+  udata = new t_event_udata(CLIENT);
+  udata->m_response_write.message = response_message;
+  udata->m_response_write.length = response_message.size();
+
+  addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
+                      EV_ADD | EV_ENABLE, 0, 0, udata);
 }

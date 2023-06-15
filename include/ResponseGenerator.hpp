@@ -31,6 +31,11 @@ struct Response
   std::vector<char> response_message;
   int read_pipe_fd;
   int write_pipe_fd;
+  int static_read_fd;
+  int static_write_fd;
+  int error_page_file_fd;
+  off_t read_file_size;
+  off_t error_page_file_size;
   int cgi_child_pid;
   bool error_keyword;
   std::string error_page_path;

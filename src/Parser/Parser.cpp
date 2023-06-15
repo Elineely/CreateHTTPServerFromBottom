@@ -69,6 +69,12 @@ size_t Parser::findNewline(const char* buf, size_t offset)
     }
     if (std::strncmp(&buf[idx], "\r\n", 2) == 0)
     {
+      if (idx == 0)
+      {
+        m_request.status = BAD_REQUEST_400;
+        m_request.validation_phase = COMPLETE;
+        throw std::invalid_argument("First line can't start with CRLF");
+      }
       return (idx);
     }
   }

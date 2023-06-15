@@ -76,3 +76,33 @@ void Server::pipeWriteEvent(struct kevent *current_event)
     delete current_udata;
   }
 }
+
+void Server::staticFileWriteEvent(struct kevent *current_event)
+{
+  t_event_udata *current_udata = static_cast<t_event_udata *>(current_event->udata);
+  struct Request &request = current_udata->m_parser.get_request();
+  struct Request &response = current_udata->m_response;
+  int write_byte;
+
+  write_byte =  write(current_udata->m_response.static_write_fd, 
+                        &request.body[current_udata->m_static_write_offset], 
+                          current_event->data);
+  current_udata->m_static_write_offset += write_byte;
+  if (current_udata->m_response.body.size() != current_udata->m_static_write_offset)
+  {
+    return ;
+  }
+  current_udata->m_response.static_write_fd
+  // 본인 이벤트 지우고 reponse에 맞는 response 생성
+  std::vector<char> response_message;
+  ResponseGenerator response_generator(request, response);
+  t_event_udata *udata;
+
+  response_message = response_generator.generateResponseMessage();
+  udata = new t_event_udata(CLIENT);
+  udata->m_response_write.message = response_message;
+  udata->m_response_write.length = response_message.size();
+
+  addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
+                      EV_ADD | EV_ENABLE, 0, 0, udata);
+}

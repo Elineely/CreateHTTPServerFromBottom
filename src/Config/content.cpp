@@ -1,6 +1,11 @@
 #include "Config.hpp"
 #include "Log.hpp"
 
+#include <unistd.h>
+#include <fcntl.h>
+
+#define BUF_SIZE 409
+
 bool isVaildServerBlockContent(std::string split_content_line_content,
                                content_list_type vaild_content_list)
 {
@@ -161,11 +166,35 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.max_header_size = temp_conf["max_header_size"];
   server.error_page = temp_conf["error_page"];
   server.locations = temp_locations;
-
   if (isVaildServerBlock(server, current_line))
   {
     exit(EXIT_FAILURE);
   }
+  int fd = open(server.error_page[0].c_str(), O_RDONLY, 0644);
+  if (fd == -1)
+  {
+    LOG_ERROR("Can't open error page file %s", server.error_page[0].c_str());
+    exit(EXIT_FAILURE);
+  }
+  
+  char buf[BUF_SIZE];
+  ssize_t read_byte;
+
+  read_byte = read(fd, buf, BUF_SIZE);
+  while (read_byte > 0)
+  {
+    if (read_byte == 0)
+    {
+      break;
+    }
+    for (int i = 0; i < read_byte; ++i)
+    {
+      server.error_page_body.push_back(buf[i]);
+    } 
+    read_byte = read(fd, buf, BUF_SIZE);
+  }
+  close(fd);
+
   return server;
 }
 

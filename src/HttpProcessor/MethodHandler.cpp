@@ -1,19 +1,18 @@
 #include "MethodHandler.hpp"
+#include "Log.hpp"
 
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <algorithm>
 #include <cstdio>
 #include <ctime>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-// #include <dirent.h>
-#include <unistd.h>
-
 
 std::string MethodHandler::generateDate(const std::time_t& timestamp)
 {
@@ -108,24 +107,25 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
 
 void MethodHandler::fileToBody(std::string target_file)
 {
-  std::ifstream file(target_file, std::ios::binary);
-  if (!file.is_open()) throw INTERNAL_SERVER_ERROR_500;
+  int infile_fd;
+  off_t file_size;
 
-  // Determine the file size, resize the vector
-  // offset 을 마지막으로 밀기
-  file.seekg(0, std::ios::end);
-  // 파일 사이즈 구하기
-  std::streampos file_size = file.tellg();
-  // 다시 돌리기
-  file.seekg(0, std::ios::beg);
-  std::vector<char> buffer(file_size);
-
-  // Read the file contents into the vector
-  file.read(&buffer[0], file_size);
-  file.close();
-
-  // contents of buffer into body
-  m_response_data.body = buffer;
+  infile_fd = open(target_file.c_str(), O_RDONLY, 0644);
+  if (infile_fd == -1)
+  {
+    LOG_ERROR("failed open file");
+    throw INTERNAL_SERVER_ERROR_500;
+  }
+  file_size = lseek(infile_fd, 0, SEEK_END);
+  if (file_size == -1)
+  {
+    LOG_ERROR("failed lseek");
+    throw INTERNAL_SERVER_ERROR_500;
+  }
+  lseek(infile_fd, 0, SEEK_SET);
+  m_response_data.read_file_size = file_size;
+  m_response_data.static_read_fd = infile_fd;
+  m_response_data.body.reserve(m_response_data.read_file_size);
 }
 
 Request MethodHandler::get_m_request_data() { return (m_request_data); }
@@ -220,38 +220,30 @@ PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
 }
 void PostMethodHandler::methodRun()
 {
+  int outfile_fd; 
+
   if (m_response_data.path_exist == false)
-  {
     throw BAD_REQUEST_400;
-  }
   if (m_response_data.file_exist == false && m_response_data.file_name == "")
   {
     m_response_data.file_name = "default.temp";
     if (access(m_response_data.file_name.c_str(), F_OK) == 0)
-      m_response_data.file_exist = true;
-  }
-  std::string target_file(m_response_data.file_path +
-                          m_response_data.file_name);
-  // delete the target file
-  if (m_response_data.file_exist == true)
-  {
-    // error deleting file
-    if (std::remove(&target_file[0]) != 0)
     {
-      throw INTERNAL_SERVER_ERROR_500;
+      m_response_data.file_exist = true;
     }
   }
   if (m_request_data.body.size() == 0)
   {
     return;
   }
-  std::ofstream new_file_stream(target_file, std::ios::binary);
-  if (!new_file_stream)
+  std::string target_file(m_response_data.file_path +
+                          m_response_data.file_name);
+  outfile_fd = open(target_file.c_str(), O_RDWR | O_CREAT | O_APPEND, 0644);
+  if (outfile_fd == -1)
   {
     throw INTERNAL_SERVER_ERROR_500;
   }
-  new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
-  new_file_stream.close();
+  m_response_data.static_write_fd = outfile_fd;
 }
 
 // DeleteMethodHandler
@@ -316,6 +308,8 @@ PutMethodHandler& PutMethodHandler::operator=(PutMethodHandler const& obj)
 }
 void PutMethodHandler::methodRun()
 {
+  int outfile_fd;
+
   if (m_response_data.path_exist == false)
   {
     throw BAD_REQUEST_400;
@@ -329,21 +323,11 @@ void PutMethodHandler::methodRun()
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
 
-  if (m_response_data.file_exist == false)
+
+  outfile_fd = open(target_file.c_str(), O_RDWR | O_CREAT | O_APPEND, 0644);
+  if (outfile_fd == -1)
   {
-    std::ofstream new_file_stream(target_file,
-                                  std::ios::app | std::ios::binary);
-    if (!new_file_stream) throw INTERNAL_SERVER_ERROR_500;
-    new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
-    new_file_stream.close();
+    throw INTERNAL_SERVER_ERROR_500;
   }
-  else
-  {
-    std::ofstream append_stream(target_file, std::ios::app);
-    std::stringstream content_stream;
-    if (!append_stream) throw INTERNAL_SERVER_ERROR_500;
-    content_stream.write(&m_request_data.body[0], m_request_data.body.size());
-    append_stream << content_stream.str();
-    append_stream.close();
-  }
+  m_response_data.static_write_fd = outfile_fd;
 }

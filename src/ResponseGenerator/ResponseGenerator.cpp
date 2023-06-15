@@ -1,8 +1,9 @@
 #include "ResponseGenerator.hpp"
 
 #include <ctime>
-#include <fstream>
 #include <string>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "Log.hpp"
 
@@ -27,6 +28,10 @@ Response::Response()
   read_pipe_fd = -1;
   write_pipe_fd = -1;
   cgi_child_pid = -1;
+  static_write_fd = -1;
+  static_read_fd = -1;
+  error_page_file_fd = -1;
+  error_page_file_size = 0;
   error_keyword = false;
   error_page_path = "";
 }
@@ -57,8 +62,12 @@ Response& Response::operator=(const Response& obj)
     cgi_flag = obj.cgi_flag;
     read_pipe_fd = obj.read_pipe_fd;
     write_pipe_fd = obj.write_pipe_fd;
+    static_write_fd = obj.static_write_fd;
+    static_read_fd = obj.static_read_fd;
     cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
+    error_page_file_fd = obj.error_page_file_fd;
+    error_page_file_size = obj.error_page_file_size;
     error_keyword = obj.error_keyword;
     error_page_path = obj.error_page_path;
   }
@@ -260,18 +269,22 @@ void ResponseGenerator::generateLocation()
 
 void ResponseGenerator::generateErrorBody()
 {
-  std::ifstream error_file(m_response.error_page_path);
+  int infile_fd;
+  off_t file_size;
 
-  if (m_response.error_keyword == true && m_response.error_page_path != "" &&
-      error_file.is_open() == true)
+  infile_fd = open(m_response.error_page_path.c_str(), O_RDONLY, 0644);
+  if ((m_response.error_keyword == true) && (infile_fd != -1))
   {
-    error_file.seekg(0, std::ios::end);
-    std::streampos file_size = error_file.tellg();
-    error_file.seekg(0, std::ios::beg);
-    std::vector<char> buffer(file_size);
-    error_file.read(&buffer[0], file_size);
-    m_response.body = buffer;
-    error_file.close();
+    file_size = lseek(infile_fd, 0, SEEK_END);
+    if (file_size == -1)
+    {
+      LOG_ERROR("failed lseek");
+      throw INTERNAL_SERVER_ERROR_500;
+    }
+    lseek(infile_fd, 0, SEEK_SET);
+    m_response.body.reserve(file_size);
+    m_response.error_page_file_fd = infile_fd;
+    m_response.error_page_file_size = file_size;
   }
   else
   {
@@ -287,7 +300,6 @@ void ResponseGenerator::generateErrorBody()
     appendStrToBody(" ");
     appendStrToBody(status_str.getStatusStr(m_response.status_code));
     appendStrToBody("</h1></center></body>\r\n</html>");
-    if (error_file.is_open()) error_file.close();
   }
 }
 
