@@ -143,6 +143,10 @@ void Parser::readBuffer(char* buf, int recv_size)
         default:
           break;
       }
+      if (m_pool.line_len == m_pool.offset)
+      {
+        return;
+      }
     }
   }
   catch (std::exception& e)
