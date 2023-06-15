@@ -57,6 +57,10 @@ void Parser::saveBufferInPool(char* buf, int recv_size)
 
 size_t Parser::findNewline(const char* buf, size_t offset)
 {
+  if (m_pool.line_len < 2)
+  {
+    return (0);
+  }
   for (size_t idx = offset; idx <= m_pool.line_len - 2; idx += 1)
   {
     if (buf[idx] != '\r')
@@ -107,8 +111,6 @@ void Parser::readBuffer(char* buf, int recv_size)
     {
       return;
     }
-
-    // LOG_DEBUG("recv_size: %d", recv_size);
 
     // 클라이언트가 보낸 데이터를 RequestPool 에 저장
     saveBufferInPool(buf, recv_size);
