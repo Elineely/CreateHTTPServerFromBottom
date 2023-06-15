@@ -30,7 +30,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
 void Server::pipeWriteEvent(struct kevent *current_event)
 {
-  LOG_INFO("🛎 PIPE WRITE EVENT 🛎");
+  // LOG_INFO("🛎 PIPE WRITE EVENT 🛎");
 
   t_event_udata *current_udata;
   int possible_write_length;

@@ -39,6 +39,7 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   if (recv_size == 0)
   {
     disconnectSocket(current_event->ident);
+    delete current_udata;
     return ;
   }
   current_udata->m_parser.readBuffer(buff, recv_size);
