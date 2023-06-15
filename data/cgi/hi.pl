@@ -11,12 +11,12 @@ print "Status: 200\r\n";
 
 # Handle GET request
 if ($request_method eq 'GET') {
-    print "Content-Type: text/plain\n\n";
+    print "Content-Type: text/plain\r\n\r\n";
     print "This is a GET request.";
 }
 
 # Handle POST request
 elsif ($request_method eq 'POST') {
-    print "Content-Type: text/plain\n\n";
+    print "Content-Type: text/plain\r\n\r\n";
     print "This is a POST request.";
 }

@@ -128,11 +128,6 @@ void ResponseGenerator::cgiDataProcess()
   std::string::size_type cgi_body_begin = cgi_data.find("\r\n\r\n");
   std::vector<char>::iterator iter =
       m_response.body.begin() + cgi_body_begin + 4;
-  if (cgi_body_begin == std::string::npos)
-  {
-    cgi_body_begin = cgi_data.find("\n\n");
-    iter =  m_response.body.begin() + cgi_body_begin + 2;
-  }
   std::vector<char> cgi_body(iter, m_response.body.end());
   m_cgi_body = cgi_body;
 }
