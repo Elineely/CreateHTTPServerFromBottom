@@ -119,8 +119,10 @@ void ResponseGenerator::cgiDataProcess()
   content_type_end = cgi_data.find("\r\n", content_type_begin);
   if (content_type_begin != std::string::npos &&
       content_type_end != std::string::npos)
+  {
     m_cgi_content_type = cgi_data.substr(content_type_begin,
                                          content_type_end - content_type_begin);
+  }
 
   // generate body in case of cgi
   std::string::size_type cgi_body_begin = cgi_data.find("\r\n\r\n");
@@ -186,6 +188,7 @@ void ResponseGenerator::generateReasonPhrase()
 
 void ResponseGenerator::generateContentType()
 {
+  appendStrToResponse_message("Content-Type:");
   if (m_response.cgi_flag == true)
   {
     appendStrToResponse_message(m_cgi_content_type);
@@ -193,7 +196,6 @@ void ResponseGenerator::generateContentType()
   }
   else
   {
-    appendStrToResponse_message("Content-Type:");
     appendStrToResponse_message(mime.getMime(m_target_file));
     appendStrToResponse_message("\r\n");
   }
@@ -262,7 +264,8 @@ void ResponseGenerator::generateErrorBody()
 {
   std::ifstream error_file(m_response.error_page_path);
 
-  if (m_response.error_keyword == true && m_response.error_page_path != "" && error_file.is_open() == true)
+  if (m_response.error_keyword == true && m_response.error_page_path != "" &&
+      error_file.is_open() == true)
   {
     error_file.seekg(0, std::ios::end);
     std::streampos file_size = error_file.tellg();
