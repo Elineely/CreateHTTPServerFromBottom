@@ -1,138 +1,142 @@
 <html>
 	<head>
 		<script>
-			const sendPostFile = () => 
+			const sendStaticPost = () => 
 			{
 				const fileInput = document.getElementById('fileInput');
 				const file = fileInput.files[0];
+				const file_name = file.name;
 				const path = "./upload/";
-				console.log(file.name);
-				
-				fetch(path + file.name, {
+				const requset_uri = path + file_name;
+
+				console.log(file);
+				console.log("request POST to -> " + requset_uri);
+				fetch(requset_uri, {
 				method: 'POST',
 				body: file
 				})
 				.then(response => {
 					// Handle the response
+					if(response.ok)
+					{
+						alert("success request!!");
+					}
+					else
+					{
+						alert("fail request..");
+					}
 				})
 				.catch(error => {
 					// Handle errors
+					alert(error);
 				});
 			}
-		
-			const sendGetRequest = () => {
-				console.log("GET");
-				if (window.confirm("Do you want to upload file?") === false) {
-					return ;
-				}
-				fetch("./index.html", {
-					method: "GET",
-					body: "hello"
-				}).
-				then(response => {
-					if (response.ok) {
-						// location.reload();
-						alert(response.ok);
-					} else {
-						window.alert("Error !", response.status);
+
+			const sendStaticPut = () => 
+			{
+				const fileInput = document.getElementById('fileInput');
+				const file = fileInput.files[0];
+				const file_name = file.name;
+				const path = "./upload/"
+				const requset_uri = path + file_name;
+
+				console.log("request PUT to -> " + requset_uri);
+				fetch(requset_uri, {
+				method: 'PUT',
+				body: file
+				})
+				.then(response => {
+					// Handle the response
+					if(response.ok)
+					{
+						alert("success request!!");
+					}
+					else
+					{
+						alert("fail request..");
 					}
 				})
 				.catch(error => {
-					console.log(error);
-					window.alert("error catch", error);
-				})
+					// Handle errors
+					alert(error);
+				});
 			}
 
-			const sendPostRequest = () => {
-				console.log("POST");
-				if (window.confirm("Do you want to upload file?") === false) {
-					return ;
-				}
-				fetch("./cgi/hello.py", {
-					method: "POST",
-					body: ""
-				}).
-				then(response => {
-					console.log(response);
-					if (response.ok) {
-						// location.reload();
-						alert(response.ok);
-						console.log("POST success!!");
-					} else {
-						window.alert("Error !", response.status);
-					}
-				})
-				.catch(error => {
-					console.log(error);
-					window.alert("error catch", error);
-				})
-			};
+			const sendCgiPost = () => 
+			{
+				const fileInput = document.getElementById('fileInput');
+				const file = fileInput.files[0];
+				const file_name = file.name;
+				const path = "./upload/";
+				const requset_uri = path + file_name + ".py";
 
-			const sendDeleteRequest = () => {
-				console.log("DELETE");
-				if (window.confirm("Do you want to upload file?") === false) {
-					return ;
-				}
-				fetch("./index.html", {
-					method: "DELETE",
-					body: "hello"
-				}).
-				then(response => {
-					if (response.ok) {
-						alert(response.ok);
-					} else {
-						window.alert("Error !", response.status);
+				console.log("request CGI POST to -> " + requset_uri);
+				fetch(requset_uri, {
+				method: 'POST',
+				body: file
+				})
+				.then(response => {
+					// Handle the response
+					if(response.ok)
+					{
+						alert("success request!!");
+					}
+					else
+					{
+						alert("fail request..");
 					}
 				})
 				.catch(error => {
-					window.alert("error catch", error);
-				})
+					// Handle errors
+					alert(error);
+				});
 			}
-
-			const sendPutRequest = () => {
-				console.log("PUT");
-				if (window.confirm("Do you want to upload file?") === false) {
-					return ;
-				}
-				fetch("./index.html", {
-					method: "PUT",
-					body: "hello"
-				}).
-				then(response => {
-					if (response.ok) {
-						location.reload();
-					} else {
-						window.alert("Error !", response.status);
-					}
-				})
-				.catch(error => {
-					window.alert("error catch", error);
-				})
-			}
-
 			
 		</script>
 	</head>
 	<body>
-		<marquee> HELLO WORLD</marquee>
-		<h1>
-			i am joonhan the tamjeong.
-			<tr>
-				<td>
-					<input type='button' onClick="sendGetRequest()" value='GET'/>
-				</td>
-				<td>	
-					<input type='button' onClick="sendPostRequest()" value='POST'/>
-				</td>
-				<td>
-					<input type='button' onClick="sendDeleteRequest()" value='DELETE'/>
-				</td>
-				<td>
-					<input type='button' onClick="sendPutRequest()" value='PUT'/>
-				</td>
-			</tr>
-		</h1>
+		<marquee> 	
+			<p>
+				Meow~~~
+			</p>
+		</marquee>
+
+		<div style="text-align: center;">
+			<img src="./images/bangle_with_note.jpg" width="300">
+
+			<h1>
+				Static File post, put
+			</h1>
 			<input type="file" name="png" id="fileInput" />
-			<input type="submit" onclick="sendPostFile()"/>
+			<br>
+			<div style="margin-top: 5;">
+				<div style="margin-bottom: 2rem;">
+					<input type="submit" onclick="sendStaticPost()" value="STATIC POST" />
+					<input type="submit" onclick="sendStaticPut()" value="STATIC PUT"/>
+				</div>
+			</div>
+			
+			<h1>
+				CGI File post
+			</h1>
+			<div style="margin-bottom: 2rem;">
+				<form action="./post_test.py" method="post" enctype="multipart/form-data">
+					<input type="file" name="image">
+					<div style="margin-top: 5;">
+						<input type="submit" value="CGI POST">
+					</div>
+				</form>
+			</div>
+
+
+
+			<div>
+				<h1>
+					<a href="./hi/"> auto_index</a>
+				</h1>
+			</div>
+
+		</div>
+			
 	</body>
 </html> 
