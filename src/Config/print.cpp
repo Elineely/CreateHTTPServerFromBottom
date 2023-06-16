@@ -15,10 +15,10 @@ void showIterMap(std::map<std::string, t_location> location)
   for (std::map<std::string, t_location>::iterator iter = location.begin();
        iter != location.end(); ++iter)
   {
-    LOG_DEBUG("location auto_index: %s", (*iter).second.auto_index.c_str());
-    LOG_DEBUG("location index: %s", (*iter).second.index.c_str());
-    LOG_DEBUG("location language: %s", (*iter).second.language.c_str());
-    LOG_DEBUG("location root: %s", (*iter).second.root.c_str());
+    // LOG_DEBUG("location auto_index: %s", (*iter).second.auto_index.c_str());
+    // LOG_DEBUG("location index: %s", (*iter).second.index.c_str());
+    // LOG_DEBUG("location language: %s", (*iter).second.language.c_str());
+    // LOG_DEBUG("location root: %s", (*iter).second.root.c_str());
   }
 }
 

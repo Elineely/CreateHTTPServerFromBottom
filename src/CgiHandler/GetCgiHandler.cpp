@@ -32,7 +32,7 @@ void GetCgiHandler::executeCgi()
 
   if (dup2(m_to_child_fds[READ], STDIN_FILENO) == -1)
   {
-    LOG_ERROR("failed to dup2(%d, %d)", m_to_child_fds, STDIN_FILENO);
+    LOG_INFO("failed to dup2(%d, %d)", m_to_child_fds, STDIN_FILENO);
     close(m_to_child_fds[READ]);
     close(m_to_parent_fds[WRITE]);
     exit(EXIT_FAILURE);
@@ -40,7 +40,7 @@ void GetCgiHandler::executeCgi()
 
   if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == -1)
   {
-    LOG_ERROR("failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
+    LOG_INFO("failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
     close(m_to_child_fds[READ]);
     close(m_to_parent_fds[WRITE]);
     exit(EXIT_FAILURE);
@@ -58,7 +58,7 @@ void GetCgiHandler::executeCgi()
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
+    LOG_INFO("Failed to execve function => strerrno: %s", strerror(errno));
     std::cerr << "error: " << strerror(errno) << std::endl;
     std::vector<char> error_message = makeErrorPage();
     write(STDOUT_FILENO, &error_message[0], error_message.size());
@@ -89,7 +89,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
   }
   catch (const std::exception& e)
   {
-    LOG_ERROR("catch error %s", e.what());
+    LOG_INFO("catch error %s", e.what());
     m_response_data.body = makeErrorPage();
   }
 }

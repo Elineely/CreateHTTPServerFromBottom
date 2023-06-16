@@ -43,13 +43,13 @@ void CgiHandler::pipeAndFork()
 {
   if (pipe(m_to_child_fds) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to create m_to_child_fds pipe");
+    LOG_INFO("Failed to create m_to_child_fds pipe");
     throw PipeForkException();
   }
 
   if (pipe(m_to_parent_fds) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to create m_to_parent_fds pipe");
+    LOG_INFO("Failed to create m_to_parent_fds pipe");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     throw PipeForkException();
@@ -58,7 +58,7 @@ void CgiHandler::pipeAndFork()
   m_pid = fork();
   if (m_pid == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to fork");
+    LOG_INFO("Failed to fork");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     close(m_to_parent_fds[READ]);

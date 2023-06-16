@@ -121,29 +121,28 @@ struct t_event_udata
   std::vector<char *> m_read_buffer;
   std::vector<char> m_result;
   t_response_write m_response_write;
-  t_server m_server;
+  config_vector m_servers;
   Request *m_request;
   Response *m_response;
   Parser m_parser;
 
   struct t_event_udata *m_other_udata;
 
-  t_event_udata(e_event_type type, t_server config, Request *request,
+  t_event_udata(e_event_type type, config_vector config, Request *request,
                 Response *response)
       : m_type(type),
-        m_server(config),
+        m_servers(config),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
         m_total_read_byte(0),
         m_request(request),
-        m_response(response),
-        m_parser()
+        m_response(response)
   {
   }
 
-  t_event_udata(e_event_type type, t_server config)
+  t_event_udata(e_event_type type, config_vector config)
       : m_type(type),
-        m_server(config),
+        m_servers(config),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
         m_total_read_byte(0)
@@ -161,7 +160,7 @@ class Server
   Server();
 
  public:
-  Server(const Config &server);
+  Server(Config &server);
   Server(const Server &a);
   ~Server();
   Server &operator=(const Server &a);
@@ -192,7 +191,8 @@ class Server
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
   void disconnectSocket(int socket);
-  void addServerSocketEvent(std::vector<t_multi_server> &servers);
+  void addServerSocketEvent(std::vector<t_multi_server> &servers, Config &server_conf);
+
 
   // read.cpp
   void serverReadEvent(struct kevent *current_event);

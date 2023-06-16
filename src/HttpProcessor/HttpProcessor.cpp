@@ -99,7 +99,7 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
   }
   catch (StatusCode code_num)
   {
-    LOG_ERROR("[HttpProcessor] constructor catches error (status code: %d)",
+    LOG_INFO("[HttpProcessor] constructor catches error (status code: %d)",
               code_num);
     m_response_data.status_code = code_num;
   }

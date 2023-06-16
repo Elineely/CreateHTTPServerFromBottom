@@ -28,7 +28,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
 void Server::pipeWriteEvent(struct kevent *current_event)
 {
-  LOG_INFO("🛎 PIPE WRITE EVENT 🛎");
+  // LOG_INFO("🛎 PIPE WRITE EVENT 🛎");
 
   t_event_udata *current_udata;
   int possible_write_length;
@@ -57,10 +57,10 @@ void Server::pipeWriteEvent(struct kevent *current_event)
         write(current_udata->m_write_pipe_fd,
               &current_request.body[pipe_write_offset], pipe_write_length);
 
-    LOG_DEBUG("write_byte: %d", write_byte);
+    // LOG_DEBUG("write_byte: %d", write_byte);
     if (write_byte == -1)
     {
-      LOG_ERROR("write error");
+      LOG_INFO("write error");
     }
     else
     {

@@ -10,14 +10,14 @@ void Parser::parseChunkedBody(Request& request)
   crlf_idx1 = findNewline(&m_pool.total_line[0], m_pool.offset);
   if (crlf_idx1 == 0)
   {
-    LOG_INFO("need more newline crlf_idx1");
+    // LOG_INFO("need more newline crlf_idx1");
     // TODO: 전용 exception 추가하기
     throw(std::invalid_argument("need more buffer"));
   }
   crlf_idx2 = findNewline(&m_pool.total_line[0], crlf_idx1 + 2);
   if (crlf_idx2 == 0)
   {
-    LOG_INFO("need more newline crlf_idx2");
+    // LOG_INFO("need more newline crlf_idx2");
     throw(std::invalid_argument("need more buffer"));
   }
 

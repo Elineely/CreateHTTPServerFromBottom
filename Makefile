@@ -32,6 +32,9 @@ SRC_RESPONSE_GENERATOR_FILES		:=	Mime.cpp \
 										ResponseGenerator.cpp \
 										StatusCode.cpp
 
+SRC_SERVER_FINDER_DIR				:= ServerFinder/
+SRC_SERVER_FINDER_FILES				:= ServerFinder.cpp
+
 SRC_SERVER_DIR			:=	Server/
 SRC_SERVER_FILES		:=	Server.cpp 				\
 							socket/socket.cpp		\
@@ -66,7 +69,8 @@ SRC_FILES				:=	$(SRC_MAIN)	\
 							$(addprefix $(SRC_SERVER_DIR), $(SRC_SERVER_FILES))	\
 							$(addprefix $(SRC_RESPONSE_GENERATOR_DIR), $(SRC_RESPONSE_GENERATOR_FILES))	\
 							$(addprefix $(SRC_UTILS_DIR), $(SRC_UTILS_FILES)) \
-							$(addprefix $(SRC_LOG_DIR), $(SRC_LOG_FILES))
+							$(addprefix $(SRC_LOG_DIR), $(SRC_LOG_FILES)) \
+							$(addprefix $(SRC_SERVER_FINDER_DIR), $(SRC_SERVER_FINDER_FILES))
 
 SRCS					:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
