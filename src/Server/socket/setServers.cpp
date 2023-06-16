@@ -4,16 +4,21 @@ void Server::setServers(const Config& server_conf,
                         std::vector<t_multi_server> &servers)
 {
   config_vector server = server_conf.get_m_server_conf();
+  std::map<int, int> port_map;
 
   for (config_vector::iterator iter = server.begin(); iter != server.end();
        ++iter)
   {
     for (int i = 0; i < iter->listen.size(); ++i)
     {
+      int port =  atoi(iter->listen[i].c_str());
+        if (port_map.find(port) != port_map.end())
+            continue;
       t_multi_server server;
-      server.server_port = atoi(iter->listen[i].c_str());
+      server.server_port = port;
       server.config = *iter;
       servers.push_back(server);
+      port_map.insert(std::make_pair(servers[i].server_port, 0));
     }
   }
 }

@@ -2,6 +2,7 @@
 #include "Log.hpp"
 #include "ResponseGenerator.hpp"
 #include "Server.hpp"
+#include "ServerFinder.hpp"
 
 #define CHILD_PROCESS 0
 
@@ -23,7 +24,7 @@ void Server::serverReadEvent(struct kevent *current_event)
   client_sock = clientReadAccept(current_event);
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-  udata = new t_event_udata(CLIENT, current_udata->m_server);
+  udata = new t_event_udata(CLIENT, current_udata->m_servers);
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
@@ -136,7 +137,9 @@ void Server::clientReadEvent(struct kevent *current_event)
   }
 
   struct Request &request = current_udata->m_parser.get_request();
-  HttpProcessor http_processor(request, current_udata->m_server);
+  ServerFinder server_finder(request, current_udata->m_servers);
+  HttpProcessor http_processor(request, server_finder.get_server());
+  // HttpProcessor http_processor(request, current_udata->m_servers[0]);
   struct Response &response = http_processor.get_m_response();
 
   // cgi 분기 확인
