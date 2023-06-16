@@ -21,6 +21,7 @@ class Parser
  public:
   // Canonical Form
   Parser(void);
+  Parser(struct Request& request);
   Parser(const Parser& src);
   virtual ~Parser(void);
   Parser& operator=(Parser const& rhs);
@@ -32,7 +33,7 @@ class Parser
 
  private:
   // Member Variables
-  struct Request m_request;
+  struct Request &m_request;
   struct RequestPool m_pool;
 
   // Member Functions

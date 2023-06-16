@@ -22,7 +22,11 @@ class HttpProcessor
 
  private:
   void setErrorPage(t_server server_data, Response& response_data);
-  t_server m_server_data;
+  HttpProcessor(void);
+  
+  // MethodHandler* m_method_handler; //이제 필요 없음?
+  //   char* m_response_message;
+
 };
 
 #endif

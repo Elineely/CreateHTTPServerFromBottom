@@ -7,7 +7,7 @@
 
 #include "StatusCode.hpp"
 #include "ValidationStatus.hpp"
-
+#include <iostream>
 struct Request
 {
   ValidationStatus validation_phase;  // 파싱 단계를 알려주는 변수
@@ -36,6 +36,7 @@ struct Request
   // Copy Assignment
   Request& operator=(const Request& rhs)
   {
+
     if (this != &rhs)
     {
       validation_phase = rhs.validation_phase;

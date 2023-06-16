@@ -1,26 +1,22 @@
 #include "Parser.hpp"
-
-#include <cstring>
-#include <iostream>
-#include <sstream>
-
 #include "Log.hpp"
 #include "utils.hpp"
 
-// Default Constructor
-Parser::Parser(void) {}
+// Constructor
 
-// Destructor
-Parser::~Parser(void) {}
-
-// Copy Constructor
-Parser::Parser(const Parser& src)
+Parser::Parser(struct Request& request) : m_request(request)
 {
-  if (this != &src)
-  {
-    *this = src;
-  }
 }
+
+// // Copy Constructor
+// Parser::Parser(const Parser& src)
+// {
+//   if (this != &src)
+//   {
+//     *this->m_request = src.m_request;
+//     *this = src;
+//   }
+// }
 
 // Copy Assignment Operator
 Parser& Parser::operator=(Parser const& rhs)

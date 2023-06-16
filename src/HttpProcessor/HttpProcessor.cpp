@@ -26,8 +26,7 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
                              t_server& server_data)
     : m_request_data(request_data), m_response_data(response_data)
 {
-  m_server_data = server_data;
-  setErrorPage(m_server_data, m_response_data);
+  setErrorPage(server_data, m_response_data);
   if (request_data.status == NO_PROBLEM) request_data.status = OK_200;
   try
   {
@@ -109,13 +108,11 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
 HttpProcessor::HttpProcessor(const HttpProcessor& obj)
     : m_request_data(obj.m_request_data), m_response_data(obj.m_response_data)
 {
-  m_server_data = obj.m_server_data;
 }
 
 HttpProcessor& HttpProcessor::operator=(HttpProcessor const& obj)
 {
   if (this == &obj) return (*this);
-  m_server_data = obj.m_server_data;
   return (*this);
 }
 

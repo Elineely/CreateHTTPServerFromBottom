@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Log.hpp"
+#include <iostream>
 
 // canonical
 Response::Response()
@@ -39,6 +40,7 @@ Response& Response::operator=(const Response& obj)
 {
   if (this != &obj)
   {
+      std::cout << "Response Body copy" << std::endl;
     accepted_method = obj.accepted_method;
     rediretion_location = obj.rediretion_location;
     file_path = obj.file_path;
@@ -322,7 +324,6 @@ void ResponseGenerator::setBody()
     m_response.response_message.insert(m_response.response_message.end(),
                                        m_response.body.begin(),
                                        m_response.body.end());
-  // m_response.response_message.push_back('\0');
 }
 
 std::vector<char> ResponseGenerator::generateErrorResponseMessage()
