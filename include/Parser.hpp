@@ -21,29 +21,25 @@ class Parser
  public:
   // Canonical Form
   Parser(void);
-  Parser(struct Request& request);
   Parser(const Parser& src);
-  virtual ~Parser(void);
+  ~Parser(void);
   Parser& operator=(Parser const& rhs);
 
   // Member Functions
-  void readBuffer(char* buf, int recv_size);
-  ValidationStatus get_validation_phase(void);
-  struct Request& get_request(void);
+  void readBuffer(char* buf, int recv_size, Request& request);
 
  private:
   // Member Variables
-  struct Request &m_request;
   struct RequestPool m_pool;
 
   // Member Functions
   void saveBufferInPool(char* buf, int recv_size);
   size_t findNewline(const char* buf, size_t offset);
-  void checkBodyType(void);
-  void parseFirstLine(void);
-  void parseHeaders(void);
-  void parseBody(void);
-  void parseChunkedBody();
+  void checkBodyType(Request& request);
+  void parseFirstLine(Request& request);
+  void parseHeaders(Request& request);
+  void parseBody(Request& request);
+  void parseChunkedBody(Request& request);
 };
 
 #endif

@@ -24,6 +24,6 @@ int Server::clientReadAccept(struct kevent *current_event)
   _linger.l_onoff = 1;
   _linger.l_linger = 0;
   setsockopt(client_sock, SOL_SOCKET, SO_LINGER, &_linger, sizeof(_linger));
-  // LOG_INFO("🌵 Client Socket fd %d is created 🌵", client_sock);
+  LOG_INFO("🌵 Client Socket fd %d is created 🌵", client_sock);
   return (client_sock);
 }

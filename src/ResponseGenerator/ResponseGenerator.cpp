@@ -340,15 +340,15 @@ std::vector<char>& ResponseGenerator::generateResponseMessage()
 {
   try
   {
-    // LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
+    LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
     if (m_response.status_code != OK_200 && m_response.status_code != FOUND_302)
-      throw(m_response.status_code);
+      throw (m_response.status_code);
     cgiDataProcess();
     setStartLine();
     setHeaders();
     setBody();
   }
-  catch (StatusCode code)
+catch (StatusCode code)
   {
     LOG_ERROR("Error code: %d", code);
     m_response.status_code = code;

@@ -58,7 +58,7 @@ void GetCgiHandler::executeCgi()
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
-    // LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
+    LOG_ERROR("Failed to execve function => strerrno: %s", strerror(errno));
     std::cerr << "error: " << strerror(errno) << std::endl;
     std::vector<char> error_message = makeErrorPage();
     write(STDOUT_FILENO, &error_message[0], error_message.size());

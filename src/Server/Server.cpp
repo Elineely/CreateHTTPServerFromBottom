@@ -110,7 +110,7 @@ void Server::start(void)
   int current_events;
   e_kqueue_event event_status;
   struct kevent *current_event;
-t_event_udata *current_udata;
+  t_event_udata *current_udata;
 
   Log::start();
   while (1)

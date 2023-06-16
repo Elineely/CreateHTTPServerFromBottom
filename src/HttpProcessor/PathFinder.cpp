@@ -154,8 +154,8 @@ void PathFinder::setBasic(std::string method, std::string root,
                           std::string redirection, std::string root_path,
                           Response& response_data)
 {
-  // LOG_DEBUG("Default server block (root: %s, file: %s, index: %s)",
-  // root.c_str(), file_name.c_str(), index_name.c_str());
+  LOG_DEBUG("Default server block (root: %s, file: %s, index: %s)",
+            root.c_str(), file_name.c_str(), index_name.c_str());
   setMethod(method, response_data);
   setRoot(root, response_data);
   setIndex(root, file_name, index_name, response_data);
@@ -163,9 +163,9 @@ void PathFinder::setBasic(std::string method, std::string root,
   setAutoIndex(auto_index, response_data);
   setRedirection(redirection, response_data);
   setRootPath(root_path, response_data);
-  // LOG_DEBUG("Default server block_exist (root: %d, file: %d, index: %d)",
-  // response_data.path_exist, response_data.file_exist,
-  // response_data.index_exist);
+  LOG_DEBUG("Default server block_exist (root: %d, file: %d, index: %d)",
+            response_data.path_exist, response_data.file_exist,
+            response_data.index_exist);
 }
 
 void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
@@ -211,14 +211,14 @@ bool PathFinder::isCgiBlock(std::string locationBlock, t_server& server_data,
 {
   if (setCgi((locationBlock), server_data, response_data))
   {
-    // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)",
-    // response_data.cgi_flag, response_data.cgi_bin_path.c_str(),
-    // response_data.index_name.c_str());
+    LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)",
+              response_data.cgi_flag, response_data.cgi_bin_path.c_str(),
+              response_data.index_name.c_str());
     return true;
   }
-  // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)",
-  // response_data.cgi_flag, response_data.cgi_bin_path.c_str(),
-  // response_data.index_name.c_str());
+  LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)",
+            response_data.cgi_flag, response_data.cgi_bin_path.c_str(),
+            response_data.index_name.c_str());
   return false;
 }
 
@@ -314,7 +314,7 @@ void PathFinder::isEndWithFileName(std::string entire_path,
 {
   size_t pos_last = entire_path.rfind("/");
   //"/a/b/c/d/e(파일)" 경우
-  // LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
+  LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
   setMaxSize(request_data, current_location.max_body_size);
   setBasic(current_location.accepted_method,
            entire_path.substr(0, pos_last + 1),
@@ -404,12 +404,12 @@ void PathFinder::manySlashesInUri(std::string locationBlock,
                          response_data);
 }
 
-void  PathFinder::setErrorPage(t_server server_data, Response& response_data)
+void PathFinder::setErrorPage(t_server server_data, Response& response_data)
 {
   if (server_data.error_page.size() == 0)
   {
     response_data.error_keyword = false;
-    return ;
+    return;
   }
   response_data.error_keyword = true;
   if (checkExist(server_data.error_page[0]))
