@@ -26,8 +26,8 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   write(1, &response_message[0], response_message.size());
   addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-  ft_delete_request(&current_udata->m_request);
-  ft_delete_response(&current_udata->m_response);
-  ft_delete_udata(&current_udata->m_other_udata);
-  ft_delete_udata(&current_udata);
+  ft_delete(&current_udata->m_request);
+  ft_delete(&current_udata->m_response);
+  ft_delete(&current_udata->m_other_udata);
+  ft_delete(&current_udata);
 }

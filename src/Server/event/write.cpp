@@ -23,7 +23,9 @@ void Server::clientWriteEvent(struct kevent *current_event)
   }
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
-  ft_delete_udata(&current_udata);
+  ft_delete(&(current_udata->m_request));
+  ft_delete(&(current_udata->m_response));
+  ft_delete(&current_udata);
 }
 
 void Server::pipeWriteEvent(struct kevent *current_event)
@@ -71,8 +73,8 @@ void Server::pipeWriteEvent(struct kevent *current_event)
   if (current_udata->m_pipe_write_offset == request_body_size)
   {
     close(current_udata->m_write_pipe_fd);
-    ft_delete_request(&current_udata->m_request);
-    ft_delete_response(&current_udata->m_response);
-    ft_delete_udata(&current_udata);
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
+    ft_delete(&current_udata);
   }
 }

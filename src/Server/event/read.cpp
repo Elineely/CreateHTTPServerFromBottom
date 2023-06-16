@@ -17,24 +17,24 @@ void Server::serverReadEvent(struct kevent *current_event)
   {
     disconnectSocket(current_event->ident);
     if (current_udata->m_other_udata != NULL)
-      ft_delete_udata(&current_udata->m_other_udata);
-    ft_delete_request(&current_udata->m_request);
-    ft_delete_response(&current_udata->m_response);
-    ft_delete_udata(&current_udata);
+      ft_delete(&current_udata->m_other_udata);
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
+    ft_delete(&current_udata);
     return;
   }
   client_sock = clientReadAccept(current_event);
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
   Request *request = new Request();
-  printf("serverReadEvent %p", request);
+  printf("serverReadEvent request: %p\n", request); //fish
 
   Response *response = new Response();
-  printf("serverReadEvent %p", response);
+  printf("serverReadEvent response: %p\n", response); // suspicious
 
 
   udata = new t_event_udata(CLIENT, current_udata->m_servers, request, response);
-  printf("serverReadEvent %p", udata);
+  printf("serverReadEvent udata: %p\n", udata);
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
@@ -50,9 +50,9 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   if (recv_size == 0)
   {
     disconnectSocket(current_event->ident);
-    ft_delete_request(&current_udata->m_request);
-    ft_delete_response(&current_udata->m_response);
-    ft_delete_udata(&current_udata);
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
+    ft_delete(&current_udata);
     return;
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
@@ -70,13 +70,10 @@ void Server::clientReadEvent(struct kevent *current_event)
     LOG_DEBUG("method: %s, status code: %d",
               current_udata->m_request->method.c_str(),
               current_udata->m_response->status_code);
-    if (current_udata->m_other_udata != NULL)
-    {
-      ft_delete_udata(&current_udata->m_other_udata);
-    }
-    // ft_delete((void**)&current_udata->m_request;
-    // ft_delete((void**)&current_udata->m_response;
-    // ft_delete((void**)&current_udata;
+    
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
+    ft_delete(&current_udata);
     disconnectSocket(current_event->ident);
     return;
   }
@@ -105,11 +102,14 @@ void Server::clientReadEvent(struct kevent *current_event)
     addStaticRequestEvent(current_event, current_udata, request, response);
   }
 
-  ft_delete_request(&current_udata->m_request);
+  ft_delete(&current_udata->m_request);
   current_udata->m_request = new Request();
+  printf("addCgiRequestEvent current_udata->m_request %p\n", current_udata->m_request); // TODO
 
-  ft_delete_response(&current_udata->m_response);
+  ft_delete(&current_udata->m_response);
   current_udata->m_response = new Response();
+  printf("addCgiRequestEvent current_udata->m_response %p\n",current_udata->m_response); // TODO
+
   Parser new_parser;
   current_udata->m_parser = new_parser;
 }
@@ -120,27 +120,34 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
                                 struct Response &response)
 {
   // Set up the event structure
+  Request* new_request = new Request(*current_udata->m_request);
+  printf("[addCgiRequestEvent] new_request: %p\n", new_request); // TODO
+
   t_event_udata *udata =
-      new t_event_udata(PIPE, current_udata->m_servers,
-                        new Request(*current_udata->m_request), NULL);
+      new t_event_udata(PIPE, current_udata->m_servers, new_request, NULL);
+  printf("[addCgiRequestEvent] udata: %p\n", udata);
+
+  new_request = new Request(*current_udata->m_request);
+  printf("[addCgiRequestEvent] new_request: %p\n", new_request); // TODO
+
   t_event_udata *udata2 =
-      new t_event_udata(PROCESS, current_udata->m_servers,
-                        new Request(*current_udata->m_request), NULL);
+      new t_event_udata(PROCESS, current_udata->m_servers, new_request, NULL);
+  printf("[addCgiRequestEvent] udata2: %p\n", udata2); // TODO
 
   udata->m_read_pipe_fd = response.read_pipe_fd;
   udata->m_write_pipe_fd = response.write_pipe_fd;
   udata->m_child_pid = response.cgi_child_pid;
   udata->m_client_sock = current_event->ident;
-  udata->m_response = new Response();
-  printf("addCgiRequestEvent udata->m_response %p\n", udata->m_response); // TODO
+  udata->m_response = new Response(response);
+  printf("[addCgiRequestEvent] udata->m_response %p\n", udata->m_response); // TODO
   udata->m_other_udata = udata2;
 
   udata2->m_read_pipe_fd = response.read_pipe_fd;
   udata2->m_write_pipe_fd = response.write_pipe_fd;
   udata2->m_child_pid = response.cgi_child_pid;
   udata2->m_client_sock = current_event->ident;
-  udata2->m_response = new Response();
-  printf("addCgiRequestEvent udata2->m_response %p\n", udata2->m_response); // TODO
+  udata2->m_response = new Response(response);
+  printf("[addCgiRequestEvent] udata2->m_response %p\n", udata2->m_response); // TODO
   udata2->m_other_udata = udata;
 
   if (request.method == "POST")
@@ -242,9 +249,9 @@ void Server::pipeReadEvent(struct kevent *current_event)
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-    ft_delete_request(&(current_udata->m_request));
-    ft_delete_response(&(current_udata->m_response));
-    ft_delete_udata(&(current_udata->m_other_udata));
-    ft_delete_udata(&current_udata);
+    ft_delete(&(current_udata->m_other_udata->m_request));
+    ft_delete(&(current_udata->m_other_udata->m_response));
+    ft_delete(&(current_udata->m_other_udata));
+    ft_delete(&current_udata);
   }
 }

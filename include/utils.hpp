@@ -31,8 +31,16 @@ int ft_error(int status_code);
 int ft_error(int status_code, const char *error_message);
 void ft_error_exit(int exit_flag, const char *error_message);
 void ft_process_print(const char *str);
-void ft_delete_response(Response** response);
-void ft_delete_udata(t_event_udata** udata);
-void ft_delete_request(Request** request);
+
+template <typename T>
+void ft_delete(T** ptr)
+{
+  if (*ptr == NULL)
+  {
+    return;
+  }
+  delete *ptr;
+  *ptr = NULL;
+}
 
 #endif
