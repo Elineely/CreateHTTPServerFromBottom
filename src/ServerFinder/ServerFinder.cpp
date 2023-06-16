@@ -48,6 +48,7 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
             }
         }
     }
+    // }
     throw BAD_REQUEST_400; //이외의 모든 경우 bad_request
 }
 
