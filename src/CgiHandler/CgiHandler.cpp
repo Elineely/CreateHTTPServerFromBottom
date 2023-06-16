@@ -5,10 +5,14 @@
 // #define SERVER_PORT std::string("80")
 
 // canonical form
-CgiHandler::CgiHandler() {}
 
-CgiHandler::CgiHandler(Request& requset_data, Response& response_data)
-    : m_request_data(requset_data), m_response_data(response_data)
+CgiHandler::CgiHandler(Request& request_data, Response& response_data)
+    : m_request_data(request_data), m_response_data(response_data)
+{
+}
+
+CgiHandler::CgiHandler(const CgiHandler& obj)
+    : m_request_data(obj.m_request_data), m_response_data(obj.m_response_data)
 {
 }
 

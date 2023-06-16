@@ -2,8 +2,6 @@
 
 // canonical form
 
-GetCgiHandler::GetCgiHandler() {}
-
 GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
     : CgiHandler(request_data, response_data)
 {
@@ -11,14 +9,10 @@ GetCgiHandler::GetCgiHandler(Request& request_data, Response& response_data)
 
 GetCgiHandler::~GetCgiHandler() {}
 
-GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj) { *this = obj; }
-
-GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
+GetCgiHandler::GetCgiHandler(const GetCgiHandler& obj) : CgiHandler(obj)
 {
   if (this != &obj)
   {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
     m_env_list = obj.m_env_list;
     m_env_list_parameter = obj.m_env_list_parameter;
     m_to_child_fds[READ] = obj.m_to_child_fds[READ];
@@ -27,7 +21,6 @@ GetCgiHandler& GetCgiHandler::operator=(GetCgiHandler const& obj)
     m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
     m_pid = obj.m_pid;
   }
-  return (*this);
 }
 
 // member functions

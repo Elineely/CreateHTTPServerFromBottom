@@ -40,7 +40,7 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   {
     disconnectSocket(current_event->ident);
     delete current_udata;
-    return ;
+    return;
   }
   current_udata->m_parser.readBuffer(buff, recv_size);
 }
@@ -135,9 +135,9 @@ void Server::clientReadEvent(struct kevent *current_event)
     return;
   }
 
-  struct Request &request = current_udata->m_parser.get_request();
+  Request &request = current_udata->m_parser.get_request();
   HttpProcessor http_processor(request, current_udata->m_server);
-  struct Response &response = http_processor.get_m_response();
+  Response &response = http_processor.get_m_response();
 
   // cgi 분기 확인
   if (response.cgi_flag == true)

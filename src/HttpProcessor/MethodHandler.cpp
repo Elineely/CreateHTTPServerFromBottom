@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -11,9 +12,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-// #include <dirent.h>
-#include <unistd.h>
-
 
 std::string MethodHandler::generateDate(const std::time_t& timestamp)
 {
@@ -94,8 +92,9 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
     std::string size = generateSize((*it).size);
     autoindex << "\t\t\t<tr><td><a href=\""
               << (m_request_data.uri == "/" ? "" : m_request_data.uri) << "/"
-              << (*it).name << "\">" << (*it).name << (*it).is_dir << "</a></td><td>" << date
-              << "</td><td>" << size << "</td></tr>\n";
+              << (*it).name << "\">" << (*it).name << (*it).is_dir
+              << "</a></td><td>" << date << "</td><td>" << size
+              << "</td></tr>\n";
   }
   autoindex << "\t\t</table>\n"
             << "\t</body>\n"
@@ -128,55 +127,28 @@ void MethodHandler::fileToBody(std::string target_file)
   m_response_data.body = buffer;
 }
 
-Request MethodHandler::get_m_request_data() { return (m_request_data); }
-Response MethodHandler::get_m_response_data() { return (m_response_data); }
-
 // MethodHandler
-MethodHandler::MethodHandler(void) {}
 MethodHandler::MethodHandler(const MethodHandler& obj)
+    : m_request_data(obj.m_request_data), m_response_data(obj.m_response_data)
 {
-  m_request_data = obj.m_request_data;
-  m_response_data = obj.m_response_data;
 }
 MethodHandler::MethodHandler(Request& request_data, Response& response_data)
+    : m_request_data(request_data), m_response_data(response_data)
 {
-  m_request_data = request_data;
-  m_response_data = response_data;
-}
-MethodHandler& MethodHandler::operator=(MethodHandler const& obj)
-{
-  if (this != &obj)
-  {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
-  }
-  return (*this);
 }
 MethodHandler::~MethodHandler(void) {}
 
 // GetMethodHandler
-GetMethodHandler::GetMethodHandler(void) {}
 GetMethodHandler::GetMethodHandler(const GetMethodHandler& obj)
+    : MethodHandler(obj)
 {
-  m_request_data = obj.m_request_data;
-  m_response_data = obj.m_response_data;
 }
 GetMethodHandler::GetMethodHandler(Request& request_data,
                                    Response& response_data)
+    : MethodHandler(request_data, response_data)
 {
-  m_request_data = request_data;
-  m_response_data = response_data;
 }
 GetMethodHandler::~GetMethodHandler(void) {}
-GetMethodHandler& GetMethodHandler::operator=(GetMethodHandler const& obj)
-{
-  if (this != &obj)
-  {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
-  }
-  return (*this);
-}
 void GetMethodHandler::methodRun()
 {
   if (m_response_data.path_exist == false) throw NOT_FOUND_404;
@@ -196,28 +168,16 @@ void GetMethodHandler::methodRun()
 }
 
 // PostMethodHandler
-PostMethodHandler::PostMethodHandler(void) {}
 PostMethodHandler::PostMethodHandler(const PostMethodHandler& obj)
+    : MethodHandler(obj)
 {
-  m_request_data = obj.m_request_data;
-  m_response_data = obj.m_response_data;
 }
 PostMethodHandler::PostMethodHandler(Request& request_data,
                                      Response& response_data)
+    : MethodHandler(request_data, response_data)
 {
-  m_request_data = request_data;
-  m_response_data = response_data;
 }
 PostMethodHandler::~PostMethodHandler(void) {}
-PostMethodHandler& PostMethodHandler::operator=(PostMethodHandler const& obj)
-{
-  if (this != &obj)
-  {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
-  }
-  return (*this);
-}
 void PostMethodHandler::methodRun()
 {
   if (m_response_data.path_exist == false)
@@ -255,29 +215,16 @@ void PostMethodHandler::methodRun()
 }
 
 // DeleteMethodHandler
-DeleteMethodHandler::DeleteMethodHandler(void) {}
 DeleteMethodHandler::DeleteMethodHandler(const DeleteMethodHandler& obj)
+    : MethodHandler(obj)
 {
-  m_request_data = obj.m_request_data;
-  m_response_data = obj.m_response_data;
 }
 DeleteMethodHandler::DeleteMethodHandler(Request& request_data,
                                          Response& response_data)
+    : MethodHandler(request_data, response_data)
 {
-  m_request_data = request_data;
-  m_response_data = response_data;
 }
 DeleteMethodHandler::~DeleteMethodHandler(void) {}
-DeleteMethodHandler& DeleteMethodHandler::operator=(
-    DeleteMethodHandler const& obj)
-{
-  if (this != &obj)
-  {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
-  }
-  return (*this);
-}
 void DeleteMethodHandler::methodRun()
 {
   if (m_response_data.path_exist == false)
@@ -292,28 +239,16 @@ void DeleteMethodHandler::methodRun()
 }
 
 // PutMethodHandler
-PutMethodHandler::PutMethodHandler(void) {}
 PutMethodHandler::PutMethodHandler(const PutMethodHandler& obj)
+    : MethodHandler(obj)
 {
-  m_request_data = obj.m_request_data;
-  m_response_data = obj.m_response_data;
 }
 PutMethodHandler::PutMethodHandler(Request& request_data,
                                    Response& response_data)
+    : MethodHandler(request_data, response_data)
 {
-  m_request_data = request_data;
-  m_response_data = response_data;
 }
 PutMethodHandler::~PutMethodHandler(void) {}
-PutMethodHandler& PutMethodHandler::operator=(PutMethodHandler const& obj)
-{
-  if (this != &obj)
-  {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
-  }
-  return (*this);
-}
 void PutMethodHandler::methodRun()
 {
   if (m_response_data.path_exist == false)

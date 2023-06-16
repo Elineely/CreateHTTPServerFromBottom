@@ -2,23 +2,17 @@
 
 // canonical form
 
-PostCgiHandler::PostCgiHandler() {}
-
-PostCgiHandler::~PostCgiHandler() {}
-
 PostCgiHandler::PostCgiHandler(Request& request_data, Response& response_data)
     : CgiHandler(request_data, response_data)
 {
 }
 
-PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj) { *this = obj; }
+PostCgiHandler::~PostCgiHandler() {}
 
-PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
+PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj) : CgiHandler(obj)
 {
   if (this != &obj)
   {
-    m_request_data = obj.m_request_data;
-    m_response_data = obj.m_response_data;
     m_env_list = obj.m_env_list;
     m_env_list_parameter = obj.m_env_list_parameter;
     m_to_child_fds[READ] = obj.m_to_child_fds[READ];
@@ -27,7 +21,6 @@ PostCgiHandler& PostCgiHandler::operator=(PostCgiHandler const& obj)
     m_to_parent_fds[WRITE] = obj.m_to_parent_fds[WRITE];
     m_pid = obj.m_pid;
   }
-  return (*this);
 }
 
 // member functions
@@ -57,7 +50,8 @@ void PostCgiHandler::executeCgi()
 
   setCgiEnv();
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
-  std::string cgi_file = m_response_data.root_path + "/" + m_response_data.file_name;
+  std::string cgi_file =
+      m_response_data.root_path + "/" + m_response_data.file_name;
   const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),

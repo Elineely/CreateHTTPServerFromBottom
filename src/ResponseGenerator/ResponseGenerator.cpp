@@ -158,9 +158,11 @@ ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
 {
   if (this != &obj)
   {
-    m_request = obj.m_request;
-    m_response = obj.m_response;
+    mime = obj.mime;
+    status_str = obj.status_str;
     m_target_file = obj.m_response.file_path + obj.m_response.file_name;
+    m_cgi_content_type = obj.m_cgi_content_type;
+    m_cgi_body = obj.m_cgi_body;
   }
   return (*this);
 }
