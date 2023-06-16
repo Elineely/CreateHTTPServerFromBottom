@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
+#include "Log.hpp"
 #include "Request.hpp"
 #include "ResponseGenerator.hpp"
-#include "Log.hpp"
 
 #define SUCCESS 0
 #define RETURN_ERROR -1
@@ -25,11 +25,12 @@
 
 class CgiHandler
 {
+ public:
+  Request& m_request_data;
+  Response& m_response_data;
+
  protected:
   // member variables
-  Request m_request_data;
-  Response m_response_data;
-
   std::vector<std::string> m_env_list;
   std::vector<const char*> m_env_list_parameter;
 
@@ -50,8 +51,8 @@ class CgiHandler
 
  public:
   // canonical form
-  CgiHandler(void);
-  CgiHandler(Request& requset_data, Response& response_data);
+  CgiHandler(Request& request_data, Response& response_data);
+  CgiHandler(const CgiHandler& obj);
   virtual ~CgiHandler(void);
 
   // getter funtions
@@ -85,13 +86,9 @@ class CgiHandler
 /* ******************* */
 class GetCgiHandler : public CgiHandler
 {
- private:
-  GetCgiHandler(void);
-
  public:
   GetCgiHandler(Request& request_data, Response& response_data);
   GetCgiHandler(const GetCgiHandler& obj);
-  GetCgiHandler& operator=(GetCgiHandler const& obj);
   virtual ~GetCgiHandler(void);
 
   virtual void outsourceCgiRequest(void);
@@ -105,13 +102,9 @@ class GetCgiHandler : public CgiHandler
 /* ******************** */
 class PostCgiHandler : public CgiHandler
 {
- private:
-  PostCgiHandler(void);
-
  public:
   PostCgiHandler(Request& request_data, Response& response_data);
   PostCgiHandler(const PostCgiHandler& obj);
-  PostCgiHandler& operator=(PostCgiHandler const& obj);
   virtual ~PostCgiHandler(void);
 
   virtual void outsourceCgiRequest(void);

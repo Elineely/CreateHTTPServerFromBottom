@@ -75,6 +75,7 @@
     "compare": "cpp",
     "concepts": "cpp",
     "__functional_03": "cpp",
-    "memory_resource": "cpp"
+    "memory_resource": "cpp",
+    "__functional_base_03": "cpp"
   }
 }

@@ -5,10 +5,14 @@
 // #define SERVER_PORT std::string("80")
 
 // canonical form
-CgiHandler::CgiHandler() {}
 
-CgiHandler::CgiHandler(Request& requset_data, Response& response_data)
-    : m_request_data(requset_data), m_response_data(response_data)
+CgiHandler::CgiHandler(Request& request_data, Response& response_data)
+    : m_request_data(request_data), m_response_data(response_data)
+{
+}
+
+CgiHandler::CgiHandler(const CgiHandler& obj)
+    : m_request_data(obj.m_request_data), m_response_data(obj.m_response_data)
 {
 }
 
@@ -39,13 +43,13 @@ void CgiHandler::pipeAndFork()
 {
   if (pipe(m_to_child_fds) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to create m_to_child_fds pipe");
+    LOG_INFO("Failed to create m_to_child_fds pipe");
     throw PipeForkException();
   }
 
   if (pipe(m_to_parent_fds) == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to create m_to_parent_fds pipe");
+    LOG_INFO("Failed to create m_to_parent_fds pipe");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     throw PipeForkException();
@@ -54,7 +58,7 @@ void CgiHandler::pipeAndFork()
   m_pid = fork();
   if (m_pid == RETURN_ERROR)
   {
-    LOG_ERROR("Failed to fork");
+    LOG_INFO("Failed to fork");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     close(m_to_parent_fds[READ]);

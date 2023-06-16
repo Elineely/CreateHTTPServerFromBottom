@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Log.hpp"
+#include <iostream>
 
 // canonical
 Response::Response()
@@ -39,6 +40,7 @@ Response& Response::operator=(const Response& obj)
 {
   if (this != &obj)
   {
+      std::cout << "Response Body copy" << std::endl;
     accepted_method = obj.accepted_method;
     rediretion_location = obj.rediretion_location;
     file_path = obj.file_path;
@@ -158,9 +160,11 @@ ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
 {
   if (this != &obj)
   {
-    m_request = obj.m_request;
-    m_response = obj.m_response;
+    mime = obj.mime;
+    status_str = obj.status_str;
     m_target_file = obj.m_response.file_path + obj.m_response.file_name;
+    m_cgi_content_type = obj.m_cgi_content_type;
+    m_cgi_body = obj.m_cgi_body;
   }
   return (*this);
 }
@@ -320,7 +324,6 @@ void ResponseGenerator::setBody()
     m_response.response_message.insert(m_response.response_message.end(),
                                        m_response.body.begin(),
                                        m_response.body.end());
-  // m_response.response_message.push_back('\0');
 }
 
 std::vector<char> ResponseGenerator::generateErrorResponseMessage()
@@ -339,15 +342,15 @@ std::vector<char>& ResponseGenerator::generateResponseMessage()
   {
     // LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
     if (m_response.status_code != OK_200 && m_response.status_code != FOUND_302)
-      throw(m_response.status_code);
+      throw (m_response.status_code);
     cgiDataProcess();
     setStartLine();
     setHeaders();
     setBody();
   }
-  catch (StatusCode code)
+catch (StatusCode code)
   {
-    LOG_ERROR("Error code: %d", code);
+    LOG_INFO("Error code: %d", code);
     m_response.status_code = code;
     generateErrorResponseMessage();
   }

@@ -76,7 +76,6 @@ class ResponseGenerator
   void setHeaders();
   void setBody();
 
-  ResponseGenerator();
   std::vector<char> generateErrorResponseMessage();
 
  public:

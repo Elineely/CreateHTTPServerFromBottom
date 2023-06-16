@@ -34,6 +34,7 @@
 #include "Config.hpp"
 #include "Parser.hpp"
 #include "ResponseGenerator.hpp"
+#include "utils.hpp"
 
 // Server 세팅
 #define BUF_SIZE 650000
@@ -121,25 +122,24 @@ struct t_event_udata
   std::vector<char> m_result;
   t_response_write m_response_write;
   config_vector m_servers;
+  Request *m_request;
+  Response *m_response;
   Parser m_parser;
-  Response m_response;
+
   struct t_event_udata *m_other_udata;
 
-  t_event_udata(e_event_type type)
+  t_event_udata(e_event_type type, config_vector config, Request *request,
+                Response *response)
       : m_type(type),
+        m_servers(config),
         m_other_udata(NULL),
         m_pipe_write_offset(0),
-        m_total_read_byte(0)
+        m_total_read_byte(0),
+        m_request(request),
+        m_response(response)
   {
   }
-  t_event_udata(e_event_type type, std::vector<char> message, size_t length)
-      : m_type(type),
-        m_response_write(message, length),
-        m_other_udata(NULL),
-        m_pipe_write_offset(0),
-        m_total_read_byte(0)
-  {
-  }
+
   t_event_udata(e_event_type type, config_vector config)
       : m_type(type),
         m_servers(config),
@@ -149,21 +149,7 @@ struct t_event_udata
   {
   }
 
-  t_event_udata(e_event_type type, int read_pipe_fd, int client_sock, pid_t pid,
-                config_vector config)
-      : m_type(type),
-        m_read_pipe_fd(read_pipe_fd),
-        m_client_sock(client_sock),
-        m_child_pid(pid),
-        m_servers(config),
-        m_other_udata(NULL),
-        m_pipe_write_offset(0),
-        m_total_read_byte(0)
-  {
-  }
-
-  ~t_event_udata()
-  {}
+  ~t_event_udata() {}
 };
 
 class Server

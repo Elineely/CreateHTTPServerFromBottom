@@ -60,6 +60,7 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers, Config &
   for (int i = 0; i < servers.size(); ++i)
   {
     t_event_udata *udata = new t_event_udata(SERVER, server_conf.get_m_server_conf());
+    printf("addServerSocketEvent %p\n", udata);
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
   }

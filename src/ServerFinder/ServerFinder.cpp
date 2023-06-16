@@ -37,8 +37,7 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
             }
         }
     }
-    // if (server_part == "127.0.0.1") //host명이 아닌, IP로 접근했을 경우, 서버 네임이 설정되어 있지 않은 후보자 가운데서 포트 매칭을 확인
-    // {
+    //host명이 아닌, IP로 접근했을 경우, 서버 네임이 설정되어 있지 않은 후보자 가운데서 포트 매칭을 확인
     for (int i = 0; i < candidates.size(); ++i)
     {
         for (int k = 0; k < servers[i].listen.size(); ++k)
@@ -69,8 +68,6 @@ ServerFinder::ServerFinder(Request& request, std::vector<t_server>& servers)
             //연결하려면 socket 쪽에서 port 번호를 받아야 한다. 
             //현재는 BadRequest 취급?? -> 이러면 servername을 설정하지 않은 모든 경우에 대해서 정상 동작을 할 수 없을 것 같다. 
             throw BAD_REQUEST_400;
-            // request.status = BAD_REQUEST_400;
-            // return ;
         }
         std::string host_origin = request.headers.find("host")->second;
         size_t pos_colone = host_origin.find(":");
@@ -80,8 +77,6 @@ ServerFinder::ServerFinder(Request& request, std::vector<t_server>& servers)
         }
         std::string server_part = host_origin.substr(0, pos_colone);
         std::string port_part = host_origin.substr(pos_colone + 1);
-        std::cout << "server : " << server_part << " , port_part : " << port_part << std::endl;
-        // std::string host_origin = request.headers.find("host")->second;
         this->current_server = find_server_name(server_part, port_part, servers);
     }
     catch (StatusCode code)

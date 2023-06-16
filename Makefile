@@ -54,7 +54,7 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_strtrim.cpp			\
 							ft_toLower.cpp			\
 							ft_error.cpp			\
-							ft_process_print.cpp
+							ft_process_print.cpp	
 
 SRC_LOG_DIR				:=	Log/
 SRC_LOG_FILES			:=	Log.cpp

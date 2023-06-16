@@ -1,45 +1,25 @@
 #include "Parser.hpp"
 
-#include <cstring>
-#include <iostream>
-#include <sstream>
-
 #include "Log.hpp"
 #include "utils.hpp"
 
-// Default Constructor
+// Constructor
 Parser::Parser(void) {}
-
-// Destructor
-Parser::~Parser(void) {}
-
-// Copy Constructor
-Parser::Parser(const Parser& src)
-{
-  if (this != &src)
-  {
-    *this = src;
-  }
-}
 
 // Copy Assignment Operator
 Parser& Parser::operator=(Parser const& rhs)
 {
   if (this != &rhs)
   {
-    m_request = rhs.m_request;
     m_pool = rhs.m_pool;
   }
   return *this;
 }
 
-// Public member functions
-struct Request& Parser::get_request(void) { return m_request; }
+// Destructor
+Parser::~Parser(void) {}
 
-ValidationStatus Parser::get_validation_phase(void)
-{
-  return (m_request.validation_phase);
-}
+// Public member functions
 
 void Parser::saveBufferInPool(char* buf, int recv_size)
 {
@@ -75,39 +55,39 @@ size_t Parser::findNewline(const char* buf, size_t offset)
   return (0);
 }
 
-void Parser::checkBodyType(void)
+void Parser::checkBodyType(Request& request)
 {
   std::map<std::string, std::string>::iterator it;
-  std::map<std::string, std::string>::iterator end_it = m_request.headers.end();
+  std::map<std::string, std::string>::iterator end_it = request.headers.end();
 
-  if (m_request.method == "GET" || m_request.method == "DELETE" ||
-      m_request.method == "HEAD" || m_request.method == "PATCH")
+  if (request.method == "GET" || request.method == "DELETE" ||
+      request.method == "HEAD" || request.method == "PATCH")
   {
-    m_request.validation_phase = COMPLETE;
+    request.validation_phase = COMPLETE;
     return;
   }
-  it = m_request.headers.find("content-length");
+  it = request.headers.find("content-length");
   if (it != end_it)
   {
-    m_request.validation_phase = ON_BODY;
+    request.validation_phase = ON_BODY;
     return;
   }
-  it = m_request.headers.find("transfer-encoding");
+  it = request.headers.find("transfer-encoding");
   if (it != end_it)
   {
-    m_request.validation_phase = ON_CHUNKED_BODY;
+    request.validation_phase = ON_CHUNKED_BODY;
     return;
   }
-  m_request.status = BAD_REQUEST_400;
+  request.status = BAD_REQUEST_400;
 }
 
 // Public member functions
-void Parser::readBuffer(char* buf, int recv_size)
+void Parser::readBuffer(char* buf, int recv_size, Request& request)
 {
   try
   {
     // std::cout << buf << std::endl;
-    if (m_request.validation_phase == COMPLETE)
+    if (request.validation_phase == COMPLETE)
     {
       return;
     }
@@ -116,28 +96,28 @@ void Parser::readBuffer(char* buf, int recv_size)
     saveBufferInPool(buf, recv_size);
 
     // Validation 단계에 따라 first-line, header, [body] 를 파싱
-    while (m_request.validation_phase != COMPLETE)
+    while (request.validation_phase != COMPLETE)
     {
-      switch (m_request.validation_phase)
+      switch (request.validation_phase)
       {
         case READY:
         {
-          parseFirstLine();
+          parseFirstLine(request);
           break;
         }
         case ON_HEADER:
         {
-          parseHeaders();
+          parseHeaders(request);
           break;
         }
         case ON_BODY:
         {
-          parseBody();
+          parseBody(request);
           break;
         }
         case ON_CHUNKED_BODY:
         {
-          parseChunkedBody();
+          parseChunkedBody(request);
           break;
         }
         default:
@@ -151,6 +131,6 @@ void Parser::readBuffer(char* buf, int recv_size)
   }
   catch (std::exception& e)
   {
-    // LOG_ERROR("Parser readBuffer catches error (%s)", e.what());
+    // LOG_INFO("Parser readBuffer catches error (%s)", e.what());
   }
 }

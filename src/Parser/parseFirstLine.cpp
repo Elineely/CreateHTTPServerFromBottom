@@ -2,7 +2,7 @@
 #include "Parser.hpp"
 #include "utils.hpp"
 
-void Parser::parseFirstLine(void)
+void Parser::parseFirstLine(Request& request)
 {
   size_t crlf_idx;
 
@@ -28,7 +28,7 @@ void Parser::parseFirstLine(void)
   if (method != "GET" && method != "POST" && method != "DELETE" &&
       method != "HEAD" && method != "PUT")
   {
-    m_request.status = METHOD_NOT_ALLOWED_405;
+    request.status = METHOD_NOT_ALLOWED_405;
   }
 
   // 2. URI 탐색
@@ -36,13 +36,13 @@ void Parser::parseFirstLine(void)
   // EXCEPTION: Method 뒤에 아무 정보도 없는 경우
   if (idx2 == std::string::npos)
   {
-    m_request.status = BAD_REQUEST_400;
+    request.status = BAD_REQUEST_400;
     throw std::invalid_argument("There should be a whitespace after method");
   }
   uri = input.substr(idx1 + 1, idx2 - idx1 - 1);
   if (uri.at(0) != '/')
   {
-    m_request.status = BAD_REQUEST_400;
+    request.status = BAD_REQUEST_400;
     throw std::invalid_argument("URI should start with slash(/)");
   }
 
@@ -51,12 +51,12 @@ void Parser::parseFirstLine(void)
       input.substr(idx2 + 1, input.find_first_of('\r', idx2 + 1) - idx2 - 1);
   if (http_version != "HTTP/1.0" && http_version != "HTTP/1.1")
   {
-    m_request.status = BAD_REQUEST_400;
+    request.status = BAD_REQUEST_400;
     throw std::invalid_argument("HTTP version should be either 1.0 or 1.1");
   }
 
-  m_request.method = method;
-  m_request.uri = uri;
-  m_request.http_version = http_version;
-  m_request.validation_phase = ON_HEADER;
+  request.method = method;
+  request.uri = uri;
+  request.http_version = http_version;
+  request.validation_phase = ON_HEADER;
 }

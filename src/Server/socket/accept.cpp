@@ -11,7 +11,7 @@ int Server::clientReadAccept(struct kevent *current_event)
                        reinterpret_cast<socklen_t *>(&client_addr_size));
   if (client_sock == -1)
   {
-    LOG_ERROR("Failed to accept client socket (strerror: %s)", strerror(errno));
+    LOG_INFO("Failed to accept client socket (strerror: %s)", strerror(errno));
     return (-1);
   }
   struct linger
