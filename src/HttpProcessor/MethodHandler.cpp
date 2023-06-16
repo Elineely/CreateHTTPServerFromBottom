@@ -192,7 +192,7 @@ void PostMethodHandler::methodRun()
   }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
-  // delete the target file
+  // ft_delete(the target file
   if (m_response_data.file_exist == true)
   {
     // error deleting file

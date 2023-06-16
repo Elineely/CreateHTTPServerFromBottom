@@ -1,13 +1,12 @@
 #include "Log.hpp"
 #include "Server.hpp"
+#include "utils.hpp"
 
 void Server::clientWriteEvent(struct kevent *current_event)
 {
   LOG_INFO("✅ CLIENT WRITE EVENT ✅");
 
   t_event_udata *current_udata;
-  t_event_udata *new_udata;
-  t_event_udata *read_udata;
   t_response_write *response_write;
   char *message;
 
@@ -24,9 +23,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
   }
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
-  // delete current_udata->m_request;
-  // delete current_udata->m_response;
-  delete current_udata;
+  ft_delete_udata(&current_udata);
 }
 
 void Server::pipeWriteEvent(struct kevent *current_event)
@@ -74,6 +71,8 @@ void Server::pipeWriteEvent(struct kevent *current_event)
   if (current_udata->m_pipe_write_offset == request_body_size)
   {
     close(current_udata->m_write_pipe_fd);
-    delete current_udata;
+    ft_delete_request(&current_udata->m_request);
+    ft_delete_response(&current_udata->m_response);
+    ft_delete_udata(&current_udata);
   }
 }

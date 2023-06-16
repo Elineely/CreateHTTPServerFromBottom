@@ -16,8 +16,10 @@ void Server::serverReadEvent(struct kevent *current_event)
   {
     disconnectSocket(current_event->ident);
     if (current_udata->m_other_udata != NULL)
-      delete current_udata->m_other_udata;
-    delete current_udata;
+      ft_delete_udata(&current_udata->m_other_udata);
+    ft_delete_request(&current_udata->m_request);
+    ft_delete_response(&current_udata->m_response);
+    ft_delete_udata(&current_udata);
     return;
   }
   client_sock = clientReadAccept(current_event);
@@ -42,7 +44,9 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   if (recv_size == 0)
   {
     disconnectSocket(current_event->ident);
-    delete current_udata;
+    ft_delete_request(&current_udata->m_request);
+    ft_delete_response(&current_udata->m_response);
+    ft_delete_udata(&current_udata);
     return;
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
@@ -62,11 +66,11 @@ void Server::clientReadEvent(struct kevent *current_event)
               current_udata->m_response->status_code);
     if (current_udata->m_other_udata != NULL)
     {
-      delete current_udata->m_other_udata;
+      ft_delete_udata(&current_udata->m_other_udata);
     }
-    // delete current_udata->m_request;
-    // delete current_udata->m_response;
-    // delete current_udata;
+    // ft_delete((void**)&current_udata->m_request;
+    // ft_delete((void**)&current_udata->m_response;
+    // ft_delete((void**)&current_udata;
     disconnectSocket(current_event->ident);
     return;
   }
@@ -94,10 +98,10 @@ void Server::clientReadEvent(struct kevent *current_event)
     addStaticRequestEvent(current_event, current_udata, request, response);
   }
 
-  delete current_udata->m_request;
+  ft_delete_request(&current_udata->m_request);
   current_udata->m_request = new Request();
 
-  delete current_udata->m_response;
+  ft_delete_response(&current_udata->m_response);
   current_udata->m_response = new Response();
   Parser new_parser;
   current_udata->m_parser = new_parser;
@@ -165,6 +169,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
   response_message = response_generator.generateResponseMessage();
   udata = new t_event_udata(CLIENT, current_udata->m_server, NULL, NULL);
   udata->m_response_write.message = response_message;
+  udata->m_response_write.offset = 0;
   udata->m_response_write.length = response_message.size();
 
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
@@ -220,7 +225,9 @@ void Server::pipeReadEvent(struct kevent *current_event)
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-    delete current_udata->m_other_udata;
-    delete current_udata;
+    ft_delete_request(&(current_udata->m_request));
+    ft_delete_response(&(current_udata->m_response));
+    ft_delete_udata(&(current_udata->m_other_udata));
+    ft_delete_udata(&current_udata);
   }
 }

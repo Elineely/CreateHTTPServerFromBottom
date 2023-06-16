@@ -1,5 +1,6 @@
-#include "Server.hpp"
 #include "Log.hpp"
+#include "Server.hpp"
+#include "utils.hpp"
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 {
@@ -14,14 +15,18 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   int result = kill(current_event->ident, SIGTERM);
   waitpid(current_event->ident, NULL, 0);
 
-  ResponseGenerator not_ok(*current_udata->m_request, *current_udata->m_response);
+  ResponseGenerator not_ok(*current_udata->m_request,
+                           *current_udata->m_response);
   response_message = not_ok.generateResponseMessage();
   t_event_udata *udata =
-      new t_event_udata(CLIENT, current_udata->m_server, current_udata->m_request, current_udata->m_response);
+      new t_event_udata(CLIENT, current_udata->m_server,
+                        current_udata->m_request, current_udata->m_response);
 
   write(1, &response_message[0], response_message.size());
-  addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock, EVFILT_WRITE,
-                       EV_ADD | EV_ENABLE, 0, 0, udata);
-  delete current_udata->m_other_udata;
-  delete current_udata;
+  addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+                       EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+  ft_delete_request(&current_udata->m_request);
+  ft_delete_response(&current_udata->m_response);
+  ft_delete_udata(&current_udata->m_other_udata);
+  ft_delete_udata(&current_udata);
 }

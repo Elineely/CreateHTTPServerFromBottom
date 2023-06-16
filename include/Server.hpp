@@ -34,6 +34,7 @@
 #include "Config.hpp"
 #include "Parser.hpp"
 #include "ResponseGenerator.hpp"
+#include "utils.hpp"
 
 // Server 세팅
 #define BUF_SIZE 650000
