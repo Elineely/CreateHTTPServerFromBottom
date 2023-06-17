@@ -29,6 +29,9 @@ struct Response
   std::string cgi_bin_path;
   std::string uploaded_path;
   std::vector<char> response_message;
+  int static_read_file_fd;
+  off_t static_read_file_size;
+  int static_write_file_fd;
   int read_pipe_fd;
   int write_pipe_fd;
   int cgi_child_pid;
