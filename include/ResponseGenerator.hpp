@@ -26,6 +26,7 @@ struct Response
   std::vector<char> body;
   StatusCode status_code;
   bool cgi_flag;
+  bool is_cgi_timeout;
   std::string cgi_bin_path;
   std::string uploaded_path;
   std::vector<char> response_message;
