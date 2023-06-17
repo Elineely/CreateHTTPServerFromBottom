@@ -2,10 +2,10 @@
 
 #include <ctime>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include "Log.hpp"
-#include <iostream>
 
 // canonical
 Response::Response()
@@ -29,7 +29,6 @@ Response::Response()
   write_pipe_fd = -1;
   cgi_child_pid = -1;
   error_keyword = false;
-  error_page_path = "";
   static_read_file_fd = -1;
   static_write_file_fd = -1;
 }
@@ -42,7 +41,7 @@ Response& Response::operator=(const Response& obj)
 {
   if (this != &obj)
   {
-      std::cout << "Response Body copy" << std::endl;
+    std::cout << "Response Body copy" << std::endl;
     accepted_method = obj.accepted_method;
     rediretion_location = obj.rediretion_location;
     file_path = obj.file_path;
@@ -64,8 +63,8 @@ Response& Response::operator=(const Response& obj)
     cgi_child_pid = obj.cgi_child_pid;
     response_message = obj.response_message;
     error_keyword = obj.error_keyword;
-    error_page_path = obj.error_page_path;
-    static_read_file_fd =obj.static_read_file_fd;
+    error_page_vector = obj.error_page_vector;
+    static_read_file_fd = obj.static_read_file_fd;
     static_write_file_fd = obj.static_write_file_fd;
   }
   return (*this);
@@ -268,18 +267,11 @@ void ResponseGenerator::generateLocation()
 
 void ResponseGenerator::generateErrorBody()
 {
-  std::ifstream error_file(m_response.error_page_path);
-
-  if (m_response.error_keyword == true && m_response.error_page_path != "" &&
-      error_file.is_open() == true)
+  LOG_DEBUG("error_page vector size: %d", m_response.error_page_vector.size());
+  if (m_response.error_keyword == true &&
+      m_response.error_page_vector.size() > 0)
   {
-    error_file.seekg(0, std::ios::end);
-    std::streampos file_size = error_file.tellg();
-    error_file.seekg(0, std::ios::beg);
-    std::vector<char> buffer(file_size);
-    error_file.read(&buffer[0], file_size);
-    m_response.body = buffer;
-    error_file.close();
+    m_response.body = m_response.error_page_vector;
   }
   else
   {
@@ -295,7 +287,6 @@ void ResponseGenerator::generateErrorBody()
     appendStrToBody(" ");
     appendStrToBody(status_str.getStatusStr(m_response.status_code));
     appendStrToBody("</h1></center></body>\r\n</html>");
-    if (error_file.is_open()) error_file.close();
   }
 }
 
@@ -346,13 +337,13 @@ std::vector<char>& ResponseGenerator::generateResponseMessage()
   {
     // LOG_DEBUG("m_response.status_code: %d", m_response.status_code);
     if (m_response.status_code != OK_200 && m_response.status_code != FOUND_302)
-      throw (m_response.status_code);
+      throw(m_response.status_code);
     cgiDataProcess();
     setStartLine();
     setHeaders();
     setBody();
   }
-catch (StatusCode code)
+  catch (StatusCode code)
   {
     LOG_INFO("Error code: %d", code);
     m_response.status_code = code;

@@ -29,6 +29,7 @@ struct Response
   std::string cgi_bin_path;
   std::string uploaded_path;
   std::vector<char> response_message;
+  std::vector<char> error_page_vector;
   int static_read_file_fd;
   off_t static_read_file_size;
   int static_write_file_fd;
@@ -36,7 +37,6 @@ struct Response
   int write_pipe_fd;
   int cgi_child_pid;
   bool error_keyword;
-  std::string error_page_path;
 
   Response();
   Response(const Response& obj);
