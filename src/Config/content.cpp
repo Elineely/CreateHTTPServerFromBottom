@@ -183,6 +183,10 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   }
 
   {
+    if (server.error_page.size() == 0)
+    {
+      return server;
+    }
     int file_fd;
 
     ssize_t read_byte;

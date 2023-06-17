@@ -25,6 +25,7 @@ Response::Response()
   file_exist = false;
   path_exist = false;
   cgi_flag = false;
+  is_cgi_timeout = false;
   read_pipe_fd = -1;
   write_pipe_fd = -1;
   cgi_child_pid = -1;
@@ -58,6 +59,7 @@ Response& Response::operator=(const Response& obj)
     path_exist = obj.path_exist;
     body = obj.body;
     cgi_flag = obj.cgi_flag;
+    is_cgi_timeout = obj.is_cgi_timeout;
     read_pipe_fd = obj.read_pipe_fd;
     write_pipe_fd = obj.write_pipe_fd;
     cgi_child_pid = obj.cgi_child_pid;
@@ -196,7 +198,14 @@ void ResponseGenerator::generateContentType()
   appendStrToResponse_message("Content-Type:");
   if (m_response.cgi_flag == true)
   {
-    appendStrToResponse_message(m_cgi_content_type);
+    if (m_cgi_content_type == "")
+    {
+      appendStrToResponse_message("text/html");
+    }
+    else
+    {
+      appendStrToResponse_message(m_cgi_content_type);
+    }
     appendStrToResponse_message("\r\n");
   }
   else
@@ -213,9 +222,20 @@ void ResponseGenerator::generateContentLength()
   std::stringstream ss;
   std::string body_length;
   if (m_response.cgi_flag == true)
-    ss << m_cgi_body.size();
+  {
+    if (m_response.is_cgi_timeout == true)
+    {
+      ss << m_response.body.size();
+    }
+    else
+    {
+      ss << m_cgi_body.size();
+    }
+  }
   else
+  {
     ss << m_response.body.size();
+  }
   body_length = ss.str();
 
   appendStrToResponse_message("Content-length:");
@@ -311,14 +331,30 @@ void ResponseGenerator::setHeaders()
 
 void ResponseGenerator::setBody()
 {
-  if (m_request.method == "HEAD") return;
+  if (m_request.method == "HEAD")
+  {
+    return;
+  }
   if (m_response.cgi_flag == true)
-    m_response.response_message.insert(m_response.response_message.end(),
-                                       m_cgi_body.begin(), m_cgi_body.end());
+  {
+    if (m_response.is_cgi_timeout == true)
+    {
+      m_response.response_message.insert(m_response.response_message.end(),
+                                         m_response.body.begin(),
+                                         m_response.body.end());
+    }
+    else
+    {
+      m_response.response_message.insert(m_response.response_message.end(),
+                                         m_cgi_body.begin(), m_cgi_body.end());
+    }
+  }
   else
+  {
     m_response.response_message.insert(m_response.response_message.end(),
                                        m_response.body.begin(),
                                        m_response.body.end());
+  }
 }
 
 std::vector<char> ResponseGenerator::generateErrorResponseMessage()

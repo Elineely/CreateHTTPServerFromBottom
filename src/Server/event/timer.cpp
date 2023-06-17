@@ -4,7 +4,7 @@
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 {
-  // LOG_INFO("⌛️ CGI PROCESS TIMEOUT EVENT ⌛️");
+  LOG_INFO("⌛️ CGI PROCESS TIMEOUT EVENT ⌛️");
   std::vector<char> response_message;
 
   t_event_udata *current_udata =
@@ -15,15 +15,20 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   int result = kill(current_event->ident, SIGTERM);
   waitpid(current_event->ident, NULL, 0);
 
+  current_udata->m_response->is_cgi_timeout = true;
   ResponseGenerator not_ok(*current_udata->m_request,
                            *current_udata->m_response);
   response_message = not_ok.generateResponseMessage();
   t_event_udata *udata =
       new t_event_udata(CLIENT, current_udata->m_servers,
                         current_udata->m_request, current_udata->m_response);
-  printf("[cgiProcessTimeoutEvent] udata: %p", udata);
 
+  udata->m_response_write.message = response_message;
+  udata->m_response_write.offset = 0;
+  udata->m_response_write.length = response_message.size();
+  printf("[cgiProcessTimeoutEvent] udata: %p\n", udata);
   write(1, &response_message[0], response_message.size());
+
   addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
   for (int i = 0; i < current_udata->m_other_udata->m_read_buffer.size(); ++i)
