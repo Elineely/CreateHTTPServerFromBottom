@@ -71,6 +71,7 @@ class Config
   bool isVaildLocationBlock(t_location &location, int line_number);
 
   void showServerConf();
+  void openErrorPage(t_server& server);
 };
 
 #endif

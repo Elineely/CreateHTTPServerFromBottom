@@ -126,6 +126,38 @@ t_location Config::get_location_expand(std::ifstream &config_file,
   return temp_location;
 }
 
+void Config::openErrorPage(t_server &server)
+{
+  if (server.error_page.size() == 0)
+  {
+    return;
+  }
+
+  int file_fd;
+  ssize_t read_byte;
+  char buf[BUF_SIZE];
+  std::string file_path;
+
+  file_path = (server.root.size() == 0 ? "./data" : server.root[0]) + "/" +
+              server.error_page[0];
+  file_fd = open(file_path.c_str(), O_RDONLY, 0644);
+  if (file_fd == -1)
+  {
+    return;
+  }
+
+  read_byte = read(file_fd, buf, BUF_SIZE);
+  while (read_byte > 0)
+  {
+    for (int i = 0; i < read_byte; ++i)
+    {
+      server.error_page_vector.push_back(buf[i]);
+    }
+    read_byte = read(file_fd, buf, BUF_SIZE);
+  }
+  close(file_fd);
+}
+
 t_server Config::get_parse_server_block(std::ifstream &file,
                                         std::string config_file_name,
                                         content_list_type vaild_content_list)
@@ -182,34 +214,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
     exit(EXIT_FAILURE);
   }
 
-  {
-    if (server.error_page.size() == 0)
-    {
-      return server;
-    }
-    int file_fd;
-
-    ssize_t read_byte;
-    char buf[BUF_SIZE];
-    std::string file_path;
-
-    file_path = (server.root.size() == 0 ? "./data" : server.root[0]) + "/" +
-                server.error_page[0];
-    file_fd = open(file_path.c_str(), O_RDONLY, 0644);
-    if (file_fd != -1)
-    {
-      read_byte = read(file_fd, buf, BUF_SIZE);
-      while (read_byte > 0)
-      {
-        for (int i = 0; i < read_byte; ++i)
-        {
-          server.error_page_vector.push_back(buf[i]);
-        }
-        read_byte = read(file_fd, buf, BUF_SIZE);
-      }
-    }
-    close(file_fd);
-  }
+  openErrorPage(server);
 
   return server;
 }
