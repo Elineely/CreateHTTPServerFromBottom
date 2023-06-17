@@ -27,13 +27,13 @@ void Server::serverReadEvent(struct kevent *current_event)
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
   Request *request = new Request();
-  printf("serverReadEvent request: %p\n", request); //fish
+  printf("serverReadEvent request: %p\n", request);  // fish
 
   Response *response = new Response();
-  printf("serverReadEvent response: %p\n", response); // suspicious
+  printf("serverReadEvent response: %p\n", response);  // suspicious
 
-
-  udata = new t_event_udata(CLIENT, current_udata->m_servers, request, response);
+  udata =
+      new t_event_udata(CLIENT, current_udata->m_servers, request, response);
   printf("serverReadEvent udata: %p\n", udata);
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
@@ -70,7 +70,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     LOG_DEBUG("method: %s, status code: %d",
               current_udata->m_request->method.c_str(),
               current_udata->m_response->status_code);
-    
+
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
@@ -104,11 +104,13 @@ void Server::clientReadEvent(struct kevent *current_event)
 
   ft_delete(&current_udata->m_request);
   current_udata->m_request = new Request();
-  printf("addCgiRequestEvent current_udata->m_request %p\n", current_udata->m_request); // TODO
+  printf("addCgiRequestEvent current_udata->m_request %p\n",
+         current_udata->m_request);  // TODO
 
   ft_delete(&current_udata->m_response);
   current_udata->m_response = new Response();
-  printf("addCgiRequestEvent current_udata->m_response %p\n",current_udata->m_response); // TODO
+  printf("addCgiRequestEvent current_udata->m_response %p\n",
+         current_udata->m_response);  // TODO
 
   Parser new_parser;
   current_udata->m_parser = new_parser;
@@ -120,26 +122,27 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
                                 struct Response &response)
 {
   // Set up the event structure
-  Request* new_request = new Request(*current_udata->m_request);
-  printf("[addCgiRequestEvent] new_request: %p\n", new_request); // TODO
+  Request *new_request = new Request(*current_udata->m_request);
+  printf("[addCgiRequestEvent] new_request: %p\n", new_request);  // TODO
 
   t_event_udata *udata =
       new t_event_udata(PIPE, current_udata->m_servers, new_request, NULL);
   printf("[addCgiRequestEvent] udata: %p\n", udata);
 
   new_request = new Request(*current_udata->m_request);
-  printf("[addCgiRequestEvent] new_request: %p\n", new_request); // TODO
+  printf("[addCgiRequestEvent] new_request: %p\n", new_request);  // TODO
 
   t_event_udata *udata2 =
       new t_event_udata(PROCESS, current_udata->m_servers, new_request, NULL);
-  printf("[addCgiRequestEvent] udata2: %p\n", udata2); // TODO
+  printf("[addCgiRequestEvent] udata2: %p\n", udata2);  // TODO
 
   udata->m_read_pipe_fd = response.read_pipe_fd;
   udata->m_write_pipe_fd = response.write_pipe_fd;
   udata->m_child_pid = response.cgi_child_pid;
   udata->m_client_sock = current_event->ident;
   udata->m_response = new Response(response);
-  printf("[addCgiRequestEvent] udata->m_response %p\n", udata->m_response); // TODO
+  printf("[addCgiRequestEvent] udata->m_response %p\n",
+         udata->m_response);  // TODO
   udata->m_other_udata = udata2;
 
   udata2->m_read_pipe_fd = response.read_pipe_fd;
@@ -147,24 +150,26 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
   udata2->m_child_pid = response.cgi_child_pid;
   udata2->m_client_sock = current_event->ident;
   udata2->m_response = new Response(response);
-  printf("[addCgiRequestEvent] udata2->m_response %p\n", udata2->m_response); // TODO
+  printf("[addCgiRequestEvent] udata2->m_response %p\n",
+         udata2->m_response);  // TODO
   udata2->m_other_udata = udata;
 
   if (request.method == "POST")
   {
-    Request* new_request_2 = new Request(*current_udata->m_request);
+    Request *new_request_2 = new Request(*current_udata->m_request);
     printf("[addCgiRequestEvent] new_request_2: %p", new_request_2);
 
     t_event_udata *udata1 =
         new t_event_udata(PIPE, current_udata->m_servers, new_request_2, NULL);
     printf("[addCgiRequestEvent] udata1: %p\n", udata1);
-  
+
     udata1->m_read_pipe_fd = response.read_pipe_fd;
     udata1->m_write_pipe_fd = response.write_pipe_fd;
     udata1->m_child_pid = response.cgi_child_pid;
     udata1->m_client_sock = current_event->ident;
     udata1->m_response = new Response();
-    printf("[addCgiRequestEvent] udata1->m_response %p\n", udata1->m_response); // TODO
+    printf("[addCgiRequestEvent] udata1->m_response %p\n",
+           udata1->m_response);  // TODO
     fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
     addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata1);
@@ -174,8 +179,8 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
   addEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
   addEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
-                       EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS, 600,
-                       udata2);
+                       EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS,
+                       DEFAULT_TIMEOUT_SECOND, udata2);
 }
 
 void Server::addStaticRequestEvent(struct kevent *current_event,
@@ -183,9 +188,9 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
                                    struct Request &request,
                                    struct Response &response)
 {
-  Request* new_request;
-  Response* new_response;
-  
+  Request *new_request;
+  Response *new_response;
+
   if (response.static_read_file_fd != -1)
   {
     off_t file_size;
@@ -203,40 +208,43 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
 
     new_request = new Request(request);
     new_response = new Response(response);
-    printf("[addStaticRequestEvent] new_request: %p\n", new_request); // TODO
-    printf("[addStaticRequestEvent] new_response: %p\n", new_response); // TODO
-    udata = new t_event_udata(STATIC_FILE, current_udata->m_servers, new_request, new_response);
+    printf("[addStaticRequestEvent] new_request: %p\n", new_request);    // TODO
+    printf("[addStaticRequestEvent] new_response: %p\n", new_response);  // TODO
+    udata = new t_event_udata(STATIC_FILE, current_udata->m_servers,
+                              new_request, new_response);
     udata->m_client_sock = current_event->ident;
-    addEventToChangeList(m_kqueue.change_list, response.static_read_file_fd, 
-                        EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
-    return ;
+    addEventToChangeList(m_kqueue.change_list, response.static_read_file_fd,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
+    return;
   }
   else if (response.static_write_file_fd != -1)
   {
     t_event_udata *udata;
-    
+
     new_request = new Request(request);
     new_response = new Response(response);
-    printf("[addStaticRequestEvent] new_request: %p\n", new_request); // TODO
-    printf("[addStaticRequestEvent] new_response: %p\n", new_response); // TODO
-    udata = new t_event_udata(STATIC_FILE, current_udata->m_servers, new_request, new_response);
+    printf("[addStaticRequestEvent] new_request: %p\n", new_request);    // TODO
+    printf("[addStaticRequestEvent] new_response: %p\n", new_response);  // TODO
+    udata = new t_event_udata(STATIC_FILE, current_udata->m_servers,
+                              new_request, new_response);
     udata->m_client_sock = current_event->ident;
-    addEventToChangeList(m_kqueue.change_list, response.static_write_file_fd, 
-                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    return ;
+    addEventToChangeList(m_kqueue.change_list, response.static_write_file_fd,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+    return;
     // 파일을 만들기
     // 파일에 쓰기
-    // 파일이 문제가 있다면 에러 throw  
-    // content_stream.write(&m_request_data.body[0], m_request_data.body.size());
+    // 파일이 문제가 있다면 에러 throw
+    // content_stream.write(&m_request_data.body[0],
+    // m_request_data.body.size());
   }
-  
+
   ResponseGenerator response_generator(request, response);
   std::vector<char> response_message;
   t_event_udata *udata;
 
   response_message = response_generator.generateResponseMessage();
   udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
-  printf("[addStaticRequestEvent] udata: %p\n", udata); // TODO
+  printf("[addStaticRequestEvent] udata: %p\n", udata);  // TODO
   udata->m_response_write.message = response_message;
   udata->m_response_write.offset = 0;
   udata->m_response_write.length = response_message.size();
@@ -258,7 +266,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
   if (read_byte > 0)
   {
     buf = new char[read_byte]();
-    printf("[pipeReadEvent] buf %p\n", buf); // TODO
+    printf("[pipeReadEvent] buf %p\n", buf);  // TODO
     std::memmove(buf, temp_buf, read_byte);
     current_udata->m_read_buffer.push_back(buf);
     current_udata->m_read_bytes.push_back(read_byte);
@@ -286,7 +294,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
     udata =
         new t_event_udata(CLIENT, current_udata->m_servers,
                           current_udata->m_request, current_udata->m_response);
-        printf("[pipeReadEvent] udata: %p\n", udata); // TODO
+    printf("[pipeReadEvent] udata: %p\n", udata);  // TODO
 
     udata->m_response_write.message = ok.generateResponseMessage();
     udata->m_response_write.offset = 0;
@@ -323,20 +331,21 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     LOG_INFO("static read file eof reached");
     close(current_event->ident);
     t_event_udata *udata;
-    Request* request = current_udata->m_request;
-    Response* response = current_udata->m_response;
+    Request *request = current_udata->m_request;
+    Response *response = current_udata->m_response;
     ResponseGenerator response_generator(*request, *response);
 
     udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
-    printf("[staticFileReadEvent] udata: %p\n", udata); // TODO
-    udata->m_response_write.message = response_generator.generateResponseMessage();
+    printf("[staticFileReadEvent] udata: %p\n", udata);  // TODO
+    udata->m_response_write.message =
+        response_generator.generateResponseMessage();
     udata->m_response_write.offset = 0;
     udata->m_response_write.length = udata->m_response_write.message.size();
 
-    addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock, 
-                            EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+    addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
-  }  
+  }
 }

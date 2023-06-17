@@ -1,5 +1,10 @@
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "Config.hpp"
 #include "Log.hpp"
+
+#define BUF_SIZE 1024
 
 bool isVaildServerBlockContent(std::string split_content_line_content,
                                content_list_type vaild_content_list)
@@ -30,12 +35,17 @@ bool Config::isVaildServerBlock(t_server &server, int line_number)
 {
   if (server.listen.size() == 0)
   {
-    LOG_INFO("Invaild Server Content, does not have listen content Line number : %d", line_number);
+    LOG_INFO(
+        "Invaild Server Content, does not have listen content Line number : %d",
+        line_number);
     return 1;
   }
   if (server.max_body_size.size() == 0)
   {
-    LOG_INFO("Invaild Server Content, does not have max_body_size content Line number : %d", line_number);
+    LOG_INFO(
+        "Invaild Server Content, does not have max_body_size content Line "
+        "number : %d",
+        line_number);
     return 1;
   }
   return 0;
@@ -45,12 +55,16 @@ bool Config::isVaildLocationBlock(t_location &location, int line_number)
 {
   if (location.root == "")
   {
-    LOG_INFO("Invaild Location, does not have root content Line number : %d", line_number);
+    LOG_INFO("Invaild Location, does not have root content Line number : %d",
+             line_number);
     return 1;
   }
   if (location.accepted_method == "")
   {
-    LOG_INFO("Invaild Location, does not have accepted_method content Line number : %d", line_number);
+    LOG_INFO(
+        "Invaild Location, does not have accepted_method content Line number : "
+        "%d",
+        line_number);
     return 1;
   }
   return 0;
@@ -59,12 +73,13 @@ bool Config::isVaildLocationBlock(t_location &location, int line_number)
 t_location Config::get_location_expand(std::ifstream &config_file,
                                        std::string config_file_name,
                                        content_list_type vaild_content_list,
-                                       int content_size, std::string server_max_size)
+                                       int content_size,
+                                       std::string server_max_size)
 {
   if (isContentCount(content_size, 3))
   {
     LOG_INFO("Invalid content at line %d in %s", current_line,
-              config_file_name.c_str());
+             config_file_name.c_str());
     exit(EXIT_FAILURE);
   }
   std::string read_line;
@@ -82,7 +97,7 @@ t_location Config::get_location_expand(std::ifstream &config_file,
         split_content_line.size() >= 3)
     {
       LOG_INFO("Invalid content at line %d in %s", current_line,
-                config_file_name.c_str());
+               config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     temp_location_map.insert(std::pair<std::string, std::string>(
@@ -99,11 +114,11 @@ t_location Config::get_location_expand(std::ifstream &config_file,
   temp_location.accepted_method = temp_location_map["accepted_method"];
   temp_location.redirection = temp_location_map["redirection"];
   temp_location.max_body_size = server_max_size;
-  if ( temp_location_map["max_body_size"] != "")
+  if (temp_location_map["max_body_size"] != "")
   {
-    temp_location.max_body_size =  temp_location_map["max_body_size"];
+    temp_location.max_body_size = temp_location_map["max_body_size"];
   }
-  
+
   if (isVaildLocationBlock(temp_location, current_line))
   {
     exit(EXIT_FAILURE);
@@ -123,8 +138,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   while (getline(file, read_line, '\n'))
   {
     std::vector<std::string> split_content_line = ft_config_split(read_line);
-    if (split_content_line.size() == 0)
-      continue;
+    if (split_content_line.size() == 0) continue;
     if (split_content_line[0] == "}")
     {
       break;
@@ -132,7 +146,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list))
     {
       LOG_INFO("Invalid content at line %d in %s", current_line,
-                config_file_name.c_str());
+               config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     if (split_content_line[0] == "location")
@@ -141,7 +155,8 @@ t_server Config::get_parse_server_block(std::ifstream &file,
       temp_locations.insert(std::pair<std::string, t_location>(
           split_content_line[1],
           get_location_expand(file, config_file_name, vaild_content_list,
-                              split_content_line.size(), temp_conf["max_body_size"][0])));
+                              split_content_line.size(),
+                              temp_conf["max_body_size"][0])));
     }
     else
     {
@@ -166,6 +181,32 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   {
     exit(EXIT_FAILURE);
   }
+
+  {
+    int file_fd;
+
+    ssize_t read_byte;
+    char buf[BUF_SIZE];
+    std::string file_path;
+
+    file_path = (server.root.size() == 0 ? "./data" : server.root[0]) + "/" +
+                server.error_page[0];
+    file_fd = open(file_path.c_str(), O_RDONLY, 0644);
+    if (file_fd != -1)
+    {
+      read_byte = read(file_fd, buf, BUF_SIZE);
+      while (read_byte > 0)
+      {
+        for (int i = 0; i < read_byte; ++i)
+        {
+          server.error_page_vector.push_back(buf[i]);
+        }
+        read_byte = read(file_fd, buf, BUF_SIZE);
+      }
+    }
+    close(file_fd);
+  }
+
   return server;
 }
 
@@ -182,7 +223,7 @@ void Config::set_m_server_conf(std::ifstream &config_file,
         split_content_line[1] != "{")
     {
       LOG_INFO("Invalid content at line %d in %s", current_line,
-                config_file_name.c_str());
+               config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     ++current_line;
