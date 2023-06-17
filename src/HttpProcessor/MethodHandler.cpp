@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -149,21 +150,53 @@ GetMethodHandler::GetMethodHandler(Request& request_data,
 {
 }
 GetMethodHandler::~GetMethodHandler(void) {}
+
 void GetMethodHandler::methodRun()
 {
-  if (m_response_data.path_exist == false) throw NOT_FOUND_404;
+  int infile_fd;
+
+  if (m_response_data.path_exist == false)
+  {
+    throw NOT_FOUND_404;
+  }
   if (m_response_data.file_exist == true)
-    fileToBody(m_response_data.file_path + m_response_data.file_name);
+  {
+    std::string infile_name;
+
+    infile_name = m_response_data.file_path + m_response_data.file_name;
+    infile_fd = open(infile_name.c_str(), O_RDONLY, 0644);
+    if (infile_fd == -1)
+    {
+      throw NOT_FOUND_404;
+    }
+    m_response_data.static_read_file_fd = infile_fd;
+  }
   else
   {
     if (m_response_data.file_name != "")
+    {
       throw NOT_FOUND_404;
+    }
     else if (m_response_data.index_exist == true)
-      fileToBody(m_response_data.file_path + m_response_data.index_name);
+    {
+      std::string infile_name;
+      
+      infile_name = m_response_data.file_path + m_response_data.index_name;
+      infile_fd = open(infile_name.c_str(), O_RDONLY, 0644);
+      if (infile_fd == -1)
+      {
+        throw NOT_FOUND_404;
+      }
+      m_response_data.static_read_file_fd = infile_fd;
+    }
     else if (m_response_data.auto_index == true)
+    {
       autoIndexToBody(m_response_data.file_path);
+    }
     else
+    {
       throw NOT_FOUND_404;
+    }
   }
 }
 
@@ -192,26 +225,17 @@ void PostMethodHandler::methodRun()
   }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
-  // ft_delete(the target file
-  if (m_response_data.file_exist == true)
-  {
-    // error deleting file
-    if (std::remove(&target_file[0]) != 0)
-    {
-      throw INTERNAL_SERVER_ERROR_500;
-    }
-  }
-  if (m_request_data.body.size() == 0)
-  {
-    return;
-  }
-  std::ofstream new_file_stream(target_file, std::ios::binary);
-  if (!new_file_stream)
+
+  int outfile_fd;
+
+  outfile_fd = open(target_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  if (outfile_fd == -1)
   {
     throw INTERNAL_SERVER_ERROR_500;
   }
-  new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
-  new_file_stream.close();
+  m_response_data.static_write_file_fd = outfile_fd;
+  // new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
+  // new_file_stream.close();
 }
 
 // DeleteMethodHandler
@@ -255,30 +279,18 @@ void PutMethodHandler::methodRun()
   {
     throw BAD_REQUEST_400;
   }
-  if (m_response_data.file_exist == false && m_response_data.file_name == "")
+  if (m_response_data.file_exist == false)
   {
     m_response_data.file_name = "default.temp";
-    if (access(m_response_data.file_name.c_str(), F_OK) == 0)
-      m_response_data.file_exist = true;
   }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
+  int outfile_fd;
 
-  if (m_response_data.file_exist == false)
+  outfile_fd = open(target_file.c_str(), O_RDWR | O_CREAT | O_APPEND, 0644);
+  if (outfile_fd == -1)
   {
-    std::ofstream new_file_stream(target_file,
-                                  std::ios::app | std::ios::binary);
-    if (!new_file_stream) throw INTERNAL_SERVER_ERROR_500;
-    new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
-    new_file_stream.close();
+    throw INTERNAL_SERVER_ERROR_500;
   }
-  else
-  {
-    std::ofstream append_stream(target_file, std::ios::app);
-    std::stringstream content_stream;
-    if (!append_stream) throw INTERNAL_SERVER_ERROR_500;
-    content_stream.write(&m_request_data.body[0], m_request_data.body.size());
-    append_stream << content_stream.str();
-    append_stream.close();
-  }
+  m_response_data.static_write_file_fd = outfile_fd;
 }

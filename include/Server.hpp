@@ -38,7 +38,7 @@
 
 // Server 세팅
 #define BUF_SIZE 650000
-#define MAX_EVENT_LIST_SIZE 8
+#define MAX_EVENT_LIST_SIZE 128
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
 #define BACK_LOG SOMAXCONN
@@ -53,6 +53,7 @@ enum e_event_type
   CLIENT,
   PIPE,
   PROCESS,
+  STATIC_FILE,
 };
 
 enum e_kqueue_event
@@ -69,6 +70,9 @@ enum e_kqueue_event
   PIPE_WRITE,
   PIPE_READ,
   PIPE_EOF,
+  STATIC_FILE_READ,
+  STATIC_FILE_WRITE,
+  STATIC_FILE_EOF,
   NOTHING
 };
 
@@ -114,7 +118,7 @@ struct t_event_udata
   int m_write_pipe_fd;
   int m_client_sock;
   int m_server_sock;
-  size_t m_pipe_write_offset;
+  size_t m_file_write_offset;
   pid_t m_child_pid;
   size_t m_total_read_byte;
   std::vector<size_t> m_read_bytes;
@@ -133,7 +137,7 @@ struct t_event_udata
       : m_type(type),
         m_servers(config),
         m_other_udata(NULL),
-        m_pipe_write_offset(0),
+        m_file_write_offset(0),
         m_total_read_byte(0),
         m_request(request),
         m_response(response)
@@ -144,7 +148,7 @@ struct t_event_udata
       : m_type(type),
         m_servers(config),
         m_other_udata(NULL),
-        m_pipe_write_offset(0),
+        m_file_write_offset(0),
         m_total_read_byte(0)
   {
   }
@@ -185,7 +189,7 @@ class Server
 
   void serverErrorEvent(struct kevent *current_event);
 
-  void pipeWriteEvent(struct kevent *current_event);
+  void fileWriteEvent(struct kevent *current_event);
   void pipeReadEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
@@ -205,6 +209,10 @@ class Server
                              t_event_udata *current_udata,
                              struct Request &request,
                              struct Response &response);
+  void staticFileReadEvent(struct kevent *current_event);
+
+  // write.cpp
+  void staticFileWriteEvent(struct kevent *current_event);
 };
 
 #endif

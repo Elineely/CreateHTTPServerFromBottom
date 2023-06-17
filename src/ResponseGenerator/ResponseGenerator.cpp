@@ -30,6 +30,8 @@ Response::Response()
   cgi_child_pid = -1;
   error_keyword = false;
   error_page_path = "";
+  static_read_file_fd = -1;
+  static_write_file_fd = -1;
 }
 
 Response::Response(const Response& obj) { *this = obj; }
@@ -63,6 +65,8 @@ Response& Response::operator=(const Response& obj)
     response_message = obj.response_message;
     error_keyword = obj.error_keyword;
     error_page_path = obj.error_page_path;
+    static_read_file_fd =obj.static_read_file_fd;
+    static_write_file_fd = obj.static_write_file_fd;
   }
   return (*this);
 }

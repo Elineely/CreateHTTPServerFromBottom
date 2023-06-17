@@ -42,6 +42,8 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
       return CLIENT_READ;
     else if (type == PIPE)
       return PIPE_READ;
+    else if (type == STATIC_FILE)
+      return STATIC_FILE_READ;
   }
   if (current_event->filter == EVFILT_WRITE)
   {
@@ -51,6 +53,8 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
       return CLIENT_WRITE;
     else if (type == PIPE)
       return PIPE_WRITE;
+    else if (type == STATIC_FILE)
+      return STATIC_FILE_WRITE;
   }
   return NOTHING;
 }
@@ -158,13 +162,25 @@ void Server::start(void)
 
         case PIPE_WRITE:
         {
-          pipeWriteEvent(current_event);
+          fileWriteEvent(current_event);
           break;
         }
 
         case CGI_PROCESS_TIMEOUT:  // cgi
         {
           cgiProcessTimeoutEvent(current_event);
+          break;
+        }
+
+        case STATIC_FILE_READ:
+        {
+          staticFileReadEvent(current_event);
+          break;
+        }
+
+        case STATIC_FILE_WRITE:
+        {
+          fileWriteEvent(current_event);
           break;
         }
 
