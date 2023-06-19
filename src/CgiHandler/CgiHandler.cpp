@@ -61,17 +61,6 @@ void CgiHandler::pipeAndFork()
 
 void CgiHandler::setCgiEnv(void)
 {
-  // TODO : get rid of ----------------
-  // joonhan님 여쭤보기
-  std::map<std::string, std::string>::iterator it =
-      m_request_data.headers.begin();
-  for (; it != m_request_data.headers.end(); ++it)
-  {
-    std::cout << it->first << ": " << it->second << std::endl;
-  }
-  std::string defualt_cgi_script(m_response_data.file_name);
-  // ----------------------------------
-
   m_env_list.push_back("GATEWAY_INTERFACE=CGI/1.1");
   m_env_list.push_back("SERVER_PROTOCOL=HTTP/1.1");
   m_env_list.push_back("SERVER_SOFTWARE=cute_webserv/1.0");
