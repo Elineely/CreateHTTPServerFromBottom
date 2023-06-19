@@ -73,14 +73,24 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
                                      *current_udata->m_request);
 }
 
+/*
+  [SUMMARY]
+  - 클라이언트 소켓에 발생한 EVFILT_READ 이벤트를 감지합니다.
+  - 발생하는 이벤트는 총 2가지 입니다.
+
+  1. 클라이언트 소켓의 연결을 끊는 경우 (current_event->flags & EV_EOF)
+  2. 클라이언트 소켓의 read buffer 에 담긴 데이터를 읽어오는 경우
+    - CGI 요청과 정적 요청을 구분해서 처리합니다.
+    - Parser 는 동일한 클라이언트가 다음에 보낼 요청을 처리하기 위해 초기화 합니다.
+*/
 void Server::clientReadEvent(struct kevent *current_event)
 {
+  t_event_udata *current_udata;
+
+  current_udata = static_cast<t_event_udata *>(current_event->udata);
   if (current_event->flags & EV_EOF)
   {
     LOG_INFO("💥 Client socket(fd: %d) will be close 💥", current_event->ident);
-    t_event_udata *current_udata =
-        static_cast<t_event_udata *>(current_event->udata);
-
     LOG_DEBUG("method: %s, status code: %d",
               current_udata->m_request->method.c_str(),
               current_udata->m_response->status_code);
@@ -92,9 +102,6 @@ void Server::clientReadEvent(struct kevent *current_event)
     return;
   }
 
-  t_event_udata *current_udata;
-
-  current_udata = static_cast<t_event_udata *>(current_event->udata);
   readClientSocketBuffer(current_event, current_udata);
   if (current_udata->m_request->validation_phase != COMPLETE)
   {
@@ -105,6 +112,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   struct Response &response = *current_udata->m_response;
   ServerFinder server_finder(request, current_udata->m_servers);
   HttpProcessor http_processor(request, response, server_finder.get_server());
+  Parser new_parser;
 
   // cgi 분기 확인
   if (response.cgi_flag == true)
@@ -117,16 +125,15 @@ void Server::clientReadEvent(struct kevent *current_event)
   }
 
   ft_delete(&current_udata->m_request);
+  ft_delete(&current_udata->m_response);
+
   current_udata->m_request = new Request();
   printf("addCgiRequestEvent current_udata->m_request %p\n",
          current_udata->m_request);  // TODO
-
-  ft_delete(&current_udata->m_response);
   current_udata->m_response = new Response();
   printf("addCgiRequestEvent current_udata->m_response %p\n",
          current_udata->m_response);  // TODO
 
-  Parser new_parser;
   current_udata->m_parser = new_parser;
 }
 
