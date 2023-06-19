@@ -33,10 +33,6 @@ const char* CgiHandler::KqueueException::what() const throw()
   return ("something wrong with kqueue()");
 }
 
-// get function
-
-Response CgiHandler::get_m_response_data() { return (m_response_data); }
-
 // member functions
 
 void CgiHandler::pipeAndFork()

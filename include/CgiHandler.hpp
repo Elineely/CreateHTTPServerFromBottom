@@ -55,9 +55,6 @@ class CgiHandler
   CgiHandler(const CgiHandler& obj);
   virtual ~CgiHandler(void);
 
-  // getter funtions
-  Response get_m_response_data();
-
   // member funtions
   virtual void outsourceCgiRequest(void) = 0;
 
