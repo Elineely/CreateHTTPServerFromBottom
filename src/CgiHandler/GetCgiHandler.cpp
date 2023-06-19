@@ -86,7 +86,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
     else
     {
       close(m_to_child_fds[READ]);
-      close(m_to_child_fds[WRITE]); // close한 fd 밑에 대입?
+      close(m_to_child_fds[WRITE]);
       close(m_to_parent_fds[WRITE]);
 
       m_response_data.read_pipe_fd = m_to_parent_fds[READ];
