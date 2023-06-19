@@ -192,6 +192,7 @@ class Server
 
   void fileWriteEvent(struct kevent *current_event);
   void pipeReadEvent(struct kevent *current_event);
+  void pipeWriteEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
