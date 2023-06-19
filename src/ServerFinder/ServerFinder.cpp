@@ -12,12 +12,10 @@ ServerFinder& ServerFinder::operator=(ServerFinder const& origin) { return (*thi
 
 t_server find_server_name(std::string server_part, std::string port_part, std::vector<t_server>& servers)
 {
-    bool if_found = false;
     std::vector<t_server> candidates;
 
     for (int i = 0; i < servers.size(); ++i) //이름 포트 일치하는애 찾아
     {
-        servers[i] = servers[i];
         std::vector<std::string> current_server_name = servers[i].server_name;
         if (current_server_name.size() == 0)
         {
