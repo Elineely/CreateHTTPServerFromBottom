@@ -9,7 +9,9 @@
 
 #include "Log.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "ResponseGenerator.hpp"
+#include "Server.hpp"
 
 #define SUCCESS 0
 #define RETURN_ERROR -1

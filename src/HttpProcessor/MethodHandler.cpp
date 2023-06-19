@@ -1,9 +1,9 @@
 #include "MethodHandler.hpp"
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+// member fuctions for generating auto_index page
 std::string MethodHandler::generateDate(const std::time_t& timestamp)
 {
   char buffer[25];
@@ -44,7 +45,10 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   DIR* dir;
   struct dirent* entry;
   dir = opendir(target_directory.c_str());
-  if (dir == NULL) throw INTERNAL_SERVER_ERROR_500;
+  if (dir == NULL)
+  {
+    throw INTERNAL_SERVER_ERROR_500;
+  }
   entry = readdir(dir);
   while (entry != NULL)
   {
@@ -54,10 +58,16 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
     if (stat(file_path.c_str(), &file_stat) != -1)
     {
       FileInfo fileData;
+      // stat구조체의 st_mode를 이용하여 디렉토리인지 파일인지 판별 후
+      // 디렉토리라면 "/"를 뒤에 붙여주기 위함.
       if (S_ISDIR(file_stat.st_mode))
+      {
         fileData.is_dir = "/";
+      }
       else
+      {
         fileData.is_dir = "";
+      }
       fileData.name = file_name;
       fileData.date = file_stat.st_mtime;
       fileData.size = file_stat.st_size;
@@ -104,28 +114,6 @@ void MethodHandler::autoIndexToBody(std::string target_directory)
   autoindex_str = autoindex.str();
   m_response_data.body.insert(m_response_data.body.end(), autoindex_str.begin(),
                               autoindex_str.end());
-}
-
-void MethodHandler::fileToBody(std::string target_file)
-{
-  std::ifstream file(target_file, std::ios::binary);
-  if (!file.is_open()) throw INTERNAL_SERVER_ERROR_500;
-
-  // Determine the file size, resize the vector
-  // offset 을 마지막으로 밀기
-  file.seekg(0, std::ios::end);
-  // 파일 사이즈 구하기
-  std::streampos file_size = file.tellg();
-  // 다시 돌리기
-  file.seekg(0, std::ios::beg);
-  std::vector<char> buffer(file_size);
-
-  // Read the file contents into the vector
-  file.read(&buffer[0], file_size);
-  file.close();
-
-  // contents of buffer into body
-  m_response_data.body = buffer;
 }
 
 // MethodHandler
@@ -180,7 +168,7 @@ void GetMethodHandler::methodRun()
     else if (m_response_data.index_exist == true)
     {
       std::string infile_name;
-      
+
       infile_name = m_response_data.file_path + m_response_data.index_name;
       infile_fd = open(infile_name.c_str(), O_RDONLY, 0644);
       if (infile_fd == -1)
@@ -234,8 +222,6 @@ void PostMethodHandler::methodRun()
     throw INTERNAL_SERVER_ERROR_500;
   }
   m_response_data.static_write_file_fd = outfile_fd;
-  // new_file_stream.write(&m_request_data.body[0], m_request_data.body.size());
-  // new_file_stream.close();
 }
 
 // DeleteMethodHandler
@@ -258,8 +244,12 @@ void DeleteMethodHandler::methodRun()
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
   if (m_response_data.file_exist == true)
-    // error deleting file
-    if (std::remove(&target_file[0]) != 0) throw INTERNAL_SERVER_ERROR_500;
+  {
+    if (std::remove(&target_file[0]) != 0)
+    {
+      throw INTERNAL_SERVER_ERROR_500;
+    }
+  }
 }
 
 // PutMethodHandler

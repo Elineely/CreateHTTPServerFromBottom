@@ -1,8 +1,5 @@
 #include "HttpProcessor.hpp"
 
-#include "CgiHandler.hpp"
-#include "Log.hpp"
-
 bool checkExist(const std::string& path_or_file)
 {
   return (access(path_or_file.c_str(), F_OK) == 0);
@@ -46,13 +43,11 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
       {
         GetCgiHandler cgi_handler(m_request_data, m_response_data);
         cgi_handler.outsourceCgiRequest();
-        m_response_data = cgi_handler.get_m_response_data();
       }
       else
       {
         GetMethodHandler method_handler(m_request_data, m_response_data);
         method_handler.methodRun();
-        // m_response_data = method_handler.get_m_response_data();
       }
     }
     else if (m_request_data.method == "POST" &&
@@ -62,13 +57,11 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
       {
         PostCgiHandler cgi_handler(m_request_data, m_response_data);
         cgi_handler.outsourceCgiRequest();
-        m_response_data = cgi_handler.get_m_response_data();
       }
       else
       {
         PostMethodHandler method_handler(m_request_data, m_response_data);
         method_handler.methodRun();
-        // m_response_data = method_handler.get_m_response_data();
       }
     }
     else if (m_request_data.method == "PUT" &&
@@ -76,14 +69,12 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
     {
       PutMethodHandler method_handler(m_request_data, m_response_data);
       method_handler.methodRun();
-      // m_response_data = method_handler.get_m_response_data();
     }
     else if (m_request_data.method == "HEAD" &&
              m_response_data.accepted_method.find("HEAD") != std::string::npos)
     {
       GetMethodHandler method_handler(m_request_data, m_response_data);
       method_handler.methodRun();
-      // m_response_data = method_handler.get_m_response_data();
     }
     else if (m_request_data.method == "DELETE" &&
              m_response_data.accepted_method.find("DELETE") !=
@@ -91,10 +82,11 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
     {
       DeleteMethodHandler method_handler(m_request_data, m_response_data);
       method_handler.methodRun();
-      // m_response_data = method_handler.get_m_response_data();
     }
     else
+    {
       throw METHOD_NOT_ALLOWED_405;
+    }
   }
   catch (StatusCode code_num)
   {

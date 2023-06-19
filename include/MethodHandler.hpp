@@ -3,9 +3,10 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "ResponseGenerator.hpp"
 
-// generate auto_index
+// struct for generating auto_index page
 struct FileInfo
 {
   std::string is_dir;
@@ -14,14 +15,13 @@ struct FileInfo
   long long int size;
 };
 
+// base class for MethodHandler classes
 class MethodHandler
 {
  protected:
   MethodHandler(const MethodHandler& obj);
 
-  void fileToBody(std::string target_file);
-
-  // for generate auto_index
+  // for generating auto_index page
   std::string generateDate(const std::time_t& timestamp);
   std::string generateSize(const long long int& fileSize);
   static bool fileInfoCompare(const FileInfo& fileInfo1,
@@ -34,11 +34,14 @@ class MethodHandler
 
   MethodHandler(Request& request_data, Response& response_data);
 
+  // 이 클래스를 상속 받은 클래스에서 주력으로 사용할 함수
+  // 각 method에서 하는 일에 맞게 fd를 open해준 뒤,
+  // method의 실질적인 수행은 read.cpp파일을 보면 됨.
   virtual void methodRun() = 0;
   virtual ~MethodHandler(void);
 };
 
-// PostMethodHandler, DeleteMethodHandler도 만들기
+// also, it can be used for method "HEAD"
 class GetMethodHandler : public MethodHandler
 {
  public:
