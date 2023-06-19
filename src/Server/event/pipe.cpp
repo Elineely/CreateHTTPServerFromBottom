@@ -37,7 +37,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
       }
       delete current_udata->m_read_buffer[i];
     }
-
+    close(current_udata->m_write_pipe_fd);
     close(current_event->ident);
     ResponseGenerator ok(*current_udata->m_request, *current_udata->m_response);
     t_event_udata *udata;
@@ -56,6 +56,13 @@ void Server::pipeReadEvent(struct kevent *current_event)
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    
+    if (current_udata->m_write_udata != NULL)
+    {
+      ft_delete(&current_udata->m_write_udata->m_request);
+      ft_delete(&current_udata->m_write_udata->m_response);
+      ft_delete(&current_udata->m_write_udata);
+    }
     ft_delete(&(current_udata->m_other_udata->m_request));
     ft_delete(&(current_udata->m_other_udata->m_response));
     ft_delete(&(current_udata->m_other_udata));
@@ -109,8 +116,5 @@ void Server::pipeWriteEvent(struct kevent *current_event)
   if (current_udata->m_file_write_offset == request_body_size)
   {
     close(current_event->ident);
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
   }
 }

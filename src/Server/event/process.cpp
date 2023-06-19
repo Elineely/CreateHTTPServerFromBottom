@@ -48,8 +48,23 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
                                 struct Request &request,
                                 struct Response &response)
 {
-  t_event_udata *read_pipe_udata;
-  t_event_udata *timeout_udata;
+  t_event_udata *read_pipe_udata = NULL;
+  t_event_udata *timeout_udata = NULL;
+  t_event_udata *write_pipe_udata = NULL;
+
+  if (request.method == "POST")
+  {
+    struct Response new_response;
+
+    write_pipe_udata =
+        createUdata(PIPE, current_event, current_udata, new_response);
+    printf("[addCgiRequestEvent] write_pipe_udata: %p\n", write_pipe_udata);
+
+    fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
+    addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+                         write_pipe_udata);
+  }
 
   read_pipe_udata = createUdata(PIPE, current_event, current_udata, response);
   printf("[addCgiRequestEvent] read_pipe_udata: %p\n",
@@ -58,7 +73,9 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
   printf("[addCgiRequestEvent] timeout_udata: %p\n", timeout_udata);  // TODO
 
   read_pipe_udata->m_other_udata = timeout_udata;
+  read_pipe_udata->m_write_udata = write_pipe_udata;
   timeout_udata->m_other_udata = read_pipe_udata;
+  timeout_udata->m_write_udata = write_pipe_udata;
 
   fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
   addEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
@@ -66,21 +83,7 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
   addEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
                        EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS,
                        DEFAULT_TIMEOUT_SECOND, timeout_udata);
-  if (request.method == "POST")
-  {
-    t_event_udata *write_pipe_udata;
-    struct Response new_response;
-
-    write_pipe_udata =
-        createUdata(PIPE, current_event, current_udata, new_response);
-    printf("[addCgiRequestEvent] write_pipe_udata: %p\n", write_pipe_udata);
-
-    timeout_udata->m_write_udata = write_pipe_udata;
-    fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
-    addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-                         write_pipe_udata);
-  }
+  return ;
 }
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
@@ -117,11 +120,14 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   {
     delete current_udata->m_other_udata->m_read_buffer[i];
   }
+  if (current_udata->m_write_udata != NULL)
+  {
+    ft_delete(&current_udata->m_write_udata->m_request);
+    ft_delete(&current_udata->m_write_udata->m_response);
+    ft_delete(&current_udata->m_write_udata);
+  }
   ft_delete(&current_udata->m_other_udata->m_request);
   ft_delete(&current_udata->m_other_udata->m_response);
   ft_delete(&current_udata->m_other_udata);
-  ft_delete(&current_udata->m_write_udata->m_request);
-  ft_delete(&current_udata->m_write_udata->m_response);
-  ft_delete(&current_udata->m_write_udata);
   ft_delete(&current_udata);
 }
