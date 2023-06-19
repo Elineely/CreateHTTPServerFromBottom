@@ -43,10 +43,11 @@ SRC_SERVER_FILES		:=	Server.cpp 				\
 							socket/kqueue.cpp		\
 							socket/setServers.cpp 	\
 							socket/accept.cpp		\
-							event/error.cpp 		\
-							event/read.cpp 			\
-							event/timer.cpp 		\
-							event/write.cpp
+							event/client.cpp		\
+							event/pipe.cpp			\
+							event/process.cpp		\
+							event/server.cpp		\
+							event/static_file.cpp
 
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\
@@ -54,7 +55,7 @@ SRC_UTILS_FILES			:=	ft_config_split.cpp		\
 							ft_strtrim.cpp			\
 							ft_toLower.cpp			\
 							ft_error.cpp			\
-							ft_process_print.cpp	
+							ft_process_print.cpp
 
 SRC_LOG_DIR				:=	Log/
 SRC_LOG_FILES			:=	Log.cpp

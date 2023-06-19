@@ -59,11 +59,13 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
   return NOTHING;
 }
 
-void Server::addServerSocketEvent(std::vector<t_multi_server> &servers, Config &server_conf)
+void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
+                                  Config &server_conf)
 {
   for (int i = 0; i < servers.size(); ++i)
   {
-    t_event_udata *udata = new t_event_udata(SERVER, server_conf.get_m_server_conf());
+    t_event_udata *udata =
+        new t_event_udata(SERVER, server_conf.get_m_server_conf());
     printf("addServerSocketEvent %p\n", udata);
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
@@ -162,7 +164,7 @@ void Server::start(void)
 
         case PIPE_WRITE:
         {
-          fileWriteEvent(current_event);
+          pipeWriteEvent(current_event);
           break;
         }
 

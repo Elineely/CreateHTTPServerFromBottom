@@ -40,7 +40,7 @@
 // Server 세팅
 #define BUF_SIZE 650000
 #define MAX_EVENT_LIST_SIZE 128
-#define DEFAULT_TIMEOUT_SECOND 3
+#define DEFAULT_TIMEOUT_SECOND 3600
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
 #define BACK_LOG SOMAXCONN
@@ -131,14 +131,15 @@ struct t_event_udata
   Request *m_request;
   Response *m_response;
   Parser m_parser;
-
   struct t_event_udata *m_other_udata;
+  struct t_event_udata *m_write_udata;
 
   t_event_udata(e_event_type type, config_vector config, Request *request,
                 Response *response)
       : m_type(type),
         m_servers(config),
         m_other_udata(NULL),
+        m_write_udata(NULL),
         m_file_write_offset(0),
         m_total_read_byte(0),
         m_request(request),
@@ -150,6 +151,7 @@ struct t_event_udata
       : m_type(type),
         m_servers(config),
         m_other_udata(NULL),
+        m_write_udata(NULL),
         m_file_write_offset(0),
         m_total_read_byte(0)
   {
@@ -193,6 +195,7 @@ class Server
 
   void fileWriteEvent(struct kevent *current_event);
   void pipeReadEvent(struct kevent *current_event);
+  void pipeWriteEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
@@ -212,6 +215,10 @@ class Server
                              struct Request &request,
                              struct Response &response);
   void staticFileReadEvent(struct kevent *current_event);
+  t_event_udata *createUdata(e_event_type event_type,
+                             struct kevent *current_event,
+                             t_event_udata *current_udata,
+                             struct Response &response);
 
   // write.cpp
   void staticFileWriteEvent(struct kevent *current_event);

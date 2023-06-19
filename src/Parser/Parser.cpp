@@ -69,7 +69,14 @@ void Parser::checkBodyType(Request& request)
   it = request.headers.find("content-length");
   if (it != end_it)
   {
-    request.validation_phase = ON_BODY;
+    if (it->second == "0")
+    {
+      request.validation_phase = COMPLETE;
+    }
+    else
+    {
+      request.validation_phase = ON_BODY;
+    }
     return;
   }
   it = request.headers.find("transfer-encoding");
