@@ -6,30 +6,39 @@
 
 #define CHILD_PROCESS 0
 
+/*
+  [SUMMARY]
+  - 서버 소켓에 발생하는 이벤트를 처리하는 함수입니다.
+  - 발생하는 이벤트는 총 2가지 입니다.
+
+  1. 서버 소켓에 오류가 발생하는 경우 (current_event->flag & EV_ERROR)
+  2. 클라이언트와 TCP 연결을 맺는 경우
+*/
 void Server::serverReadEvent(struct kevent *current_event)
 {
-  int client_sock;
   t_event_udata *current_udata;
-  t_event_udata *udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
-  if (current_event->flags & EV_EOF)
+  if (current_event->flags & EV_ERROR)
   {
+    LOG_INFO("💥 Server socket(fd: %d) error. it will be closed. 💥", current_event->ident);
     disconnectSocket(current_event->ident);
-    if (current_udata->m_other_udata != NULL)
-      ft_delete(&current_udata->m_other_udata);
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
     return;
   }
+
+  int client_sock;
+  Request *request;
+  Response *response;
+  t_event_udata *udata;
+
   client_sock = clientReadAccept(current_event);
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-  Request *request = new Request();
+  request = new Request();
   printf("serverReadEvent request: %p\n", request);  // fish
 
-  Response *response = new Response();
+  response = new Response();
   printf("serverReadEvent response: %p\n", response);  // suspicious
 
   udata =
