@@ -28,6 +28,7 @@ PostCgiHandler::PostCgiHandler(const PostCgiHandler& obj) : CgiHandler(obj)
 void PostCgiHandler::executeCgi()
 {
   close(m_to_child_fds[WRITE]);
+  close(m_to_parent_fds[READ]);
 
   if (dup2(m_to_child_fds[READ], STDIN_FILENO) == -1)
   {
@@ -36,9 +37,7 @@ void PostCgiHandler::executeCgi()
     close(m_to_parent_fds[WRITE]);
     exit(EXIT_FAILURE);
   }
-  close(m_to_child_fds[READ]);
 
-  close(m_to_parent_fds[READ]);
   if (dup2(m_to_parent_fds[WRITE], STDOUT_FILENO) == -1)
   {
     LOG_INFO("failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
@@ -46,6 +45,8 @@ void PostCgiHandler::executeCgi()
     close(m_to_parent_fds[WRITE]);
     exit(EXIT_FAILURE);
   }
+
+  close(m_to_child_fds[READ]);
   close(m_to_parent_fds[WRITE]);
 
   setCgiEnv();
