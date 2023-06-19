@@ -33,6 +33,7 @@
 // Paser header
 #include "Config.hpp"
 #include "Parser.hpp"
+#include "Response.hpp"
 #include "ResponseGenerator.hpp"
 #include "utils.hpp"
 
@@ -196,8 +197,8 @@ class Server
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
   void disconnectSocket(int socket);
-  void addServerSocketEvent(std::vector<t_multi_server> &servers, Config &server_conf);
-
+  void addServerSocketEvent(std::vector<t_multi_server> &servers,
+                            Config &server_conf);
 
   // read.cpp
   void serverReadEvent(struct kevent *current_event);
