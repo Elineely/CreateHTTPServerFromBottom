@@ -21,7 +21,7 @@ void Server::serverReadEvent(struct kevent *current_event)
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   if (current_event->flags & EV_ERROR)
   {
-    LOG_INFO("💥 Server socket(fd: %d) error. it will be closed. 💥", current_event->ident);
+    LOG_INFO("💥 Server socket(fd: %d) error. 💥", current_event->ident);
     disconnectSocket(current_event->ident);
     ft_delete(&current_udata);
     return;
@@ -36,10 +36,10 @@ void Server::serverReadEvent(struct kevent *current_event)
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
   request = new Request();
-  printf("serverReadEvent request: %p\n", request);  // fish
+  printf("serverReadEvent request: %p\n", request);  // TODO
 
   response = new Response();
-  printf("serverReadEvent response: %p\n", response);  // suspicious
+  printf("serverReadEvent response: %p\n", response);  // TODO
 
   udata =
       new t_event_udata(CLIENT, current_udata->m_servers, request, response);
@@ -81,7 +81,7 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   1. 클라이언트 소켓의 연결을 끊는 경우 (current_event->flags & EV_EOF)
   2. 클라이언트 소켓의 read buffer 에 담긴 데이터를 읽어오는 경우
     - CGI 요청과 정적 요청을 구분해서 처리합니다.
-    - Parser 는 동일한 클라이언트가 다음에 보낼 요청을 처리하기 위해 초기화 합니다.
+    - Parser 는 동일한 클라이언트의 다음 요청을 처리하기 위해 초기화 합니다.
 */
 void Server::clientReadEvent(struct kevent *current_event)
 {
@@ -137,71 +137,92 @@ void Server::clientReadEvent(struct kevent *current_event)
   current_udata->m_parser = new_parser;
 }
 
+/*
+  [SUMMARY]
+  - CGI 요청을 처리하기 위한 함수입니다.
+  - GET, POST 요청 시 공통으로 등록하는 이벤트는 총 2가지 입니다.
+    1. pipe 의 read buffer 에 발생하는 EVFILT_READ 이벤트
+    2. CGI 프로그램이 일정 시간 동안 응답이 없어서 TIMEOUT 이 발생하는 이벤트
+  - POST 요청인 경우에는 이벤트를 하나 더 추가합니다.
+    3. CGI 프로그램의 표준 입력으로 데이터를 넘겨주기 위해
+        pipe 의 write buffer 에 데이터를 입력하는 이벤트
+  - pipe read/write buffer 에 대해 등록하는 이유는
+    pipe 의 최대 버퍼 크기 제한이 있어서
+    한 번에 데이터를 읽고 쓰는 것이 불가능 하기 때문입니다.
+*/
+t_event_udata *Server::createUdata(e_event_type type,
+                                   struct kevent *current_event,
+                                   t_event_udata *current_udata,
+                                   struct Response &response)
+{
+  Request *new_request;
+  Response *new_response;
+  t_event_udata *udata;
+
+  new_request = new Request(*current_udata->m_request);
+  printf("[createUdata] new_request: %p\n", new_request);  // TODO
+
+  new_response = new Response(response);
+  printf("[createUdata] new_response: %p\n", new_response);  // TODO
+
+  udata = new t_event_udata(type, current_udata->m_servers, new_request,
+                            new_response);
+  udata->m_read_pipe_fd = response.read_pipe_fd;
+  udata->m_write_pipe_fd = response.write_pipe_fd;
+  udata->m_child_pid = response.cgi_child_pid;
+  udata->m_client_sock = current_event->ident;
+
+  return (udata);
+}
+
+/*
+  [SUMMARY]
+  - CGI 요청을 처리하기 위한 함수입니다.
+  - GET, POST 요청 시 공통으로 등록하는 이벤트는 총 2가지 입니다.
+    1. pipe 의 read buffer 에 발생하는 EVFILT_READ 이벤트
+    2. CGI 프로그램이 일정 시간 동안 응답이 없어서 TIMEOUT 이 발생하는 이벤트
+  - POST 요청인 경우에는 이벤트를 하나 더 추가합니다.
+    3. CGI 프로그램의 표준 입력으로 데이터를 넘겨주기 위해
+        pipe 의 write buffer 에 데이터를 입력하는 이벤트
+  - pipe read/write buffer 에 대해 등록하는 이유는
+    pipe 의 최대 버퍼 크기 제한이 있어서
+    한 번에 데이터를 읽고 쓰는 것이 불가능 하기 때문입니다.
+*/
 void Server::addCgiRequestEvent(struct kevent *current_event,
                                 t_event_udata *current_udata,
                                 struct Request &request,
                                 struct Response &response)
 {
-  // Set up the event structure
-  Request *new_request = new Request(*current_udata->m_request);
-  printf("[addCgiRequestEvent] new_request: %p\n", new_request);  // TODO
+  t_event_udata *read_pipe_udata;
+  t_event_udata *timeout_udata;
 
-  t_event_udata *udata =
-      new t_event_udata(PIPE, current_udata->m_servers, new_request, NULL);
-  printf("[addCgiRequestEvent] udata: %p\n", udata);
+  read_pipe_udata = createUdata(PIPE, current_event, current_udata, response);
+  printf("[addCgiRequestEvent] read_pipe_udata: %p\n", read_pipe_udata); // TODO
+  timeout_udata = createUdata(PROCESS, current_event, current_udata, response);
+  printf("[addCgiRequestEvent] timeout_udata: %p\n", timeout_udata);  // TODO
 
-  new_request = new Request(*current_udata->m_request);
-  printf("[addCgiRequestEvent] new_request: %p\n", new_request);  // TODO
-
-  t_event_udata *udata2 =
-      new t_event_udata(PROCESS, current_udata->m_servers, new_request, NULL);
-  printf("[addCgiRequestEvent] udata2: %p\n", udata2);  // TODO
-
-  udata->m_read_pipe_fd = response.read_pipe_fd;
-  udata->m_write_pipe_fd = response.write_pipe_fd;
-  udata->m_child_pid = response.cgi_child_pid;
-  udata->m_client_sock = current_event->ident;
-  udata->m_response = new Response(response);
-  printf("[addCgiRequestEvent] udata->m_response %p\n",
-         udata->m_response);  // TODO
-  udata->m_other_udata = udata2;
-
-  udata2->m_read_pipe_fd = response.read_pipe_fd;
-  udata2->m_write_pipe_fd = response.write_pipe_fd;
-  udata2->m_child_pid = response.cgi_child_pid;
-  udata2->m_client_sock = current_event->ident;
-  udata2->m_response = new Response(response);
-  printf("[addCgiRequestEvent] udata2->m_response %p\n",
-         udata2->m_response);  // TODO
-  udata2->m_other_udata = udata;
-
-  if (request.method == "POST")
-  {
-    Request *new_request_2 = new Request(*current_udata->m_request);
-    printf("[addCgiRequestEvent] new_request_2: %p", new_request_2);
-
-    t_event_udata *udata1 =
-        new t_event_udata(PIPE, current_udata->m_servers, new_request_2, NULL);
-    printf("[addCgiRequestEvent] udata1: %p\n", udata1);
-
-    udata1->m_read_pipe_fd = response.read_pipe_fd;
-    udata1->m_write_pipe_fd = response.write_pipe_fd;
-    udata1->m_child_pid = response.cgi_child_pid;
-    udata1->m_client_sock = current_event->ident;
-    udata1->m_response = new Response();
-    printf("[addCgiRequestEvent] udata1->m_response %p\n",
-           udata1->m_response);  // TODO
-    fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
-    addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata1);
-  }
+  read_pipe_udata->m_other_udata = timeout_udata;
+  timeout_udata->m_other_udata = read_pipe_udata;
 
   fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
   addEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
-                       EV_ADD | EV_ENABLE, 0, 0, udata);
+                       EV_ADD | EV_ENABLE, 0, 0, read_pipe_udata);
   addEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
                        EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS,
-                       DEFAULT_TIMEOUT_SECOND, udata2);
+                       DEFAULT_TIMEOUT_SECOND, timeout_udata);
+  if (request.method == "POST")
+  {
+    t_event_udata *write_pipe_udata;
+
+    write_pipe_udata =
+        createUdata(PROCESS, current_event, current_udata, response);
+    printf("[addCgiRequestEvent] write_pipe_udata: %p\n", write_pipe_udata);
+
+    fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
+    addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+                         write_pipe_udata);
+  }
 }
 
 void Server::addStaticRequestEvent(struct kevent *current_event,

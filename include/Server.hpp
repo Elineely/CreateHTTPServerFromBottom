@@ -196,8 +196,8 @@ class Server
   void cgiProcessTimeoutEvent(struct kevent *current_event);
 
   void disconnectSocket(int socket);
-  void addServerSocketEvent(std::vector<t_multi_server> &servers, Config &server_conf);
-
+  void addServerSocketEvent(std::vector<t_multi_server> &servers,
+                            Config &server_conf);
 
   // read.cpp
   void serverReadEvent(struct kevent *current_event);
@@ -211,6 +211,9 @@ class Server
                              struct Request &request,
                              struct Response &response);
   void staticFileReadEvent(struct kevent *current_event);
+  t_event_udata *createUdata(e_event_type type, struct kevent *current_event,
+                             t_event_udata *current_udata,
+                             struct Response &response);
 
   // write.cpp
   void staticFileWriteEvent(struct kevent *current_event);
