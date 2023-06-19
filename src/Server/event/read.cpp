@@ -49,6 +49,11 @@ void Server::serverReadEvent(struct kevent *current_event)
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }
 
+/*
+  [SUMMARY]
+  - 클라이언트가 보낸 데이터를 클라이언트 소켓의 read buffer 에서 읽어옵니다.
+  - recv 반환 값 0은 클라이언트가 연결을 끊기 위해 EOF 를 보낸 것을 의미합니다.
+*/
 void Server::readClientSocketBuffer(struct kevent *current_event,
                                     t_event_udata *current_udata)
 {
