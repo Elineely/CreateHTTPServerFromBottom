@@ -78,17 +78,7 @@ void CgiHandler::setCgiEnv(void)
 
   m_env_list.push_back("REQUEST_METHOD=" + m_request_data.method);
 
-  // surlee님 여쭤보기
-  // cgi_bin_path, file_name, file_path, root_path -> execve 인자도 달라져야 할 듯
-  if (m_response_data.cgi_bin_path == "")
-  {
-    // m_env_list.push_back("SCRIPT_NAME=" + defualt_cgi_script);
-  }
-  else
-  {
-    // m_env_list.push_back("SCRIPT_NAME=" + m_response_data.cgi_bin_path);
-    // m_env_list.push_back("SCRIPT_NAME=" + m_response_data.file_name);
-  }
+  m_env_list.push_back("SCRIPT_NAME=" + m_response_data.file_name);
 
   m_env_list.push_back("PATH_INFO=/");
   m_env_list.push_back("QUERY_STRING=");
@@ -109,7 +99,6 @@ void CgiHandler::setCgiEnv(void)
     m_env_list.push_back("HTTP_X_SECRET_HEADER_FOR_TEST=1");
   }
 
-  // m_env_list.push_back("X_FILE_PATH=" + m_response_data.file_path);
   m_env_list.push_back("X_UPLOAD_PATH=" + m_response_data.uploaded_path);
 
   for (int i = 0; i < m_env_list.size(); ++i)

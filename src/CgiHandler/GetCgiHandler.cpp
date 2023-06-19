@@ -50,11 +50,13 @@ void GetCgiHandler::executeCgi()
   close(m_to_parent_fds[WRITE]);
 
   setCgiEnv();
+
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   std::string cgi_file =
       m_response_data.root_path + "/" + m_response_data.file_name;
   const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
+
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
@@ -70,6 +72,11 @@ void GetCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
+    if (m_response_data.file_exist == false)
+    {
+      throw (ExecutionException());
+    }
+
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
@@ -79,7 +86,7 @@ void GetCgiHandler::outsourceCgiRequest(void)
     else
     {
       close(m_to_child_fds[READ]);
-      close(m_to_child_fds[WRITE]);
+      close(m_to_child_fds[WRITE]); // close한 fd 밑에 대입?
       close(m_to_parent_fds[WRITE]);
 
       m_response_data.read_pipe_fd = m_to_parent_fds[READ];
