@@ -30,7 +30,7 @@ const char* CgiHandler::ExecutionException::what() const throw()
 
 const char* CgiHandler::KqueueException::what() const throw()
 {
-  return ("something wrong with kqueue()");
+  return ("kqueue() function error");
 }
 
 // member functions
