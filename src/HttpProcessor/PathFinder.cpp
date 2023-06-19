@@ -54,6 +54,7 @@ void PathFinder::setIndex(std::string root, std::string file_name,
   // Post method의 경우, 요청받은 file이 존재하지 않더라도
   // 요청받은 파일 name을 기록할 필요가 있다.
   response_data.file_name = file_name;
+  response_data.index_name = index_name;
   if (file_name == "")
     response_data.file_exist = false;
   else if (checkExist(root + file_name))
@@ -65,7 +66,6 @@ void PathFinder::setIndex(std::string root, std::string file_name,
   else if (checkExist(root + index_name))
   {
     response_data.index_exist = true;
-    response_data.index_name = index_name;
   }
   else
     response_data.index_exist = false;

@@ -40,8 +40,6 @@ class CgiHandler
 
   int m_to_child_fds[2];
   int m_to_parent_fds[2];
-  // int m_input_file_fd;
-  // int m_output_file_fd;
   pid_t m_pid;
 
   // member functions
@@ -56,9 +54,6 @@ class CgiHandler
   CgiHandler(Request& request_data, Response& response_data);
   CgiHandler(const CgiHandler& obj);
   virtual ~CgiHandler(void);
-
-  // getter funtions
-  Response get_m_response_data();
 
   // member funtions
   virtual void outsourceCgiRequest(void) = 0;
