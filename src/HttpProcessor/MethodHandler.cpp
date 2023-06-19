@@ -207,7 +207,10 @@ void PostMethodHandler::methodRun()
   }
   if (m_response_data.file_exist == false && m_response_data.file_name == "")
   {
-    m_response_data.file_name = "default.temp";
+    if (m_response_data.index_name != "")
+      m_response_data.file_name = m_response_data.index_name;
+    else
+      m_response_data.file_name = "default.temp";
     if (access(m_response_data.file_name.c_str(), F_OK) == 0)
       m_response_data.file_exist = true;
   }
@@ -269,9 +272,12 @@ void PutMethodHandler::methodRun()
   {
     throw BAD_REQUEST_400;
   }
-  if (m_response_data.file_exist == false)
+  if (m_response_data.file_exist == false && m_response_data.file_name == "")
   {
-    m_response_data.file_name = "default.temp";
+    if (m_response_data.index_name != "")
+      m_response_data.file_name = m_response_data.index_name;
+    else
+      m_response_data.file_name = "default.temp";
   }
   std::string target_file(m_response_data.file_path +
                           m_response_data.file_name);
