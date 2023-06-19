@@ -49,11 +49,13 @@ void PostCgiHandler::executeCgi()
   close(m_to_parent_fds[WRITE]);
 
   setCgiEnv();
+
   const char* cgi_bin_path = m_response_data.cgi_bin_path.c_str();
   std::string cgi_file =
       m_response_data.root_path + "/" + m_response_data.file_name;
   const char* argv[] = {cgi_bin_path, cgi_file.c_str(), NULL};
   const char** envp = &m_env_list_parameter[0];
+
   if (execve(cgi_bin_path, const_cast<char* const*>(argv),
              const_cast<char* const*>(envp)) == RETURN_ERROR)
   {
@@ -68,6 +70,11 @@ void PostCgiHandler::outsourceCgiRequest(void)
 {
   try
   {
+    if (m_response_data.file_exist == false)
+    {
+      throw ExecutionException();
+    }
+
     pipeAndFork();
 
     if (m_pid == CHILD_PROCESS)
@@ -87,6 +94,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
   catch (const std::exception& e)
   {
     LOG_INFO("catch error %s", e.what());
-    m_response_data.body = makeErrorPage();
+    m_response_data.cgi_flag = false;
+    m_response_data.status_code = NOT_IMPLEMENTED_501;
   }
 }
