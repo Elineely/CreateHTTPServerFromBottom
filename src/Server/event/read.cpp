@@ -244,6 +244,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
 
   response_message = response_generator.generateResponseMessage();
   udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+  Log::printRequestResult(current_udata);
   printf("[addStaticRequestEvent] udata: %p\n", udata);  // TODO
   udata->m_response_write.message = response_message;
   udata->m_response_write.offset = 0;
@@ -300,6 +301,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
     udata->m_response_write.offset = 0;
     udata->m_response_write.length = udata->m_response_write.message.size();
 
+    Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
@@ -342,6 +344,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     udata->m_response_write.offset = 0;
     udata->m_response_write.length = udata->m_response_write.message.size();
 
+    Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     ft_delete(&current_udata->m_request);

@@ -1,4 +1,7 @@
 #include "Log.hpp"
+#include "Server.hpp"
+
+#include <iomanip>
 
 void Log::start(void)
 {
@@ -12,6 +15,21 @@ void Log::start(void)
     std::cout << " \\____/ \\__,_| \\__| \\___| \\/  \\/  \\___||_.__/ |___/ \\___||_|     \\_/  \n";
     std::cout << "                                                                     \n";
     std::cout << "=========================================================================" << std::endl;
+}
+
+void Log::printRequestResult(t_event_udata* current_udata)
+{
+  std::cout << BLUE_TEXT << std::setw(6) << std::left << current_udata->m_request->method << CUT_TEXT;
+  std::cout << std::setw(current_udata->m_request->uri.size() + 2) << std::left << current_udata->m_request->uri;
+  if (current_udata->m_response->status_code >= 400)
+  {
+    std::cout << RED_TEXT;
+  }
+  else
+  {
+    std::cout << GREEN_TEXT;
+  }
+  std::cout << std::setw(3) << std::left << current_udata->m_response->status_code << CUT_TEXT << std::endl;
 }
 
 void Log::printCallerInfo(const char* file, const char* function, int line)
