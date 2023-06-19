@@ -69,11 +69,13 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
   if (request.method == "POST")
   {
     t_event_udata *write_pipe_udata;
+    struct Response new_response;
 
     write_pipe_udata =
-        createUdata(PIPE, current_event, current_udata, response);
+        createUdata(PIPE, current_event, current_udata, new_response);
     printf("[addCgiRequestEvent] write_pipe_udata: %p\n", write_pipe_udata);
 
+    timeout_udata->m_write_udata = write_pipe_udata;
     fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
     addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
@@ -118,5 +120,8 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   ft_delete(&current_udata->m_other_udata->m_request);
   ft_delete(&current_udata->m_other_udata->m_response);
   ft_delete(&current_udata->m_other_udata);
+  ft_delete(&current_udata->m_write_udata->m_request);
+  ft_delete(&current_udata->m_write_udata->m_response);
+  ft_delete(&current_udata->m_write_udata);
   ft_delete(&current_udata);
 }

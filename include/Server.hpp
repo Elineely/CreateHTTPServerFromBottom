@@ -131,14 +131,15 @@ struct t_event_udata
   Request *m_request;
   Response *m_response;
   Parser m_parser;
-
   struct t_event_udata *m_other_udata;
+  struct t_event_udata *m_write_udata;
 
   t_event_udata(e_event_type type, config_vector config, Request *request,
                 Response *response)
       : m_type(type),
         m_servers(config),
         m_other_udata(NULL),
+        m_write_udata(NULL),
         m_file_write_offset(0),
         m_total_read_byte(0),
         m_request(request),
@@ -150,6 +151,7 @@ struct t_event_udata
       : m_type(type),
         m_servers(config),
         m_other_udata(NULL),
+        m_write_udata(NULL),
         m_file_write_offset(0),
         m_total_read_byte(0)
   {
@@ -213,7 +215,8 @@ class Server
                              struct Request &request,
                              struct Response &response);
   void staticFileReadEvent(struct kevent *current_event);
-  t_event_udata *createUdata(e_event_type type, struct kevent *current_event,
+  t_event_udata *createUdata(e_event_type event_type,
+                             struct kevent *current_event,
                              t_event_udata *current_udata,
                              struct Response &response);
 
