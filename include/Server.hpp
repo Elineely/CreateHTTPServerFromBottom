@@ -33,6 +33,7 @@
 // Paser header
 #include "Config.hpp"
 #include "Parser.hpp"
+#include "Response.hpp"
 #include "ResponseGenerator.hpp"
 #include "utils.hpp"
 

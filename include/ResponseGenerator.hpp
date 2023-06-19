@@ -1,49 +1,16 @@
-#ifndef RESPONSE_HPP
-#define RESPONSE_HPP
+#ifndef RESPONSE_GENERATOR_HPP
+#define RESPONSE_GENERATOR_HPP
 
 #include <map>
 #include <string>
 #include <vector>
 
 #include "Config.hpp"
+#include "Log.hpp"
 #include "Mime.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "StatusCode.hpp"
-
-struct Response
-{
-  std::string accepted_method;
-  bool redirection_exist;
-  std::string rediretion_location;
-  bool auto_index;
-  std::string file_name;
-  bool file_exist;
-  std::string index_name;
-  bool index_exist;
-  std::string file_path;
-  bool path_exist;
-  std::string root_path;
-  std::vector<char> body;
-  StatusCode status_code;
-  bool cgi_flag;
-  bool is_cgi_timeout;
-  std::string cgi_bin_path;
-  std::string uploaded_path;
-  std::vector<char> response_message;
-  std::vector<char> error_page_vector;
-  int static_read_file_fd;
-  off_t static_read_file_size;
-  int static_write_file_fd;
-  int read_pipe_fd;
-  int write_pipe_fd;
-  int cgi_child_pid;
-  bool error_keyword;
-
-  Response();
-  Response(const Response& obj);
-  ~Response();
-  Response& operator=(const Response& obj);
-};
 
 class ResponseGenerator
 {
