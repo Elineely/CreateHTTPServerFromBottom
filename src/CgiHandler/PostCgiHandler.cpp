@@ -72,7 +72,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
   {
     if (m_response_data.file_exist == false)
     {
-      throw (ExecutionException());
+      throw ExecutionException();
     }
 
     pipeAndFork();
@@ -94,6 +94,7 @@ void PostCgiHandler::outsourceCgiRequest(void)
   catch (const std::exception& e)
   {
     LOG_INFO("catch error %s", e.what());
-    m_response_data.body = makeErrorPage();
+    m_response_data.cgi_flag = false;
+    m_response_data.status_code = NOT_IMPLEMENTED_501;
   }
 }
