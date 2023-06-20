@@ -297,7 +297,6 @@ bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
                                          Request& request_data)
 {
   std::map<std::string, t_location>::iterator temp_location;
-  std::size_t pos_last;
 
   temp_location = server_data.locations.find(location_key);
   if (temp_location == server_data.locations.end())
@@ -308,10 +307,7 @@ bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
     if (checkExist(current_location.root + location_key))
     {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
        //  인덱스 하려면 꼭 필요
-      std::string rest_of_uri =
-          (locationBlock).substr((locationBlock).find("/"));
-      std::string entire_path = current_location.root + rest_of_uri;
-      pos_last = entire_path.rfind("/");
+      std::string entire_path = current_location.root + locationBlock;
       if (isEndWithDirectory(locationBlock, current_location, response_data,
                              request_data))
         return true;
