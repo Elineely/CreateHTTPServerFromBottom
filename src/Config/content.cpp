@@ -184,11 +184,16 @@ t_server Config::get_parse_server_block(std::ifstream &file,
     if (split_content_line[0] == "location")
     {
       current_line++;
+      std::string temp_string;
+      if (temp_conf.find("max_body_size") == temp_conf.end())
+        temp_string = "";
+      else 
+        temp_string = temp_conf["max_body_size"][0];
       temp_locations.insert(std::pair<std::string, t_location>(
           split_content_line[1],
           get_location_expand(file, config_file_name, vaild_content_list,
                               split_content_line.size(),
-                              temp_conf["max_body_size"][0])));
+                              temp_string)));
     }
     else
     {
@@ -209,6 +214,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.error_page = temp_conf["error_page"];
   server.locations = temp_locations;
 
+  std::cout << "in here" << std::endl;
   if (isVaildServerBlock(server, current_line))
   {
     exit(EXIT_FAILURE);
