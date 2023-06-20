@@ -25,7 +25,6 @@ bool PathFinder::is_directory(const std::string& path)
 
 bool PathFinder::checkExist(const std::string& path_or_file)
 {
-  // return (true);
   return (access(path_or_file.c_str(), F_OK) == 0);
 }
 
@@ -92,16 +91,16 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
   pos_dot = location_key.find_last_of(".");
   if (pos_dot == std::string::npos)
     return (false);  // 마지막 블럭 내에 .이 없는 경우
-  location_key = location_key.substr(
-      pos_dot);  //.이 있는 경우 확장자를 location_key로 설정
+  location_key = location_key.substr(pos_dot);  
+  //.이 있는 경우 확장자를 location_key로 설정
   if (server_data.locations.find(location_key) == server_data.locations.end())
     return false;  // uri로 들어온 확장자가 config location에 존재하지 않을 때.
   t_location current_location =
       server_data.locations.find(location_key)->second;
-  if (current_location.ourcgi_pass == "" || current_location.ourcgi_index == "")
+  if (current_location.ourcgi_pass == "" )
     return false;  // 블록에 ourcgi_pass와 ourcgi_index가 모두 있어야 cgi
   if (!checkExist(current_location.ourcgi_pass) ||
-      is_directory(current_location.ourcgi_pass))
+      is_directory(current_location.ourcgi_pass) || current_location.ourcgi_index == "")
     throw BAD_GATEWAY_502;  // ourcgi_pass에 입력된 파일이 없는 경우 혹은 넘어온
                             // 경로가 디렉토리일 경우 error
   else
@@ -115,21 +114,6 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
     setMethod(current_location.accepted_method, response_data);
     return true;
   }
-  // if (locationBlock.substr(locationBlock.find_last_of(".")) == ".py")
-  // {
-  //   response_data.cgi_flag = true;
-  //   t_location current_location = server_data.locations.find(".py")->second;
-  //   response_data.cgi_bin_path = current_location.ourcgi_pass;
-  //   response_data.root_path = current_location.root;
-  //   response_data.uploaded_path =
-  //       current_location.uploaded_path;  // 경로 존재하는지
-  //   setIndex(current_location.root + "/", current_location.ourcgi_index,
-  //   current_location.index,
-  //            response_data);
-  //   setMethod(current_location.accepted_method, response_data);
-  //   return true;
-  // }
-  // return false;
 }
 
 void PathFinder::setRedirection(std::string redirection,
@@ -170,7 +154,6 @@ void PathFinder::setBasic(std::string method, std::string root,
 void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
 {
   checkMaxSize(request_data, std::atol(max_body_size.c_str()));
-  // checkMaxSize(request_data, std::stoll(max_body_size, NULL, 10));
 }
 
 void PathFinder::checkMaxSize(Request request_data, long long max_body_size)
@@ -194,6 +177,8 @@ bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
 
   if ((locationBlock) == "/" || (locationBlock) == "")  // default block
   {
+    std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
+    if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
     setMaxSize(request_data, current_location.max_body_size);
     setBasic(current_location.accepted_method, current_location.root + "/", "",
@@ -210,14 +195,8 @@ bool PathFinder::isCgiBlock(std::string locationBlock, t_server& server_data,
 {
   if (setCgi((locationBlock), server_data, response_data))
   {
-    // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)",
-    // response_data.cgi_flag, response_data.cgi_bin_path.c_str(),
-    // response_data.index_name.c_str());
     return true;
   }
-  // LOG_DEBUG("after setCgi m_response_data (cgi_f: %d, bin: %s, index: %s)",
-  // response_data.cgi_flag, response_data.cgi_bin_path.c_str(),
-  // response_data.index_name.c_str());
   return false;
 }
 
@@ -230,6 +209,8 @@ void PathFinder::oneSlashInUri(t_server& server_data, std::string locationBlock,
   temp_location = server_data.locations.find(locationBlock);
   if (temp_location == server_data.locations.end())
   {
+    std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
+    if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
     if (checkExist(current_location.root + locationBlock))
     {  // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치
@@ -335,6 +316,8 @@ bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
   temp_location = server_data.locations.find(location_key);
   if (temp_location == server_data.locations.end())
   {  //(기본디렉토리)/(내부 디렉토리)/내부 파일"
+    std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
+    if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
     if (checkExist(current_location.root + locationBlock))
     {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto

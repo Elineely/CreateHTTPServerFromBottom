@@ -67,8 +67,6 @@ void CgiHandler::setCgiEnv(void)
 
   m_env_list.push_back("REQUEST_METHOD=" + m_request_data.method);
 
-  // m_env_list.push_back("SCRIPT_NAME=" + m_response_data.file_name);
-
   m_env_list.push_back("PATH_INFO=/");
   m_env_list.push_back("QUERY_STRING=");
 
