@@ -178,7 +178,7 @@ bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
   if ((locationBlock) == "/" || (locationBlock) == "")  // default block
   {
     std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
-    if (temp == server_data.locations.end()) throw BAD_REQUEST_400;
+    if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
     setMaxSize(request_data, current_location.max_body_size);
     setBasic(current_location.accepted_method, current_location.root + "/", "",
@@ -210,7 +210,7 @@ void PathFinder::oneSlashInUri(t_server& server_data, std::string locationBlock,
   if (temp_location == server_data.locations.end())
   {
     std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
-    if (temp == server_data.locations.end()) throw BAD_REQUEST_400;
+    if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
     if (checkExist(current_location.root + locationBlock))
     {  // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치
@@ -317,7 +317,7 @@ bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
   if (temp_location == server_data.locations.end())
   {  //(기본디렉토리)/(내부 디렉토리)/내부 파일"
     std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
-    if (temp == server_data.locations.end()) throw BAD_REQUEST_400;
+    if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
     if (checkExist(current_location.root + locationBlock))
     {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
