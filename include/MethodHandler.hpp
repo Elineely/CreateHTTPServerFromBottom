@@ -12,7 +12,7 @@ struct FileInfo
   std::string is_dir;
   std::string name;
   std::time_t date;
-  long long int size;
+  size_t size;
 };
 
 // base class for MethodHandler classes
@@ -23,7 +23,7 @@ class MethodHandler
 
   // for generating auto_index page
   std::string generateDate(const std::time_t& timestamp);
-  std::string generateSize(const long long int& fileSize);
+  std::string generateSize(const ssize_t& fileSize);
   static bool fileInfoCompare(const FileInfo& fileInfo1,
                               const FileInfo& fileInfo2);
   void autoIndexToBody(std::string target_directory);

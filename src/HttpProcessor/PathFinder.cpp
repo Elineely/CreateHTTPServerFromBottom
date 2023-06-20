@@ -1,16 +1,8 @@
 #include "PathFinder.hpp"
 
-// #include "./PathTest/PathFinder.hpp" // for test
-
-// #include <iostream>
-
 PathFinder::PathFinder() {}
 
 PathFinder::~PathFinder() {}
-
-PathFinder::PathFinder(const PathFinder& origin){};
-
-PathFinder& PathFinder::operator=(PathFinder const& origin) { return (*this); };
 
 bool PathFinder::is_directory(const std::string& path)
 {
@@ -137,8 +129,6 @@ void PathFinder::setBasic(std::string method, std::string root,
                           std::string redirection, std::string root_path,
                           Response& response_data)
 {
-  // LOG_DEBUG("Default server block (root: %s, file: %s, index: %s)",
-  // root.c_str(), file_name.c_str(), index_name.c_str());
   setMethod(method, response_data);
   setRoot(root, response_data);
   setIndex(root, file_name, index_name, response_data);
@@ -146,9 +136,6 @@ void PathFinder::setBasic(std::string method, std::string root,
   setAutoIndex(auto_index, response_data);
   setRedirection(redirection, response_data);
   setRootPath(root_path, response_data);
-  // LOG_DEBUG("Default server block_exist (root: %d, file: %d, index: %d)",
-  // response_data.path_exist, response_data.file_exist,
-  // response_data.index_exist);
 }
 
 void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
@@ -156,13 +143,13 @@ void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
   checkMaxSize(request_data, std::atol(max_body_size.c_str()));
 }
 
-void PathFinder::checkMaxSize(Request request_data, long long max_body_size)
+void PathFinder::checkMaxSize(Request request_data, long max_body_size)
 {
   if (max_body_size < 0)
   {
     throw BAD_REQUEST_400;
   }
-  if (request_data.body.size() > max_body_size)
+  if (static_cast<long>(request_data.body.size()) > max_body_size)
   {
     throw PAYLOAD_TOO_LARGE_413;
   }
@@ -294,7 +281,6 @@ void PathFinder::isEndWithFileName(std::string entire_path,
 {
   size_t pos_last = entire_path.rfind("/");
   //"/a/b/c/d/e(파일)" 경우
-  // LOG_DEBUG("pos_last: %d, entire_path: %s", pos_last, entire_path.c_str());
   setMaxSize(request_data, current_location.max_body_size);
   setBasic(current_location.accepted_method,
            entire_path.substr(0, pos_last + 1),
@@ -319,7 +305,7 @@ bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
     std::map<std::string, t_location>::iterator temp = server_data.locations.find("/");
     if (temp == server_data.locations.end()) throw NOT_FOUND_404;
     current_location = server_data.locations.find("/")->second;
-    if (checkExist(current_location.root + locationBlock))
+    if (checkExist(current_location.root + location_key))
     {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
        //  인덱스 하려면 꼭 필요
       std::string rest_of_uri =
@@ -355,7 +341,6 @@ void PathFinder::firstBlockIsLocation(std::string location_key,
   std::string rest_of_uri =
       (locationBlock).substr((locationBlock).find("/", 1));
   std::string entire_path = current_location.root + rest_of_uri;
-  std::size_t pos_last = entire_path.rfind("/");
 
   if (isEndWithExistDirectory(entire_path, request_data, current_location,
                               response_data))
@@ -374,7 +359,6 @@ void PathFinder::manySlashesInUri(std::string locationBlock,
   //"a/b/c/d(디렉토리)", "/a/b/c/d/e(파일)"
   t_location current_location;
   std::map<std::string, t_location>::iterator temp_location;
-  std::size_t pos_last;
 
   std::string location_key =
       (locationBlock).substr(0, (locationBlock).find("/", 1));
@@ -394,7 +378,7 @@ void PathFinder::setErrorPage(t_server server_data, Response& response_data)
     return;
   }
   response_data.error_keyword = true;
-};
+}
 
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)

@@ -35,13 +35,13 @@ void CgiHandler::pipeAndFork()
 {
   if (pipe(m_to_child_fds) == RETURN_ERROR)
   {
-    LOG_INFO("Failed to create m_to_child_fds pipe");
+    Log::print(ERROR, "Failed to create m_to_child_fds pipe");
     throw PipeForkException();
   }
 
   if (pipe(m_to_parent_fds) == RETURN_ERROR)
   {
-    LOG_INFO("Failed to create m_to_parent_fds pipe");
+    Log::print(ERROR, "Failed to create m_to_parent_fds pipe");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     throw PipeForkException();
@@ -50,7 +50,7 @@ void CgiHandler::pipeAndFork()
   m_pid = fork();
   if (m_pid == RETURN_ERROR)
   {
-    LOG_INFO("Failed to fork");
+    Log::print(ERROR, "Failed to fork");
     close(m_to_child_fds[READ]);
     close(m_to_child_fds[WRITE]);
     close(m_to_parent_fds[READ]);
@@ -88,7 +88,7 @@ void CgiHandler::setCgiEnv(void)
 
   m_env_list.push_back("X_UPLOAD_PATH=" + m_response_data.uploaded_path);
 
-  for (int i = 0; i < m_env_list.size(); ++i)
+  for (unsigned long i = 0; i < m_env_list.size(); ++i)
   {
     m_env_list_parameter.push_back(m_env_list[i].c_str());
   }
@@ -103,7 +103,7 @@ std::vector<char> CgiHandler::makeErrorPage(void)
   std::string error_response(status_code + content_type + body);
 
   std::vector<char> v_error_response;
-  for (int i = 0; i < error_response.size(); ++i)
+  for (unsigned long i = 0; i < error_response.size(); ++i)
   {
     v_error_response.push_back(error_response[i]);
   }

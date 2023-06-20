@@ -1,15 +1,14 @@
 #include "Log.hpp"
 #include "utils.hpp"
 
-void print_error(const char *messaege)
+void print_error(const char *message)
 {
-  LOG_ERROR(messaege);
-  return;
+  Log::print(ERROR, message);
 }
 
-void print_error(const char *messaege, int num)
+void print_error(const char *message, int num)
 {
-  std::cerr << messaege << " " << num << std::endl;
+  std::cerr << message << " " << num << std::endl;
   return;
 }
 
@@ -27,6 +26,6 @@ int ft_error(int status_code, const char *error_message)
 
 void ft_error_exit(int exit_flag, const char *message)
 {
-  LOG_ERROR(message);
+  Log::print(ERROR, message);
   exit(exit_flag);
 }

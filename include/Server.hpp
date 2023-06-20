@@ -46,7 +46,7 @@
 #define BACK_LOG SOMAXCONN
 
 // 실행프로그램 기준으로 상대 경로를 정의한다
-#define DEFAULT_SERVER_FILE "./server.conf"
+#define DEFAULT_SERVER_FILE "./default.conf"
 #define SERVER_CONTENT_FILE "./server_content.conf"
 
 enum e_event_type
@@ -55,7 +55,7 @@ enum e_event_type
   CLIENT,
   PIPE,
   PROCESS,
-  STATIC_FILE,
+  STATIC_FILE
 };
 
 enum e_kqueue_event
@@ -137,23 +137,23 @@ struct t_event_udata
   t_event_udata(e_event_type type, config_vector config, Request *request,
                 Response *response)
       : m_type(type),
-        m_servers(config),
-        m_other_udata(NULL),
-        m_write_udata(NULL),
         m_file_write_offset(0),
         m_total_read_byte(0),
+        m_servers(config),
         m_request(request),
-        m_response(response)
+        m_response(response),
+        m_other_udata(NULL),
+        m_write_udata(NULL)
   {
   }
 
   t_event_udata(e_event_type type, config_vector config)
       : m_type(type),
+        m_file_write_offset(0),
+        m_total_read_byte(0),
         m_servers(config),
         m_other_udata(NULL),
-        m_write_udata(NULL),
-        m_file_write_offset(0),
-        m_total_read_byte(0)
+        m_write_udata(NULL)
   {
   }
 
@@ -180,8 +180,7 @@ class Server
   void addEventToChangeList(std::vector<struct kevent> &change_list,
                             uintptr_t ident, int16_t filter, uint16_t flags,
                             uint32_t fflags, intptr_t data, void *udata);
-  void setSocket(const Config &server_conf,
-                 std::vector<t_multi_server> &servers);
+  void setSocket(std::vector<t_multi_server> &servers);
   void setServers(const Config &server_conf,
                   std::vector<t_multi_server> &servers);
   void startBind(std::vector<t_multi_server> &servers);

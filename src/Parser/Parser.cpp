@@ -27,7 +27,6 @@ void Parser::saveBufferInPool(char* buf, int recv_size)
   {
     throw std::invalid_argument("NULL string is not allowed");
   }
-  // LOG_DEBUG("recv_size: %d", recv_size);
   m_pool.line_len += recv_size;
   for (int idx = 0; idx < recv_size; idx += 1)
   {
@@ -138,6 +137,6 @@ void Parser::readBuffer(char* buf, int recv_size, Request& request)
   }
   catch (std::exception& e)
   {
-    // LOG_INFO("Parser readBuffer catches error (%s)", e.what());
+    // Log::print(ERROR, "Parser readBuffer catches error (%s)", e.what());
   }
 }

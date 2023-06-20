@@ -15,7 +15,6 @@ void Server::serverReadEvent(struct kevent *current_event)
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   if (current_event->flags & EV_ERROR)
   {
-    LOG_INFO("💥 Server socket(fd: %d) error. 💥", current_event->ident);
     disconnectSocket(current_event->ident);
     ft_delete(&current_udata);
     return;
@@ -30,14 +29,11 @@ void Server::serverReadEvent(struct kevent *current_event)
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
   request = new Request();
-  printf("serverReadEvent request: %p\n", request);  // TODO
 
   response = new Response();
-  printf("serverReadEvent response: %p\n", response);  // TODO
 
   udata =
       new t_event_udata(CLIENT, current_udata->m_servers, request, response);
-  printf("serverReadEvent udata: %p\n", udata);
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
@@ -49,6 +45,5 @@ void Server::serverReadEvent(struct kevent *current_event)
 */
 void Server::serverErrorEvent(struct kevent *current_event)
 {
-  LOG_INFO("🐛 Server socket error 🐛");
   disconnectSocket(current_event->ident);
 }

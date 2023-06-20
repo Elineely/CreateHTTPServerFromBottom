@@ -22,7 +22,7 @@ std::string MethodHandler::generateDate(const std::time_t& timestamp)
                 std::localtime(&timestamp));
   return buffer;
 }
-std::string MethodHandler::generateSize(const long long int& fileSize)
+std::string MethodHandler::generateSize(const ssize_t& fileSize)
 {
   std::stringstream ss;
   ss << fileSize << " Byte";

@@ -3,7 +3,7 @@
 void Server::startBind(std::vector<t_multi_server> &servers)
 {
   int option = 1;
-  for (int i = 0; i < servers.size(); ++i)
+  for (unsigned long i = 0; i < servers.size(); ++i)
   {
     setsockopt(servers[i].server_sock, SOL_SOCKET, SO_REUSEADDR, &option,
                sizeof(option));

@@ -14,7 +14,7 @@ void HttpProcessor::setErrorPage(t_server server_data, Response& response_data)
   }
   response_data.error_keyword = true;
   response_data.error_page_vector = server_data.error_page_vector;
-};
+}
 
 HttpProcessor::~HttpProcessor(void) {}
 
@@ -90,8 +90,6 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
   }
   catch (StatusCode code_num)
   {
-    LOG_INFO("[HttpProcessor] constructor catches error (status code: %d)",
-             code_num);
     m_response_data.status_code = code_num;
   }
 }

@@ -77,6 +77,8 @@ SRCS					:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJ_DIR					:=	obj/
 OBJS					:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
+CXXFLAGS				:=	-Wall -Werror -Wextra -std=c++98 -pedantic
+
 ifdef DEBUG_MODE
 	CXXFLAGS			:=	$(CXXFLAGS) -g3
 endif
@@ -84,6 +86,8 @@ endif
 ifdef D_SANI
 	CXXFLAGS			:=	$(CXXFLAGS) -g3 -fsanitize=address
 endif
+
+
 
 .PHONY : all
 all : $(NAME)

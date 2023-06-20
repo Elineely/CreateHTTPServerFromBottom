@@ -17,8 +17,6 @@ StatusStr::StatusStr()
   m_str_map.insert(std::make_pair(504, "Gateway Timeout"));
   m_str_map.insert(std::make_pair(505, "HTTP Version Not Supported"));
 }
-StatusStr::StatusStr(const StatusStr& obj) {}
-StatusStr& StatusStr::operator=(StatusStr const& obj) { return (*this); }
 StatusStr::~StatusStr() {}
 
 std::string StatusStr::getStatusStr(StatusCode code)

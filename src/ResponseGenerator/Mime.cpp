@@ -20,8 +20,6 @@ Mime::Mime()
   m_mime_map.insert(std::make_pair(".pdf", "application/pdf"));
   m_mime_map.insert(std::make_pair("default", "text/html"));
 }
-Mime::Mime(const Mime& obj) {}
-Mime& Mime::operator=(Mime const& obj) { return (*this); }
 Mime::~Mime() {}
 
 std::string Mime::getMime(std::string target_file)

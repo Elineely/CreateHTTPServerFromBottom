@@ -9,8 +9,6 @@ class ServerFinder
 {
     private:
     ServerFinder();
-    ServerFinder(const ServerFinder& origin);
-    ServerFinder& operator=(ServerFinder const& origin);
     t_server current_server;
 
     public:

@@ -2,16 +2,15 @@
 #include "Server.hpp"
 #include <utility>
 
-void Server::setSocket(const Config& server_conf,
-                       std::vector<t_multi_server>& servers)
+void Server::setSocket(std::vector<t_multi_server>& servers)
 {
-
-  for (int i = 0; i < servers.size(); ++i)
+  for (size_t i = 0; i < servers.size(); ++i)
   {
     servers[i].server_sock = socket(PF_INET, SOCK_STREAM, 0);
 
-    LOG_INFO("Server port number: %d (socket fd: %d)", servers[i].server_port,
+    Log::print(INFO, "Server port number: %d (socket fd: %d)", servers[i].server_port,
              servers[i].server_sock);
+
     if (servers[i].server_sock == -1)
     {
       ft_error_exit(1, strerror(errno));

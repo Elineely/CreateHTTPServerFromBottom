@@ -27,6 +27,13 @@ if 'image' in form:
         print('<html><body>')
         print('<h2>Image saved successfully!</h2>')
         print('</body></html>')
+    else:
+        print('Content-Type:text/html\r')
+        print('Status: 400\r\n\r')
+        print('<html><body>')
+        print('<h2>There is no image file!</h2>')
+        print('</body></html>')
+        
 else:
     print('Content-Type:text/html\r')
     print('Status: 500\r\n\r')

@@ -62,11 +62,10 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
 void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
                                   Config &server_conf)
 {
-  for (int i = 0; i < servers.size(); ++i)
+  for (size_t i = 0; i < servers.size(); ++i)
   {
     t_event_udata *udata =
         new t_event_udata(SERVER, server_conf.get_m_server_conf());
-    printf("addServerSocketEvent %p\n", udata);
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
   }
@@ -75,32 +74,25 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
 Server::Server(Config &server_conf)
 {
   setServers(server_conf, servers);
-  LOG_INFO("Successfully set servers");
-
-  setSocket(server_conf, servers);
-  LOG_INFO("Successfully open server socket");
+  setSocket(servers);
 
   startBind(servers);
-  LOG_INFO("Successfully bind server socket with IP address");
 
   startListen(servers, BACK_LOG);
-  LOG_INFO("Successfully listen server socket");
 
   m_kqueue.kq = getKqueue();
-  LOG_INFO("Successfully create kqueue");
 
   addServerSocketEvent(servers, server_conf);
 }
 
-Server::Server() { std::cout << "Server Constructor Call" << std::endl; }
+Server::Server() {}
 
 Server::Server(const Server &other)
 {
-  std::cout << "Server Constructor Call" << std::endl;
   *this = other;
 }
 
-Server::~Server() { std::cout << "Server Destructor Call" << std::endl; }
+Server::~Server() { }
 
 Server &Server::operator=(const Server &other)
 {
@@ -194,20 +186,18 @@ void Server::start(void)
 
         case CLIENT_ERROR:
         {
-          LOG_ERROR("🐛 Client socket error 🐛");
           disconnectSocket(current_event->ident);
           break;
         }
 
         default:
         {
-          LOG_DEBUG("default status: %d", event_status);
           break;
         }
       }
     }
   }
-  for (int i = 0; i < servers.size(); ++i)
+  for (size_t i = 0; i < servers.size(); ++i)
   {
     shutdown(servers[i].server_sock, SHUT_RDWR);
     close(servers[i].server_sock);

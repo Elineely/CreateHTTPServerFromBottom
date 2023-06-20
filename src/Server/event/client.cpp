@@ -45,10 +45,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   if (current_event->flags & EV_EOF)
   {
-    LOG_INFO("💥 Client socket(fd: %d) will be close 💥", current_event->ident);
-    LOG_DEBUG("method: %s, status code: %d",
-              current_udata->m_request->method.c_str(),
-              current_udata->m_response->status_code);
+    Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥", current_event->ident);
 
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
@@ -83,11 +80,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   ft_delete(&current_udata->m_response);
 
   current_udata->m_request = new Request();
-  printf("addCgiRequestEvent current_udata->m_request %p\n",
-         current_udata->m_request);  // TODO
   current_udata->m_response = new Response();
-  printf("addCgiRequestEvent current_udata->m_response %p\n",
-         current_udata->m_response);  // TODO
 
   current_udata->m_parser = new_parser;
 }
@@ -98,8 +91,6 @@ void Server::clientReadEvent(struct kevent *current_event)
 */
 void Server::clientWriteEvent(struct kevent *current_event)
 {
-  LOG_INFO("✅ CLIENT WRITE EVENT ✅");
-
   t_event_udata *current_udata;
   t_response_write *response_write;
   char *message;

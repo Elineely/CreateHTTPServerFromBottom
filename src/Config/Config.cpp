@@ -25,21 +25,17 @@ Config::Config(std::string config_file_name,
 
   if (content_file.fail())
   {
-    LOG_INFO("Failed to open %s", config_content_file_name.c_str());
+    Log::print(ERROR, "Failed to open %s", config_content_file_name.c_str());
     exit(EXIT_FAILURE);
   }
-  // LOG_INFO("Successfully open %s", config_content_file_name.c_str());
   set_vaild_content_list(content_file, vaild_content_list);
-  // LOG_INFO("Successfully validate %s", config_content_file_name.c_str());
 
   if (config_file.fail())
   {
-    LOG_INFO("Failed to open %s", config_file_name.c_str());
+    Log::print(ERROR, "Failed to open %s", config_file_name.c_str());
     exit(EXIT_FAILURE);
   }
-  // LOG_INFO("Successfully open %s", config_file_name.c_str());
   set_m_server_conf(config_file, config_file_name, vaild_content_list);
-  // LOG_INFO("Successfully validate %s", config_file_name.c_str());
 }
 
 Config::Config() { }
@@ -52,7 +48,6 @@ Config::Config(const Config &other)
 Config &Config::operator=(const Config &other)
 {
   if (this == &other) return *this;
-  std::cout << "Config Assignment Operator Call" << std::endl;
   m_server_conf = other.m_server_conf;
   return *this;
 }

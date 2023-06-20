@@ -35,17 +35,12 @@ bool Config::isVaildServerBlock(t_server &server, int line_number)
 {
   if (server.listen.size() == 0)
   {
-    LOG_INFO(
-        "Invaild Server Content, does not have listen content Line number : %d",
-        line_number);
+    Log::print(ERROR, "Invaild Server Content, does not have listen content Line number : %d", line_number);
     return 1;
   }
   if (server.max_body_size.size() == 0)
   {
-    LOG_INFO(
-        "Invaild Server Content, does not have max_body_size content Line "
-        "number : %d",
-        line_number);
+    Log::print(ERROR,"Invaild Server Content, does not have max_body_size content Line number : %d", line_number);
     return 1;
   }
   return 0;
@@ -55,16 +50,12 @@ bool Config::isVaildLocationBlock(t_location &location, int line_number)
 {
   if (location.root == "")
   {
-    LOG_INFO("Invaild Location, does not have root content Line number : %d",
-             line_number);
+    Log::print(ERROR,"Invaild Location, does not have root content Line number : %d", line_number);
     return 1;
   }
   if (location.accepted_method == "")
   {
-    LOG_INFO(
-        "Invaild Location, does not have accepted_method content Line number : "
-        "%d",
-        line_number);
+    Log::print(ERROR,"Invaild Location, does not have accepted_method content Line number : %d", line_number);
     return 1;
   }
   return 0;
@@ -78,7 +69,7 @@ t_location Config::get_location_expand(std::ifstream &config_file,
 {
   if (isContentCount(content_size, 3))
   {
-    LOG_INFO("Invalid content at line %d in %s", current_line,
+    Log::print(ERROR, "Invalid content at line %d in %s", current_line,
              config_file_name.c_str());
     exit(EXIT_FAILURE);
   }
@@ -96,7 +87,7 @@ t_location Config::get_location_expand(std::ifstream &config_file,
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list) ||
         split_content_line.size() >= 3)
     {
-      LOG_INFO("Invalid content at line %d in %s", current_line,
+      Log::print(ERROR, "Invalid content at line %d in %s", current_line,
                config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
@@ -149,7 +140,7 @@ void Config::openErrorPage(t_server &server)
   read_byte = read(file_fd, buf, BUF_SIZE);
   while (read_byte > 0)
   {
-    for (int i = 0; i < read_byte; ++i)
+    for (ssize_t i = 0; i < read_byte; ++i)
     {
       server.error_page_vector.push_back(buf[i]);
     }
@@ -177,7 +168,7 @@ t_server Config::get_parse_server_block(std::ifstream &file,
     }
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list))
     {
-      LOG_INFO("Invalid content at line %d in %s", current_line,
+      Log::print(ERROR, "Invalid content at line %d in %s", current_line,
                config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
@@ -214,7 +205,6 @@ t_server Config::get_parse_server_block(std::ifstream &file,
   server.error_page = temp_conf["error_page"];
   server.locations = temp_locations;
 
-  std::cout << "in here" << std::endl;
   if (isVaildServerBlock(server, current_line))
   {
     exit(EXIT_FAILURE);
@@ -237,7 +227,7 @@ void Config::set_m_server_conf(std::ifstream &config_file,
     if (split_content_line.size() != 2 || split_content_line[0] != "server" ||
         split_content_line[1] != "{")
     {
-      LOG_INFO("Invalid content at line %d in %s", current_line,
+      Log::print(ERROR, "Invalid content at line %d in %s", current_line,
                config_file_name.c_str());
       exit(EXIT_FAILURE);
     }

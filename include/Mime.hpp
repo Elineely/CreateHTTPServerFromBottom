@@ -11,8 +11,6 @@ class Mime
 
  public:
   Mime();
-  Mime(const Mime& obj);
-  Mime& operator=(Mime const& obj);
   ~Mime();
   std::string getMime(std::string target_file);
 };

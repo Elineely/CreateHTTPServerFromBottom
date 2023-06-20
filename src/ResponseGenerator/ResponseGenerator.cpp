@@ -107,7 +107,7 @@ ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
   return (*this);
 }
 
-ResponseGenerator::~ResponseGenerator(){};
+ResponseGenerator::~ResponseGenerator(){}
 
 void ResponseGenerator::generateVersion()
 {
@@ -220,7 +220,6 @@ void ResponseGenerator::generateLocation()
 
 void ResponseGenerator::generateErrorBody()
 {
-  LOG_DEBUG("error_page vector size: %d", m_response.error_page_vector.size());
   if (m_response.error_keyword == true &&
       m_response.error_page_vector.size() > 0)
   {
@@ -319,7 +318,6 @@ std::vector<char>& ResponseGenerator::generateResponseMessage()
   }
   catch (StatusCode code)
   {
-    LOG_INFO("Error code: %d", code);
     m_response.status_code = code;
     generateErrorResponseMessage();
   }

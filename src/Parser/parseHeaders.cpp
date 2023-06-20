@@ -17,7 +17,6 @@ void Parser::parseHeaders(Request& request)
   }
   else if (crlf_idx == 0)
   {
-    // LOG_INFO("Need more buffer");
     throw std::invalid_argument("Need more buffer in parseHeaders");
   }
   // \r\n 은 제외하고 input 에 저장
@@ -42,6 +41,5 @@ void Parser::parseHeaders(Request& request)
   }
 
   value = ft_strtrim(input.substr(idx1 + 1, (crlf_idx - idx1 - 1)));
-  // LOG_DEBUG("key: %s, value: %s", key.c_str(), value.c_str());
   request.headers[key] = value;
 }

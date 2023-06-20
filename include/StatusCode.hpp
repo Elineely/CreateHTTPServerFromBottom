@@ -31,8 +31,6 @@ class StatusStr
 
  public:
   StatusStr();
-  StatusStr(const StatusStr& obj);
-  StatusStr& operator=(StatusStr const& obj);
   ~StatusStr();
   std::string getStatusStr(StatusCode code);
 };

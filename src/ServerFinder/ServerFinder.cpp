@@ -6,15 +6,11 @@ ServerFinder::ServerFinder() {}
 
 ServerFinder::~ServerFinder() {}
 
-ServerFinder::ServerFinder(const ServerFinder& origin){};
-
-ServerFinder& ServerFinder::operator=(ServerFinder const& origin) { return (*this); };
-
 t_server find_server_name(std::string server_part, std::string port_part, std::vector<t_server>& servers)
 {
     std::vector<t_server> candidates;
 
-    for (int i = 0; i < servers.size(); ++i) //이름 포트 일치하는애 찾아
+    for (size_t i = 0; i < servers.size(); ++i) //이름 포트 일치하는애 찾아
     {
         std::vector<std::string> current_server_name = servers[i].server_name;
         if (current_server_name.size() == 0)
@@ -27,7 +23,7 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
         {
             if (current_server_name[0] == server_part)
             {
-                for (int k = 0; k < servers[i].listen.size(); ++k)
+                for (size_t k = 0; k < servers[i].listen.size(); ++k)
                 {
                     if (servers[i].listen[k] == port_part)
                         return (servers[i]);
@@ -36,9 +32,9 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
         }
     }
     //host명이 아닌, IP로 접근했을 경우, 서버 네임이 설정되어 있지 않은 후보자 가운데서 포트 매칭을 확인
-    for (int i = 0; i < candidates.size(); ++i)
+    for (size_t i = 0; i < candidates.size(); ++i)
     {
-        for (int k = 0; k < servers[i].listen.size(); ++k)
+        for (size_t k = 0; k < servers[i].listen.size(); ++k)
         {
             if (servers[i].listen[k] == port_part)
             {
@@ -84,7 +80,7 @@ ServerFinder::ServerFinder(Request& request, std::vector<t_server>& servers)
     }
 }
 
- t_server& ServerFinder::get_server(void)
- {
-    return (current_server);
- }
+t_server& ServerFinder::get_server(void)
+{
+return (current_server);
+}

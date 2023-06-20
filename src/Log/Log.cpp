@@ -61,20 +61,14 @@ void Log::printLogLevel(e_log_level level)
   }
 }
 
-void Log::print(e_log_level level, const char* file, const char* function,
-                int line, const char* message, ...)
+void Log::print(e_log_level level, const char* message, ...)
 {
   va_list ap;
 
+  va_start(ap, message);
+
   printLogLevel(level);
 
-  // TODO: 디버깅에서만 함수 호출 정보 출력할 지 결정하기
-  // if (level == DEBUG)
-  // {
-    printCallerInfo(file, function, line);
-  // }
-
-  va_start(ap, message);
   for (const char* p = message; *p != '\0'; ++p)
   {
     if (*p == '%')

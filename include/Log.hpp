@@ -13,9 +13,9 @@
 #define BLUE_TEXT	"\033[34m"
 #define CUT_TEXT	"\033[0m"
 
-#define LOG_ERROR(format, args...) Log::print(ERROR, __FILE__, __func__, __LINE__, format, ## args);
-#define LOG_DEBUG(format, args...) Log::print(DEBUG, __FILE__, __func__, __LINE__, format, ## args);
-#define LOG_INFO(format, args...) Log::print(INFO, __FILE__, __func__, __LINE__, format, ## args);
+// #define LOG_ERROR(format, args...) Log::print(ERROR, __FILE__, __func__, __LINE__, format, ## args);
+// #define LOG_DEBUG(format, args...) Log::print(DEBUG, __FILE__, __func__, __LINE__, format, ## args);
+// #define LOG_INFO(format, args...) Log::print(INFO, __FILE__, __func__, __LINE__, format, ## args);
 
 struct t_event_udata;
 
@@ -23,7 +23,7 @@ enum e_log_level
 {
   ERROR,
   DEBUG,
-  INFO,
+  INFO
 };
 
 class Log
@@ -39,8 +39,7 @@ class Log
 
   public:
     static void start(void);
-    static void print(e_log_level level, const char* file, const char* function,
-                      int line, const char* message, ...);
+    static void print(e_log_level level, const char* message, ...);
     static void printRequestResult(t_event_udata* current_udata);
 };
 

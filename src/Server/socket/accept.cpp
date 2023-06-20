@@ -11,7 +11,7 @@ int Server::clientReadAccept(struct kevent *current_event)
                        reinterpret_cast<socklen_t *>(&client_addr_size));
   if (client_sock == -1)
   {
-    LOG_INFO("Failed to accept client socket (strerror: %s)", strerror(errno));
+    Log::print(ERROR, "Failed to accept client socket (strerror: %s)", strerror(errno));
     return (-1);
   }
   struct linger
@@ -19,11 +19,10 @@ int Server::clientReadAccept(struct kevent *current_event)
     int l_onoff;
     int l_linger;
   };
-  struct linger _linger;
+  struct linger linger;
 
-  _linger.l_onoff = 1;
-  _linger.l_linger = 0;
-  setsockopt(client_sock, SOL_SOCKET, SO_LINGER, &_linger, sizeof(_linger));
-  // LOG_INFO("🌵 Client Socket fd %d is created 🌵", client_sock);
+  linger.l_onoff = 1;
+  linger.l_linger = 0;
+  setsockopt(client_sock, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
   return (client_sock);
 }

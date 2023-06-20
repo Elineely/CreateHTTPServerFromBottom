@@ -9,7 +9,7 @@ void Server::setServers(const Config& server_conf,
   for (config_vector::iterator iter = server.begin(); iter != server.end();
        ++iter)
   {
-    for (int i = 0; i < iter->listen.size(); ++i)
+    for (size_t i = 0; i < iter->listen.size(); ++i)
     {
       int port =  atoi(iter->listen[i].c_str());
         if (port_map.find(port) != port_map.end())

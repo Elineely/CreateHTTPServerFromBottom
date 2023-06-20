@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
   if (argc > 2)
   {
-    LOG_INFO("Usage: [./cute_webserv config_file]");
+    Log::print(ERROR, "Usage: [./cute_webserv config_file]");
     exit(EXIT_FAILURE);
   }
 

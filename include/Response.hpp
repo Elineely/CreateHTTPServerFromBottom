@@ -66,7 +66,6 @@ struct Response
   {
     if (this != &obj)
     {
-      std::cout << "Response Body copy" << std::endl;
       accepted_method = obj.accepted_method;
       rediretion_location = obj.rediretion_location;
       file_path = obj.file_path;

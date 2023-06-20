@@ -12,20 +12,15 @@ void Parser::parseBody(Request& request)
     m_pool.offset += 1;
   }
 
-  long content_length = std::atol(request.headers["content-length"].c_str());
-  // std::strtoll(request.headers["content-length"].c_str(), NULL, 10);
+  ssize_t content_length = std::atol(request.headers["content-length"].c_str());
 
-  if (content_length == request.body.size())
+  if (content_length == static_cast<ssize_t>(request.body.size()))
   {
     request.validation_phase = COMPLETE;
   }
-  else if (content_length < request.body.size())
+  else if (content_length < static_cast<ssize_t>(request.body.size()))
   {
     request.status = BAD_REQUEST_400;
     request.validation_phase = COMPLETE;
   }
-  LOG_DEBUG(
-      "m_pool.line_len: %d, m_pool.offset: %d, content-length: %d, body_size: "
-      "%d",
-      m_pool.line_len, m_pool.offset, content_length, request.body.size());
 }
