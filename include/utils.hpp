@@ -32,15 +32,4 @@ int ft_error(int status_code, const char *error_message);
 void ft_error_exit(int exit_flag, const char *error_message);
 void ft_process_print(const char *str);
 
-template <typename T>
-void ft_delete(T** ptr)
-{
-  if (*ptr == NULL)
-  {
-    return;
-  }
-  delete *ptr;
-  *ptr = NULL;
-}
-
 #endif

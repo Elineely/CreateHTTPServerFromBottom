@@ -16,7 +16,7 @@ void Server::serverReadEvent(struct kevent *current_event)
   if (current_event->flags & EV_ERROR)
   {
     disconnectSocket(current_event->ident);
-    ft_delete(&current_udata);
+    ft_delete(&current_udata, current_udata->m_client_sock);
     return;
   }
 
@@ -29,11 +29,14 @@ void Server::serverReadEvent(struct kevent *current_event)
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
   request = new Request();
+  m_udata_map[current_udata->m_client_sock].push_back(request);
 
   response = new Response();
+  m_udata_map[current_udata->m_client_sock].push_back(response);
 
   udata =
       new t_event_udata(CLIENT, current_udata->m_servers, request, response);
+  m_udata_map[current_udata->m_client_sock].push_back(udata);
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);

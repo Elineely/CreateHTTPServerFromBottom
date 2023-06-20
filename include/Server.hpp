@@ -18,6 +18,7 @@
 // std::container header
 #include <list>
 #include <vector>
+#include <map>
 
 // common I/O header
 #include <fcntl.h>
@@ -164,6 +165,7 @@ class Server
 {
  private:
   std::vector<t_multi_server> servers;
+  std::map<int, std::vector<void *> > m_udata_map;
   t_kqueue m_kqueue;
   Server();
 
@@ -221,6 +223,46 @@ class Server
 
   // write.cpp
   void staticFileWriteEvent(struct kevent *current_event);
-};
+  
+  template <typename T>
+  void ft_delete(T** ptr, int client_sock)
+  {
+    std::map<int, std::vector<void *> >::iterator it;
+    it = m_udata_map.find(client_sock);
+    if (it == m_udata_map.end())
+      return ;
+    for (size_t i = 0; i < it->second.size(); ++i)
+    {
+      if (*ptr == it->second[i])
+      {
+        it->second.erase(it->second.begin() + i);
+        
+        if (*ptr == NULL)
+        {
+          return;
+        }
+        delete *ptr;
+        *ptr = NULL;
+        return ;
+      }
+    }
+  }
+
+  void ft_delete_all(int client_sock)
+  {
+    std::map<int, std::vector<void *> >::iterator it;
+    it = m_udata_map.find(client_sock);
+    if (it == m_udata_map.end())
+      return ;
+    for (size_t i = 0; i < it->second.size(); ++i)
+    {
+        delete static_cast<int *>(it->second[i]);
+        it->second.erase(it->second.begin() + i);
+      }
+    }
+  }
+;
+
+
 
 #endif

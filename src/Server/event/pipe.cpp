@@ -44,28 +44,28 @@ void Server::pipeReadEvent(struct kevent *current_event)
     udata =
         new t_event_udata(CLIENT, current_udata->m_servers,
                           current_udata->m_request, current_udata->m_response);
-
+    
     udata->m_response_write.message = ok.generateResponseMessage();
     udata->m_response_write.offset = 0;
     udata->m_response_write.length = udata->m_response_write.message.size();
 
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
+    addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
     
     Log::printRequestResult(current_udata);
     
     if (current_udata->m_write_udata != NULL)
     {
-      ft_delete(&current_udata->m_write_udata->m_request);
-      ft_delete(&current_udata->m_write_udata->m_response);
-      ft_delete(&current_udata->m_write_udata);
+      ft_delete(&current_udata->m_write_udata->m_request, current_udata->m_client_sock);
+      ft_delete(&current_udata->m_write_udata->m_response, current_udata->m_client_sock);
+      ft_delete(&current_udata->m_write_udata, current_udata->m_client_sock);
     }
-    ft_delete(&(current_udata->m_other_udata->m_request));
-    ft_delete(&(current_udata->m_other_udata->m_response));
-    ft_delete(&(current_udata->m_other_udata));
-    ft_delete(&current_udata);
+    ft_delete(&(current_udata->m_other_udata->m_request), current_udata->m_client_sock);
+    ft_delete(&(current_udata->m_other_udata->m_response), current_udata->m_client_sock);
+    ft_delete(&(current_udata->m_other_udata), current_udata->m_client_sock);
+    ft_delete(&current_udata, current_udata->m_client_sock);
   }
 }
 

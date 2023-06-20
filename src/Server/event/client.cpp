@@ -19,9 +19,9 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   if (recv_size == 0)
   {
     disconnectSocket(current_event->ident);
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
+    ft_delete(&current_udata->m_request, current_udata->m_client_sock);
+    ft_delete(&current_udata->m_response, current_udata->m_client_sock);
+    ft_delete(&current_udata, current_udata->m_client_sock);
     return;
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
@@ -43,13 +43,19 @@ void Server::clientReadEvent(struct kevent *current_event)
   t_event_udata *current_udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
+  if (m_udata_map.find(current_event->ident) == m_udata_map.end())
+  {
+    std::vector<void *> vec;
+    m_udata_map.insert(std::make_pair(current_event->ident, vec));
+  }
   if (current_event->flags & EV_EOF)
   {
     Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥", current_event->ident);
 
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
+    ft_delete(&current_udata->m_request, current_udata->m_client_sock);
+    ft_delete(&current_udata->m_response, current_udata->m_client_sock);
+    ft_delete(&current_udata, current_udata->m_client_sock);
+    ft_delete_all(current_event->ident);
     disconnectSocket(current_event->ident);
     return;
   }
@@ -76,13 +82,16 @@ void Server::clientReadEvent(struct kevent *current_event)
     addStaticRequestEvent(current_event, current_udata, request, response);
   }
 
-  ft_delete(&current_udata->m_request);
-  ft_delete(&current_udata->m_response);
-
+  ft_delete(&current_udata->m_request, current_udata->m_client_sock);
+  ft_delete(&current_udata->m_response, current_udata->m_client_sock);
   current_udata->m_request = new Request();
+  m_udata_map[current_event->ident].push_back(current_udata->m_request);
   current_udata->m_response = new Response();
+  m_udata_map[current_event->ident].push_back(current_udata->m_response);
 
   current_udata->m_parser = new_parser;
+
+
 }
 
 /*
@@ -108,7 +117,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
   }
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
-  ft_delete(&(current_udata->m_request));
-  ft_delete(&(current_udata->m_response));
-  ft_delete(&current_udata);
+  ft_delete(&(current_udata->m_request), current_udata->m_client_sock);
+  ft_delete(&(current_udata->m_response), current_udata->m_client_sock);
+  ft_delete(&current_udata, current_udata->m_client_sock);
 }

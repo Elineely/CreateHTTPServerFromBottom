@@ -21,6 +21,8 @@ void Server::addEventToChangeList(
   change_list.push_back(temp_event);
 }
 
+
+
 e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
 {
   if (current_event->flags & EV_ERROR)

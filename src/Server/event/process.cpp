@@ -15,11 +15,14 @@ t_event_udata *Server::createUdata(e_event_type type,
   t_event_udata *udata;
 
   new_request = new Request(*current_udata->m_request);
-
+  m_udata_map[current_udata->m_client_sock].push_back(new_request);
   new_response = new Response(response);
+  m_udata_map[current_udata->m_client_sock].push_back(new_response);
 
   udata = new t_event_udata(type, current_udata->m_servers, new_request,
                             new_response);
+  m_udata_map[current_udata->m_client_sock].push_back(udata);
+
   udata->m_read_pipe_fd = response.read_pipe_fd;
   udata->m_write_pipe_fd = response.write_pipe_fd;
   udata->m_child_pid = response.cgi_child_pid;
@@ -100,6 +103,8 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   udata =
       new t_event_udata(CLIENT, current_udata->m_servers,
                         current_udata->m_request, current_udata->m_response);
+  m_udata_map[current_udata->m_client_sock].push_back(udata);
+                        
   udata->m_response_write.message = response_message;
   udata->m_response_write.offset = 0;
   udata->m_response_write.length = response_message.size();
@@ -114,12 +119,12 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   }
   if (current_udata->m_write_udata != NULL)
   {
-    ft_delete(&current_udata->m_write_udata->m_request);
-    ft_delete(&current_udata->m_write_udata->m_response);
-    ft_delete(&current_udata->m_write_udata);
+    ft_delete(&current_udata->m_write_udata->m_request, current_udata->m_client_sock);
+    ft_delete(&current_udata->m_write_udata->m_response, current_udata->m_client_sock);
+    ft_delete(&current_udata->m_write_udata, current_udata->m_client_sock);
   }
-  ft_delete(&current_udata->m_other_udata->m_request);
-  ft_delete(&current_udata->m_other_udata->m_response);
-  ft_delete(&current_udata->m_other_udata);
-  ft_delete(&current_udata);
+  ft_delete(&current_udata->m_other_udata->m_request, current_udata->m_client_sock);
+  ft_delete(&current_udata->m_other_udata->m_response, current_udata->m_client_sock);
+  ft_delete(&current_udata->m_other_udata, current_udata->m_client_sock);
+  ft_delete(&current_udata, current_udata->m_client_sock);
 }
