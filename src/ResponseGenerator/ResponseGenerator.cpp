@@ -42,15 +42,17 @@ void ResponseGenerator::cgiDataProcess()
   }
   status_begin = cgi_data.find("Status: ");
   status_end = cgi_data.find("\r\n", status_begin);
-  if (status_begin == std::string::npos && status_end == std::string::npos)
+  if (status_begin != std::string::npos && status_end != std::string::npos)
   {
     std::stringstream ss;
-    int error_code;
+    int status_code;
     cgi_status_code = cgi_data.substr(status_begin + 8, 3);
     ss << cgi_status_code;
-    ss >> error_code;
-    throw(static_cast<StatusCode>(error_code));
+    ss >> status_code;
+    m_response.status_code = static_cast<StatusCode>(status_code);
   }
+  else
+    m_response.status_code = OK_200;
 
   // generate content-type header in case of cgi
   std::string::size_type content_type_begin;
