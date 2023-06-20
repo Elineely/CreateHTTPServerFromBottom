@@ -225,24 +225,21 @@ class Server
   void staticFileWriteEvent(struct kevent *current_event);
   
   template <typename T>
-  void ft_delete(T** ptr, int client_sock)
+  void ft_delete(T* ptr, int client_sock)
   {
     std::map<int, std::vector<void *> >::iterator it;
     it = m_udata_map.find(client_sock);
     if (it == m_udata_map.end())
       return ;
-    for (size_t i = 0; i < it->second.size(); ++i)
+    // std::cout << "fd: "<< client_sock << " left size : " << it->second.size() << std::endl;
+
+    for (int i = 0; i < it->second.size(); ++i)
     {
-      if (*ptr == it->second[i])
+      if (ptr == it->second[i])
       {
+        // printf("client fd : %d   %p == %p  delete\n",client_sock ,ptr, it->second[i]);
         it->second.erase(it->second.begin() + i);
-        
-        if (*ptr == NULL)
-        {
-          return;
-        }
-        delete *ptr;
-        *ptr = NULL;
+        delete ptr;
         return ;
       }
     }
@@ -256,8 +253,9 @@ class Server
       return ;
     for (size_t i = 0; i < it->second.size(); ++i)
     {
+      std::cout << client_sock << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
         delete static_cast<int *>(it->second[i]);
-        it->second.erase(it->second.begin() + i);
+      it->second.erase(it->second.begin() + i);
       }
     }
   }

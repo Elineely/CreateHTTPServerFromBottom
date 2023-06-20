@@ -44,6 +44,8 @@ void Server::pipeReadEvent(struct kevent *current_event)
     udata =
         new t_event_udata(CLIENT, current_udata->m_servers,
                           current_udata->m_request, current_udata->m_response);
+    m_udata_map[current_udata->m_client_sock].push_back(udata);
+   std::cout << "2  " << current_udata->m_client_sock << std::endl;
     
     udata->m_response_write.message = ok.generateResponseMessage();
     udata->m_response_write.offset = 0;
@@ -58,14 +60,14 @@ void Server::pipeReadEvent(struct kevent *current_event)
     
     if (current_udata->m_write_udata != NULL)
     {
-      ft_delete(&current_udata->m_write_udata->m_request, current_udata->m_client_sock);
-      ft_delete(&current_udata->m_write_udata->m_response, current_udata->m_client_sock);
-      ft_delete(&current_udata->m_write_udata, current_udata->m_client_sock);
+      ft_delete(current_udata->m_write_udata->m_request, current_udata->m_client_sock);
+      ft_delete(current_udata->m_write_udata->m_response, current_udata->m_client_sock);
+      ft_delete(current_udata->m_write_udata, current_udata->m_client_sock);
     }
-    ft_delete(&(current_udata->m_other_udata->m_request), current_udata->m_client_sock);
-    ft_delete(&(current_udata->m_other_udata->m_response), current_udata->m_client_sock);
-    ft_delete(&(current_udata->m_other_udata), current_udata->m_client_sock);
-    ft_delete(&current_udata, current_udata->m_client_sock);
+    ft_delete((current_udata->m_other_udata->m_request), current_udata->m_client_sock);
+    ft_delete((current_udata->m_other_udata->m_response), current_udata->m_client_sock);
+    ft_delete((current_udata->m_other_udata), current_udata->m_client_sock);
+    ft_delete(current_udata, current_udata->m_client_sock);
   }
 }
 

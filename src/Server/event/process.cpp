@@ -119,12 +119,12 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   }
   if (current_udata->m_write_udata != NULL)
   {
-    ft_delete(&current_udata->m_write_udata->m_request, current_udata->m_client_sock);
-    ft_delete(&current_udata->m_write_udata->m_response, current_udata->m_client_sock);
-    ft_delete(&current_udata->m_write_udata, current_udata->m_client_sock);
+    ft_delete(current_udata->m_write_udata->m_request, current_udata->m_client_sock);
+    ft_delete(current_udata->m_write_udata->m_response, current_udata->m_client_sock);
+    ft_delete(current_udata->m_write_udata, current_udata->m_client_sock);
   }
-  ft_delete(&current_udata->m_other_udata->m_request, current_udata->m_client_sock);
-  ft_delete(&current_udata->m_other_udata->m_response, current_udata->m_client_sock);
-  ft_delete(&current_udata->m_other_udata, current_udata->m_client_sock);
-  ft_delete(&current_udata, current_udata->m_client_sock);
+  ft_delete(current_udata->m_other_udata->m_request, current_udata->m_client_sock);
+  ft_delete(current_udata->m_other_udata->m_response, current_udata->m_client_sock);
+  ft_delete(current_udata->m_other_udata, current_udata->m_client_sock);
+  ft_delete(current_udata, current_udata->m_client_sock);
 }
