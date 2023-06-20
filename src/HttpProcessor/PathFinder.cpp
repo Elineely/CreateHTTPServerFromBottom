@@ -202,8 +202,7 @@ void PathFinder::oneSlashInUri(t_server& server_data, std::string locationBlock,
     if (checkExist(current_location.root + locationBlock))
     {  // '/' 기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치
        // auto 인덱스 하려면 꼭 필요
-      if (isEndWithDirectory(locationBlock, current_location, response_data,
-                             request_data))
+      if (isEndWithDirectory(current_location.root + locationBlock, request_data, current_location, response_data))
         return;
       else
       {
@@ -233,29 +232,29 @@ void PathFinder::oneSlashInUri(t_server& server_data, std::string locationBlock,
   }
 }
 
-bool PathFinder::isEndWithDirectory(std::string locationBlock,
-                                    t_location current_location,
-                                    Response& response_data,
-                                    Request& request_data)
-{
-  // 디렉토리로 끝나는 경우가 온 경우
-  if (is_directory(current_location.root +
-                   locationBlock))  //"a/b/c/d(존재하는 디렉토리)"
-  {
-    if (locationBlock[locationBlock.length() - 1] != '/')
-      locationBlock += "/";  // 디렉토리 뒤 '/'
-    setMaxSize(request_data, current_location.max_body_size);
-    setBasic(current_location.accepted_method,
-             current_location.root + locationBlock, "", current_location.index,
-             current_location.auto_index, current_location.uploaded_path,
-             current_location.redirection, current_location.root,
-             response_data);
-    return true;
-  }
-  return false;
-}
+// bool PathFinder::isEndWithDirectory(std::string locationBlock,
+//                                     t_location current_location,
+//                                     Response& response_data,
+//                                     Request& request_data)
+// {
+//   // 디렉토리로 끝나는 경우가 온 경우
+//   if (is_directory(current_location.root +
+//                    locationBlock))  //"a/b/c/d(존재하는 디렉토리)"
+//   {
+//     if (locationBlock[locationBlock.length() - 1] != '/')
+//       locationBlock += "/";  // 디렉토리 뒤 '/'
+//     setMaxSize(request_data, current_location.max_body_size);
+//     setBasic(current_location.accepted_method,
+//              current_location.root + locationBlock, "", current_location.index,
+//              current_location.auto_index, current_location.uploaded_path,
+//              current_location.redirection, current_location.root,
+//              response_data);
+//     return true;
+//   }
+//   return false;
+// }
 
-bool PathFinder::isEndWithExistDirectory(std::string entire_path,
+bool PathFinder::isEndWithDirectory(std::string entire_path,
                                          Request& request_data,
                                          t_location current_location,
                                          Response& response_data)
@@ -289,6 +288,7 @@ void PathFinder::isEndWithFileName(std::string entire_path,
            current_location.redirection, current_location.root, response_data);
 }
 
+
 bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
                                          std::string location_key,
                                          t_location current_location,
@@ -307,12 +307,11 @@ bool PathFinder::firstBlockIsNotLocation(t_server& server_data,
     if (checkExist(current_location.root + location_key))
     {  //  기본 블럭 뒤 파일 이름 or 디렉토리 이름 허용 -> default 위치 auto
        //  인덱스 하려면 꼭 필요
-      std::string entire_path = current_location.root + locationBlock;
-      if (isEndWithDirectory(locationBlock, current_location, response_data,
-                             request_data))
+      // std::string entire_path = current_location.root + locationBlock;
+      if (isEndWithDirectory(current_location.root + locationBlock, request_data, current_location, response_data))
         return true;
       else
-        isEndWithFileName(entire_path, request_data, current_location,
+        isEndWithFileName(current_location.root + locationBlock, request_data, current_location,
                           response_data);
     }
     else
@@ -336,13 +335,12 @@ void PathFinder::firstBlockIsLocation(std::string location_key,
   t_location current_location = temp_location->second;
   std::string rest_of_uri =
       (locationBlock).substr((locationBlock).find("/", 1));
-  std::string entire_path = current_location.root + rest_of_uri;
 
-  if (isEndWithExistDirectory(entire_path, request_data, current_location,
+  if (isEndWithDirectory(current_location.root + rest_of_uri, request_data, current_location,
                               response_data))
     return;
   else
-    isEndWithFileName(entire_path, request_data, current_location,
+    isEndWithFileName(current_location.root + rest_of_uri, request_data, current_location,
                       response_data);
 }
 
