@@ -85,6 +85,8 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
     }
     else
     {
+      if (m_response_data.cgi_flag == true)
+        m_response_data.cgi_flag = false;
       throw METHOD_NOT_ALLOWED_405;
     }
   }
