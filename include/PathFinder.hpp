@@ -47,10 +47,10 @@ class PathFinder
                      Response& response_data, Request& request_data);
   void manySlashesInUri(std::string locationBlock, t_server& server_data,
                         Response& response_data, Request& request_data);
-  bool isEndWithDirectory(std::string locationBlock,
-                          t_location current_location, Response& response_data,
-                          Request& request_data);
-  bool isEndWithExistDirectory(std::string entire_path, Request& request_data,
+  // bool isEndWithDirectory(std::string locationBlock,
+                          // t_location current_location, Response& response_data,
+                          // Request& request_data);
+  bool isEndWithDirectory(std::string entire_path, Request& request_data,
                                t_location current_location,
                                Response& response_data);
   void isEndWithFileName(std::string entire_path, Request& request_data,
