@@ -16,7 +16,6 @@ void Server::setServers(const Config& server_conf,
             continue;
       t_multi_server server;
       server.server_port = port;
-      server.config = *iter;
       servers.push_back(server);
       port_map.insert(std::make_pair(port, 0));
     }

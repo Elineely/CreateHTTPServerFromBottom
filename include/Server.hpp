@@ -97,7 +97,6 @@ struct t_multi_server
   int server_sock;
   int server_port;
   struct sockaddr_in serv_addr;
-  t_server config;
 };
 
 struct t_response_write
