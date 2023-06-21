@@ -36,6 +36,11 @@ HttpProcessor::HttpProcessor(Request& request_data, Response& response_data,
   try
   {
     PathFinder path_finder(request_data, server_data, m_response_data);
+    if (m_response_data.redirection_exist == true)
+    {
+      if (m_request_data.method != "GET")
+        m_response_data.redirection_exist = false;
+    }
     if (m_request_data.method == "GET" &&
         m_response_data.accepted_method.find("GET") != std::string::npos)
     {
