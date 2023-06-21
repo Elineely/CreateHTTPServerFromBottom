@@ -11,14 +11,14 @@ void Server::setServers(const Config& server_conf,
   {
     for (size_t i = 0; i < iter->listen.size(); ++i)
     {
-      int port =  atoi(iter->listen[i].c_str());
+      int port = atoi(iter->listen[i].c_str());
         if (port_map.find(port) != port_map.end())
             continue;
       t_multi_server server;
       server.server_port = port;
       server.config = *iter;
       servers.push_back(server);
-      port_map.insert(std::make_pair(servers[i].server_port, 0));
+      port_map.insert(std::make_pair(port, 0));
     }
   }
 }
