@@ -44,7 +44,6 @@ typedef std::pair<std::string, std::vector<std::string> >
 class Config
 {
  private:
-  int current_line;
   config_vector m_server_conf;
 
  private:
@@ -67,8 +66,8 @@ class Config
                                  std::string config_file_name,
                                  content_list_type vaild_content_list,
                                  int content_size, std::string server_max_size);
-  bool isVaildServerBlock(t_server &server, int line_number);
-  bool isVaildLocationBlock(t_location &location, int line_number);
+  bool isVaildServerBlock(t_server &server);
+  bool isVaildLocationBlock(t_location &location);
 
   void showServerConf();
   void openErrorPage(t_server& server);

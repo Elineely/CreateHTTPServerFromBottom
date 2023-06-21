@@ -1,7 +1,7 @@
 #include "HttpProcessor.hpp"
 #include "Log.hpp"
-#include "ResponseGenerator.hpp"
 #include "Server.hpp"
+#include "ResponseGenerator.hpp"
 #include "ServerFinder.hpp"
 
 void Server::addStaticRequestEvent(struct kevent *current_event,
@@ -19,10 +19,24 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     t_event_udata *udata;
 
     file_size = lseek(response.static_read_file_fd, 0, SEEK_END);
-    if (file_size == -1)
+    if (file_size == 0)
     {
-      throw INTERNAL_SERVER_ERROR_500;
+      close(response.static_read_file_fd);
+      Request *request = current_udata->m_request;
+      Response *response = current_udata->m_response;
+      ResponseGenerator response_generator(*request, *response);
+
+      udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+      udata->m_response_write.message =
+          response_generator.generateResponseMessage();
+      udata->m_response_write.offset = 0;
+      udata->m_response_write.length = udata->m_response_write.message.size();
+      Log::printRequestResult(current_udata);
+      addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+      return ;
     }
+
     lseek(response.static_read_file_fd, 0, SEEK_SET);
     response.static_read_file_size = file_size;
     response.body.reserve(file_size);
@@ -61,10 +75,10 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     udata->m_response_write.offset = 0;
     udata->m_response_write.length = response_message.size();
 
+    Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
 
-    Log::printRequestResult(current_udata);
   }
 }
 

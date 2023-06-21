@@ -1,172 +1,26 @@
 <html>
 	<head>
+		<style>
+			.banner 
+			{
+				background-color: blanchedalmond;
+			}
+		</style>
 		<script>
-			const sendStaticPost = () => 
-			{
-				const fileInput = document.getElementById('fileInput');
-				const file = fileInput.files[0];
-				const file_name = file.name;
-				const path = "./upload/";
-				const requset_uri = path + file_name;
-
-				console.log(file);
-				console.log("request POST to -> " + requset_uri);
-				fetch(requset_uri, {
-				method: 'POST',
-				body: file
-				})
-				.then(response => {
-					// Handle the response
-					if(response.ok)
-					{
-						alert("success request!!");
-					}
-					else
-					{
-						alert("fail request..");
-					}
-				})
-				.catch(error => {
-					// Handle errors
-					alert(error);
-				});
-			}
-
-			const sendStaticPut = () => 
-			{
-				const fileInput = document.getElementById('fileInput');
-				const file = fileInput.files[0];
-				const file_name = file.name;
-				const path = "./upload/"
-				const requset_uri = path + file_name;
-
-				console.log("request PUT to -> " + requset_uri);
-				fetch(requset_uri, {
-				method: 'PUT',
-				body: file
-				})
-				.then(response => {
-					// Handle the response
-					if(response.ok)
-					{
-						alert("success request!!");
-					}
-					else
-					{
-						alert("fail request..");
-					}
-				})
-				.catch(error => {
-					// Handle errors
-					alert(error);
-				});
-			}
-			
-			const sendPlCgiGet = () => 
-			{
-				const path = "./Perl.pl"
-				const requset_uri = path;
-
-				console.log("request GET to -> " + requset_uri);
-				fetch(requset_uri, {
-					method: 'GET'
-				})
-				.then(response => {
-					// Handle the response
-					if(response.ok)
-					{
-						alert("success request!!");
-					}
-					else
-					{
-						alert("fail request..");
-					}
-				})
-				.catch(error => {
-					// Handle errors
-					alert(error);
-				});
-			}
-
-			const sendPlCgiPost = () => 
-			{
-				const path = "./Perl.pl"
-				const requset_uri = path;
-
-				console.log("request POST to -> " + requset_uri);
-				fetch(requset_uri, {
-					method: 'POST'
-				})
-				.then(response => {
-					// Handle the response
-					if(response.ok)
-					{
-						alert("success request!!");
-					}
-					else
-					{
-						alert("fail request..");
-					}
-				})
-				.catch(error => {
-					// Handle errors
-					alert(error);
-				});
-			}
-
 
 		</script>
 	</head>
 	<body>
-		<marquee> 	
+		<marquee class="banner"> 	
 			<p>
 				Meow~~~
 			</p>
 		</marquee>
 
-		<div style="text-align: center;">
-			<img src="./images/bangle_with_note.jpg" width="300">
-
+		<center>
 			<h1>
-				Static File post, put
+				Welcome!!
 			</h1>
-			<input type="file" name="png" id="fileInput" />
-			<br>
-			<div style="margin-top: 5;">
-				<div style="margin-bottom: 2rem;">
-					<input type="submit" onclick="sendStaticPost()" value="STATIC POST" />
-					<input type="submit" onclick="sendStaticPut()" value="STATIC PUT"/>
-				</div>
-			</div>
-			
-			<h1>
-				CGI File post
-			</h1>
-			<div style="margin-bottom: 2rem;">
-				<form action="./post_test.py" method="post" enctype="multipart/form-data">
-					<input type="file" name="image">
-					<div style="margin-top: 5;">
-						<input type="submit" value="CGI POST">
-					</div>
-				</form>
-			</div>
-			<div>
-				<h2>Perl CGI</h2>
-				<input type="submit" onclick="sendPlCgiGet()" value="PERL GET" />
-				<input type="submit" onclick="sendPlCgiPost()" value="PERL POST"/>
-			</div>
-			<div>
-				<h1>
-					<a href="./hi/"> auto_index</a>
-				</h1>
-			</div>
-			<div>
-				<h1>
-					<a href="./figma/"> FIGMA</a>
-				</h1>
-			</div>
-
-		</div>
-			
+		</center>
 	</body>
 </html> 
