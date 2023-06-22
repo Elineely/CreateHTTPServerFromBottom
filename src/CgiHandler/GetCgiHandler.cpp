@@ -46,6 +46,14 @@ void GetCgiHandler::executeCgi()
     exit(EXIT_FAILURE);
   }
 
+   if (dup2(m_to_parent_fds[WRITE], STDERR_FILENO) == -1)
+  {
+    Log::print(ERROR, "failed to dup2(%d, %d)", m_to_parent_fds, STDOUT_FILENO);
+    close(m_to_child_fds[READ]);
+    close(m_to_parent_fds[WRITE]);
+    exit(EXIT_FAILURE);
+  }
+
   close(m_to_child_fds[READ]);
   close(m_to_parent_fds[WRITE]);
 
