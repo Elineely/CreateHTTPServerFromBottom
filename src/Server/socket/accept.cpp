@@ -14,11 +14,7 @@ int Server::clientReadAccept(struct kevent *current_event)
     Log::print(ERROR, "Failed to accept client socket (strerror: %s)", strerror(errno));
     return (-1);
   }
-  struct linger
-  {
-    int l_onoff;
-    int l_linger;
-  };
+
   struct linger linger;
 
   linger.l_onoff = 1;
