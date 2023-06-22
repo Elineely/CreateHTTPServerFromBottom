@@ -101,3 +101,45 @@ void Log::print(e_log_level level, const char* message, ...)
 
   va_end(ap);
 }
+
+void Log::print_line(e_log_level level, const char* file, const char* func, int line, const char* message, ...)
+{
+  va_list ap;
+
+  va_start(ap, message);
+
+  printLogLevel(level);
+  printCallerInfo(file, func, line);
+
+  for (const char* p = message; *p != '\0'; ++p)
+  {
+    if (*p == '%')
+    {
+      ++p;
+
+      switch (*p)
+      {
+        case 'd':
+          std::cout << va_arg(ap, int);
+          break;
+        case 'f':
+          std::cout << va_arg(ap, double);
+          break;
+        case 's':
+          std::cout << va_arg(ap, const char*);
+          break;
+        default:
+          std::cout << "[Invalid format specifier]";
+          break;
+      }
+    }
+    else
+    {
+      std::cout << *p;
+    }
+  }
+
+  std::cout << std::endl;
+
+  va_end(ap);
+}
