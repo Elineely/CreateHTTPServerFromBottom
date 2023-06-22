@@ -129,7 +129,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
       current_udata->m_response->body.push_back(buf[idx]);
     }
   }
-  if (read_byte < BUF_SIZE)
+  if (read_byte < BUF_SIZE) // TODO: EVFILT_VNODE 필터로 바꿔서 감지할 지?
   {
     close(current_event->ident);
     t_event_udata *udata;
