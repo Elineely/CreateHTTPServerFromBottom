@@ -13,6 +13,7 @@ void Server::serverReadEvent(struct kevent *current_event)
   t_event_udata *current_udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
+  // 서버 소켓 에러가 발생한 경우
   if (current_event->flags & EV_ERROR)
   {
     disconnectSocket(current_event->ident);
@@ -26,6 +27,10 @@ void Server::serverReadEvent(struct kevent *current_event)
   t_event_udata *udata;
 
   client_sock = clientReadAccept(current_event);
+  if (client_sock == -1)
+  {
+    return ;
+  }
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
  try
@@ -42,7 +47,7 @@ void Server::serverReadEvent(struct kevent *current_event)
       exit(EXIT_FAILURE);
     }
 
-  std::cout << "register client : " << client_sock << std::endl; 
+  std::cout << "register client : " << client_sock << std::endl;
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }
