@@ -15,11 +15,14 @@ void Server::clearUdata()
     if (it != m_close_udata_map.end())
     {
       if (it->second != NULL)
+      {
         delete it->second;
+      }
+      m_close_udata_map.erase(it);
     }
-    m_close_fd_vec.erase(m_close_fd_vec.begin() + i);
     disconnectSocket(m_close_fd_vec[i]);
   } 
+  m_close_fd_vec.clear();
 }
 
 void Server::addEventToChangeList(

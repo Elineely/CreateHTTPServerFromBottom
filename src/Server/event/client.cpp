@@ -111,6 +111,11 @@ void Server::clientWriteEvent(struct kevent *current_event)
   message = &response_write->message[0];
   send_byte = send(current_event->ident, message + response_write->offset,
                    response_write->length - response_write->offset, 0);
+  if (send_byte == -1)
+  {
+    std::cout << "send byte -1 " << std::endl;
+    return ;
+  }
   response_write->offset += send_byte;
   if (response_write->length > response_write->offset)
   {
