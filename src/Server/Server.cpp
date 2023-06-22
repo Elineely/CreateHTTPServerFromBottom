@@ -64,8 +64,15 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
 {
   for (size_t i = 0; i < servers.size(); ++i)
   {
-    t_event_udata *udata =
-        new t_event_udata(SERVER, server_conf.get_m_server_conf());
+    t_event_udata *udata;
+    try
+    {
+      udata = new t_event_udata(SERVER, server_conf.get_m_server_conf());
+    }
+    catch(std::exception e)
+    {
+      exit(EXIT_FAILURE);
+    }
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
   }

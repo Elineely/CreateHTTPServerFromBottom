@@ -12,8 +12,10 @@ void Server::setServers(const Config& server_conf,
     for (size_t i = 0; i < iter->listen.size(); ++i)
     {
       int port = atoi(iter->listen[i].c_str());
-        if (port_map.find(port) != port_map.end())
-            continue;
+      if (port_map.find(port) != port_map.end())
+      {
+        ft_error_exit(EXIT_FAILURE, "Duplicated port is not allowed.");
+      }
       t_multi_server server;
       server.server_port = port;
       servers.push_back(server);

@@ -24,6 +24,10 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
     ft_delete(&current_udata);
     return;
   }
+  else if (recv_size == -1)
+  {
+    ft_error_exit(EXIT_FAILURE,"recv system call error");
+  }
   current_udata->m_parser.readBuffer(buff, recv_size,
                                      *current_udata->m_request);
 }
@@ -79,9 +83,15 @@ void Server::clientReadEvent(struct kevent *current_event)
   ft_delete(&current_udata->m_request);
   ft_delete(&current_udata->m_response);
 
-  current_udata->m_request = new Request();
-  current_udata->m_response = new Response();
-
+  try
+  {
+    current_udata->m_request = new Request();
+    current_udata->m_response = new Response();
+  }
+  catch(const std::exception &e)
+  {
+    exit(EXIT_FAILURE);
+  }
   current_udata->m_parser = new_parser;
 }
 

@@ -13,19 +13,30 @@ void Server::pipeReadEvent(struct kevent *current_event)
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   read_byte = read(current_event->ident, temp_buf, BUF_SIZE);
-
-  if (read_byte > 0)
+  
+  if (read_byte == -1)
   {
-    buf = new char[read_byte]();
+    ft_error_exit(EXIT_FAILURE, "pipe read failed");
+  }
+  else if (read_byte > 0)
+  {
+    try
+    {
+      buf = new char[read_byte]();
+    }
+    catch(const std::exception& e)
+    {
+      exit(EXIT_FAILURE);
+    }
     std::memmove(buf, temp_buf, read_byte);
     current_udata->m_read_buffer.push_back(buf);
     current_udata->m_read_bytes.push_back(read_byte);
     current_udata->m_total_read_byte += read_byte;
     return;
   }
-  wait(NULL);
-  if (current_event->flags & EV_EOF)
+  else if (current_event->flags & EV_EOF || read_byte == 0)
   {
+    wait(NULL);
     current_udata->m_response->body.reserve(current_udata->m_total_read_byte);
     for (size_t i = 0; i < current_udata->m_read_buffer.size(); ++i)
     {
@@ -40,11 +51,16 @@ void Server::pipeReadEvent(struct kevent *current_event)
     close(current_event->ident);
     ResponseGenerator ok(*current_udata->m_request, *current_udata->m_response);
     t_event_udata *udata;
-
-    udata =
-        new t_event_udata(CLIENT, current_udata->m_servers,
-                          current_udata->m_request, current_udata->m_response);
-
+    try
+    {
+      udata =
+          new t_event_udata(CLIENT, current_udata->m_servers,
+                            current_udata->m_request, current_udata->m_response);
+    }
+    catch(const std::exception& e)
+    {
+      exit(EXIT_FAILURE);
+    }
     udata->m_response_write.message = ok.generateResponseMessage();
     udata->m_response_write.offset = 0;
     udata->m_response_write.length = udata->m_response_write.message.size();

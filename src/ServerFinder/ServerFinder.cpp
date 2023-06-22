@@ -42,7 +42,6 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
             }
         }
     }
-    // }
     throw BAD_REQUEST_400; //이외의 모든 경우 bad_request
 }
 
@@ -57,10 +56,7 @@ ServerFinder::ServerFinder(Request& request, std::vector<t_server>& servers)
     {
         if (temp == request.headers.end()) 
         {
-            //header에 host:가 안 들어온 경우, server_name이 설정되어 있지 않은 블록에서 port 일치 여부 확인,
-            //port 일치시 연결한다. -> 이 단에서는 host 헤더 없이는 port 번호를 알 수 가 없다. 
-            //연결하려면 socket 쪽에서 port 번호를 받아야 한다. 
-            //현재는 BadRequest 취급?? -> 이러면 servername을 설정하지 않은 모든 경우에 대해서 정상 동작을 할 수 없을 것 같다. 
+            //header에 host:가 안 들어온 경우, BAD REQUEST 취급
             throw BAD_REQUEST_400;
         }
         std::string host_origin = request.headers.find("host")->second;

@@ -14,12 +14,19 @@ t_event_udata *Server::createUdata(e_event_type type,
   Response *new_response;
   t_event_udata *udata;
 
-  new_request = new Request(*current_udata->m_request);
+  try
+  {
+    new_request = new Request(*current_udata->m_request);
 
-  new_response = new Response(response);
+    new_response = new Response(response);
 
-  udata = new t_event_udata(type, current_udata->m_servers, new_request,
-                            new_response);
+    udata = new t_event_udata(type, current_udata->m_servers, new_request,
+                              new_response);
+  }
+  catch(const std::exception &e)
+  {
+    exit(EXIT_FAILURE);
+  }
   udata->m_read_pipe_fd = response.read_pipe_fd;
   udata->m_write_pipe_fd = response.write_pipe_fd;
   udata->m_child_pid = response.cgi_child_pid;
@@ -97,9 +104,15 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   ResponseGenerator not_ok(*current_udata->m_request,
                            *current_udata->m_response);
   response_message = not_ok.generateResponseMessage();
-  udata =
-      new t_event_udata(CLIENT, current_udata->m_servers,
-                        current_udata->m_request, current_udata->m_response);
+  try
+  {
+    udata = new t_event_udata(CLIENT, current_udata->m_servers,
+                          current_udata->m_request, current_udata->m_response);
+  }
+  catch(const std::exception &e)
+  {
+    exit(EXIT_FAILURE);
+  }
   udata->m_response_write.message = response_message;
   udata->m_response_write.offset = 0;
   udata->m_response_write.length = response_message.size();
