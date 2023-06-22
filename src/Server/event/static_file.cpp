@@ -129,7 +129,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
       current_udata->m_response->body.push_back(buf[idx]);
     }
   }
-  else if (read_byte == 0)
+  if (read_byte < BUF_SIZE)
   {
     close(current_event->ident);
     t_event_udata *udata;
