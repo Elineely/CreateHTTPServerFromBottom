@@ -42,6 +42,7 @@ void Server::serverReadEvent(struct kevent *current_event)
       exit(EXIT_FAILURE);
     }
 
+  std::cout << "register client : " << client_sock << std::endl; 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }

@@ -114,6 +114,10 @@ void Server::clientWriteEvent(struct kevent *current_event)
   if (send_byte == -1)
   {
     std::cout << "send byte -1 " << std::endl;
+    ft_delete(&(current_udata->m_request));
+    ft_delete(&(current_udata->m_response));
+    ft_delete(&current_udata);
+    m_close_udata_map.erase(current_event->ident);
     return ;
   }
   response_write->offset += send_byte;
