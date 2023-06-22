@@ -5,7 +5,6 @@
 
 # Read the request method
 my $request_method = $ENV{'REQUEST_METHOD'};
-
 print "HTTP/1.1 200 OK\r\n";
 print "Status: 200\r\n";
 
