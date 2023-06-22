@@ -18,6 +18,7 @@
 // std::container header
 #include <list>
 #include <vector>
+#include <map>
 
 // common I/O header
 #include <fcntl.h>
@@ -112,6 +113,7 @@ struct t_response_write
   {
   }
 };
+
 struct t_event_udata
 {
   e_event_type m_type;
@@ -163,6 +165,8 @@ class Server
 {
  private:
   std::vector<t_multi_server> servers;
+  std::map<int, t_event_udata *> m_close_udata_map;
+  std::vector<int> m_close_fd_vec;
   t_kqueue m_kqueue;
   Server();
 
@@ -196,6 +200,7 @@ class Server
   void pipeWriteEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
+  void clearUdata();
 
   void disconnectSocket(int socket);
   void addServerSocketEvent(std::vector<t_multi_server> &servers,

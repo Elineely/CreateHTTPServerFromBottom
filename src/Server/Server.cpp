@@ -6,6 +6,22 @@ void Server::disconnectSocket(int socket) { close(socket); }
 
 const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
+void Server::clearUdata()
+{
+  for (size_t i = 0; i < m_close_fd_vec.size(); ++i)
+  {
+    std::map<int, t_event_udata *>::iterator it;
+    it = m_close_udata_map.find(m_close_fd_vec[i]);
+    if (it != m_close_udata_map.end())
+    {
+      if (it->second != NULL)
+        delete it->second;
+    }
+    m_close_fd_vec.erase(m_close_fd_vec.begin() + i);
+    disconnectSocket(m_close_fd_vec[i]);
+  } 
+}
+
 void Server::addEventToChangeList(
     std::vector<struct kevent> &change_list,
     uintptr_t ident, /* identifier for this event */
@@ -202,6 +218,10 @@ void Server::start(void)
           break;
         }
       }
+    }
+    if (m_close_fd_vec.size() > 0)
+    {
+      clearUdata();
     }
   }
   for (size_t i = 0; i < servers.size(); ++i)

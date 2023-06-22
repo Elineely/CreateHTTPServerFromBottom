@@ -54,7 +54,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
-    disconnectSocket(current_event->ident);
+    m_close_fd_vec.push_back(current_event->ident);
     return;
   }
 
@@ -121,4 +121,5 @@ void Server::clientWriteEvent(struct kevent *current_event)
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);
+  m_close_udata_map.erase(current_event->ident);
 }

@@ -29,6 +29,8 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       try
       {
         udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+        m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
+
       }
       catch(const std::exception &e)
       {
@@ -94,6 +96,8 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     try
     {
       udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+      m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
+
     }
     catch(const std::exception &e)
     {
@@ -120,6 +124,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   read_byte = read(current_event->ident, buf, BUF_SIZE);
   if (read_byte == -1)
   {
+    
     ft_error_exit(EXIT_FAILURE, "static file read failed");
   }
   else if (read_byte > 0)
@@ -139,6 +144,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     try
     {
       udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+      m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
     }
     catch(const std::exception &e)
     {
@@ -199,6 +205,7 @@ void Server::fileWriteEvent(struct kevent *current_event)
     try
     {
       udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+      m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
     }
     catch(const std::exception &e)
     {
