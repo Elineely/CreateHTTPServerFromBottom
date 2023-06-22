@@ -28,12 +28,19 @@ void Server::serverReadEvent(struct kevent *current_event)
   client_sock = clientReadAccept(current_event);
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-  request = new Request();
+ try
+    {
+      request = new Request();
 
-  response = new Response();
+      response = new Response();
 
-  udata =
+      udata =
       new t_event_udata(CLIENT, current_udata->m_servers, request, response);
+    }
+    catch(std::exception &e)
+    {
+      exit(EXIT_FAILURE);
+    }
 
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
