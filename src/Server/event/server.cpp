@@ -1,4 +1,5 @@
 #include "Server.hpp"
+
 #include "Log.hpp"
 /*
   [SUMMARY]
@@ -29,23 +30,23 @@ void Server::serverReadEvent(struct kevent *current_event)
   client_sock = clientReadAccept(current_event);
   if (client_sock == -1)
   {
-    return ;
+    return;
   }
   fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
- try
-    {
-      request = new Request();
+  try
+  {
+    request = new Request();
 
-      response = new Response();
+    response = new Response();
 
-      udata =
-      new t_event_udata(CLIENT, current_udata->m_servers, request, response);
-    }
-    catch(std::exception &e)
-    {
-      exit(EXIT_FAILURE);
-    }
+    udata =
+        new t_event_udata(CLIENT, current_udata->m_servers, request, response);
+  }
+  catch (std::exception &e)
+  {
+    exit(EXIT_FAILURE);
+  }
 
   std::cout << "register client : " << client_sock << std::endl;
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
@@ -58,5 +59,9 @@ void Server::serverReadEvent(struct kevent *current_event)
 */
 void Server::serverErrorEvent(struct kevent *current_event)
 {
+  t_event_udata *current_udata;
+
+  current_udata = static_cast<t_event_udata *>(current_event->udata);
   disconnectSocket(current_event->ident);
+  ft_delete(&current_udata);
 }
