@@ -28,6 +28,7 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
                     if (servers[i].listen[k] == port_part)
                         return (servers[i]);
                 }
+                throw NOT_FOUND_404; //이름이 매칭 된적이 있는데 해당 서버에서 매치되는 포트가 없는 경우 not_found
             }
         }
     }
@@ -36,13 +37,13 @@ t_server find_server_name(std::string server_part, std::string port_part, std::v
     {
         for (size_t k = 0; k < servers[i].listen.size(); ++k)
         {
-            if (servers[i].listen[k] == port_part)
+            if (candidates[i].listen[k] == port_part)
             {
                 return (candidates[i]);
             }
         }
     }
-    throw BAD_REQUEST_400; //이외의 모든 경우 bad_request
+    throw NOT_FOUND_404; //이외의 모든 경우 not_found_404
 }
 
 ServerFinder::ServerFinder(Request& request, std::vector<t_server>& servers)
