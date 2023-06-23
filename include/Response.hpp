@@ -59,6 +59,7 @@ struct Response
     error_keyword = false;
     static_read_file_fd = -1;
     static_write_file_fd = -1;
+    static_read_file_size = 0;
   }
   Response(const Response& obj) { *this = obj; }
   ~Response(){};
@@ -91,6 +92,7 @@ struct Response
       error_page_vector = obj.error_page_vector;
       static_read_file_fd = obj.static_read_file_fd;
       static_write_file_fd = obj.static_write_file_fd;
+      static_read_file_size = obj.static_read_file_size;
     }
     return (*this);
   }

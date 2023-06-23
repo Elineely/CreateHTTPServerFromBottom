@@ -112,7 +112,7 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   {
     udata = new t_event_udata(CLIENT, current_udata->m_servers,
                           current_udata->m_request, current_udata->m_response);
-    m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
+    addUdataContent(current_udata->m_client_sock, udata);
   }
   catch(const std::exception &e)
   {

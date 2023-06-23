@@ -6,27 +6,54 @@ void Server::disconnectSocket(int socket) { close(socket); }
 
 const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
+void Server::addUdataContent(int fd, t_event_udata *udata)
+{
+  std::map<int, std::vector<t_event_udata *> >::iterator it;
+  it = m_close_udata_map.find(fd);
+  if (it != m_close_udata_map.end())
+  {
+    it->second.push_back(udata);
+  }
+}
+
+void Server::clearUdataContent(int fd, t_event_udata *udata)
+{
+  std::cout << "claerUdataContent" << std::endl;
+  std::map<int, std::vector<t_event_udata *> >::iterator it;
+  it = m_close_udata_map.find(fd);
+  if (it != m_close_udata_map.end())
+  {
+    for (size_t i = 0; i < it->second.size(); ++i)
+    {
+      if (it->second[i] == udata){
+        std::cout << "in here" << std::endl;
+         it->second.erase(it->second.begin() + i);
+      }
+    }
+  }
+}
+
 void Server::clearUdata()
 {
-  for (size_t i = 0; i < m_close_fd_vec.size(); ++i)
+  std::cout << "claerUdata" << std::endl;
+  for (std::set<int>::iterator i = m_close_fd_vec.begin(); i != m_close_fd_vec.end(); ++i)
   {
-    std::map<int, t_event_udata *>::iterator it;
-    t_event_udata* udata;
-
-    it = m_close_udata_map.find(m_close_fd_vec[i]);
-    if (it != m_close_udata_map.end())
+    std::map<int, std::vector<t_event_udata *> >::iterator it;
+    it = m_close_udata_map.find(*i);
+    if (it == m_close_udata_map.end())
     {
-      udata = it->second;
-      if (udata != NULL)
-      {
-        delete udata;
-        // addEventToChangeList(m_kqueue.change_list, m_close_fd_vec[i], EVFILT_WRITE,
-        //                EV_DELETE, 0, 0, NULL);
-      }
-      m_close_udata_map.erase(it);
-      
+      continue;
     }
-    disconnectSocket(m_close_fd_vec[i]);
+    for (size_t j = 0; j < it->second.size(); ++j)
+    {
+      if (it->second[j] != NULL)
+      {
+        delete it->second[j];
+      }
+    }
+    it->second.clear();
+    m_close_udata_map.erase(it);
+    disconnectSocket(*i);
   } 
   m_close_fd_vec.clear();
 }
@@ -164,7 +191,6 @@ void Server::start(void)
       if (current_event->flags & EV_ERROR)
       {
         std::cerr << "flag is EV_ERROR: " << current_event->ident << " " << strerror(current_event->data) << std::endl;
-        // m_close_udata_map.insert(std::make_pair(current_event->ident, current_udata));
         continue;
       }
       else

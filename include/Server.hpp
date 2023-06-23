@@ -19,6 +19,7 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <set>
 
 // common I/O header
 #include <fcntl.h>
@@ -40,7 +41,7 @@
 
 // Server 세팅
 #define BUF_SIZE 650000
-#define MAX_EVENT_LIST_SIZE 128
+#define MAX_EVENT_LIST_SIZE 1000
 #define DEFAULT_TIMEOUT_SECOND 3600
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
@@ -177,8 +178,8 @@ class Server
 {
  private:
   std::vector<t_multi_server> servers;
-  std::map<int, t_event_udata *> m_close_udata_map;
-  std::vector<int> m_close_fd_vec;
+  std::map<int, std::vector<t_event_udata *> > m_close_udata_map;
+  std::set<int> m_close_fd_vec;
   t_kqueue m_kqueue;
   Server();
 
@@ -213,6 +214,8 @@ class Server
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
   void clearUdata();
+  void clearUdataContent(int fd, t_event_udata *udata);
+  void addUdataContent(int fd, t_event_udata *udata);
 
   void disconnectSocket(int socket);
   void addServerSocketEvent(std::vector<t_multi_server> &servers,

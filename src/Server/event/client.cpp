@@ -60,17 +60,15 @@ void Server::clientReadEvent(struct kevent *current_event)
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
-    m_close_fd_vec.push_back(current_event->ident);
+    m_close_fd_vec.insert(current_event->ident);
     return;
   }
 
-  std::cerr << "before REad BUFFER" << std::endl;
   readClientSocketBuffer(current_event, current_udata);
   if (current_udata->m_request->validation_phase != COMPLETE)
   {
     return;
   }
-  std::cerr << "after REad BUFFER" << std::endl;
 
   struct Request &request = *current_udata->m_request;
   struct Response &response = *current_udata->m_response;
@@ -81,18 +79,15 @@ void Server::clientReadEvent(struct kevent *current_event)
   // cgi 분기 확인
   if (response.cgi_flag == true)
   {
-    std::cerr << "cgi?" << std::endl;
     addCgiRequestEvent(current_event, current_udata, request, response);
   }
   else
   {
-    std::cerr << "not cgi" << std::endl;
     addStaticRequestEvent(current_event, current_udata, request, response);
   }
 
   ft_delete(&current_udata->m_request);
   ft_delete(&current_udata->m_response);
-    std::cerr << "read end delete" << std::endl;
 
   try
   {
@@ -118,37 +113,30 @@ void Server::clientWriteEvent(struct kevent *current_event)
   char *message;
   ssize_t send_byte;
 
-  std::cerr << "before send" << std::endl;
-
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   response_write = &current_udata->m_response_write;
   message = &response_write->message[0];
-  try
+
+  if (current_event->flags & EV_EOF)
   {
-    /* code */
-     std::cerr << current_event->ident << " " << response_write->offset << " " <<
-                   response_write->length - response_write->offset << std::endl;
+    ft_delete(&(current_udata->m_request));
+    ft_delete(&(current_udata->m_response));
+    ft_delete(&current_udata);
+    clearUdataContent(current_event->ident, current_udata);
+    return ;
+  }
   send_byte = write(current_event->ident, message + response_write->offset,
                    response_write->length - response_write->offset);
-  std::cerr << "after send" << std::endl;
-  }
-  catch(const std::exception& e)
-  {
-    std::cerr << e.what() << '\n';
-  }
-  
- 
   
   if (send_byte == -1)
   {
     std::cerr << "send byte -1" << std::endl;
     addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
-    std::cerr << current_event->ident << "  send byte -1 " << std::endl;
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
-    m_close_udata_map.erase(current_event->ident);
+    clearUdataContent(current_event->ident, current_udata);
     return ;
   }
   response_write->offset += send_byte;
@@ -163,5 +151,6 @@ void Server::clientWriteEvent(struct kevent *current_event)
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);
-  m_close_udata_map.erase(current_event->ident);
+  clearUdataContent(current_event->ident, current_udata);
+
 }
