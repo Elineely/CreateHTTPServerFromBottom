@@ -48,6 +48,8 @@ void Server::clientReadEvent(struct kevent *current_event)
   t_event_udata *current_udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
+
+  addCloseFdVector(current_event->ident);
   if (current_event->flags & EV_EOF)
   {
     Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥", current_event->ident);

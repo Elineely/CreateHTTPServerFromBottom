@@ -216,6 +216,7 @@ class Server
   void clearUdata();
   void clearUdataContent(int fd, t_event_udata *udata);
   void addUdataContent(int fd, t_event_udata *udata);
+  void addCloseFdVector(int fd);
 
   void disconnectSocket(int socket);
   void addServerSocketEvent(std::vector<t_multi_server> &servers,

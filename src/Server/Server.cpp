@@ -6,6 +6,16 @@ void Server::disconnectSocket(int socket) { close(socket); }
 
 const std::vector<t_multi_server> &Server::get_servers(void) { return servers; }
 
+void Server::addCloseFdVector(int fd)
+{
+  if (m_close_udata_map.find(fd) == m_close_udata_map.end())
+  {
+    std::vector<t_event_udata*> vec;
+    m_close_udata_map.insert(std::make_pair(fd , vec));
+    std::cout << "make new vector fd :" << fd << std::endl;
+  }
+}
+
 void Server::addUdataContent(int fd, t_event_udata *udata)
 {
   std::map<int, std::vector<t_event_udata *> >::iterator it;
@@ -38,16 +48,25 @@ void Server::clearUdata()
   std::cout << "claerUdata" << std::endl;
   for (std::set<int>::iterator i = m_close_fd_vec.begin(); i != m_close_fd_vec.end(); ++i)
   {
+    std::cout << "claerUdata2 : " << *i << std::endl;
+
     std::map<int, std::vector<t_event_udata *> >::iterator it;
     it = m_close_udata_map.find(*i);
     if (it == m_close_udata_map.end())
     {
       continue;
     }
+    std::cout << "claerUdata3" << std::endl;
+
     for (size_t j = 0; j < it->second.size(); ++j)
     {
+      std::cout << "claerUdata4" << std::endl;
+
       if (it->second[j] != NULL)
       {
+        printf("%p ", it->second[j]);
+        std::cout << "claerUdata5" << std::endl;
+
         delete it->second[j];
       }
     }
@@ -56,6 +75,7 @@ void Server::clearUdata()
     disconnectSocket(*i);
   } 
   m_close_fd_vec.clear();
+  std::cout << "end" << std::endl;
 }
 
 void Server::addEventToChangeList(
