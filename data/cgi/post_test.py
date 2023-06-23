@@ -2,11 +2,14 @@
 import cgi
 import os
 import sys
-# aaaadfdafadsfadsf d fsadf d;
+
 import cgitb
 cgitb.enable()
 
 upload_dir = './data/upload/'
+
+while True:
+    print()
 
 form = cgi.FieldStorage()
 

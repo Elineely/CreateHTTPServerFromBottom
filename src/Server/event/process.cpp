@@ -75,8 +75,11 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
 
   read_pipe_udata->m_other_udata = timeout_udata;
   read_pipe_udata->m_write_udata = write_pipe_udata;
+  read_pipe_udata->m_child_pid = response.cgi_child_pid;
   timeout_udata->m_other_udata = read_pipe_udata;
   timeout_udata->m_write_udata = write_pipe_udata;
+
+  current_udata->m_child_pid = response.cgi_child_pid;
 
   fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
   addEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,

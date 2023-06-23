@@ -121,8 +121,8 @@ struct t_event_udata
   int m_write_pipe_fd;
   int m_client_sock;
   int m_server_sock;
-  size_t m_file_write_offset;
   pid_t m_child_pid;
+  size_t m_file_write_offset;
   size_t m_total_read_byte;
   std::vector<size_t> m_read_bytes;
   std::vector<char *> m_read_buffer;
@@ -138,6 +138,11 @@ struct t_event_udata
   t_event_udata(e_event_type type, config_vector config, Request *request,
                 Response *response)
       : m_type(type),
+        m_read_pipe_fd(-1),
+        m_write_pipe_fd(-1),
+        m_client_sock(-1),
+        m_server_sock(-1),
+        m_child_pid(-1),
         m_file_write_offset(0),
         m_total_read_byte(0),
         m_servers(config),
@@ -150,9 +155,16 @@ struct t_event_udata
 
   t_event_udata(e_event_type type, config_vector config)
       : m_type(type),
+        m_read_pipe_fd(-1),
+        m_write_pipe_fd(-1),
+        m_client_sock(-1),
+        m_server_sock(-1),
+        m_child_pid(-1),
         m_file_write_offset(0),
         m_total_read_byte(0),
         m_servers(config),
+        m_request(NULL),
+        m_response(NULL),
         m_other_udata(NULL),
         m_write_udata(NULL)
   {

@@ -11,14 +11,22 @@ void Server::clearUdata()
   for (size_t i = 0; i < m_close_fd_vec.size(); ++i)
   {
     std::map<int, t_event_udata *>::iterator it;
+    t_event_udata* udata;
+
     it = m_close_udata_map.find(m_close_fd_vec[i]);
     if (it != m_close_udata_map.end())
     {
-      if (it->second != NULL)
+      udata = it->second;
+      if (udata != NULL)
       {
-        delete it->second;
+        delete udata;
+        // addEventToChangeList(m_kqueue.change_list, m_close_fd_vec[i], EVFILT_WRITE,
+        //                EV_DELETE, 0, 0, NULL);
       }
+      addEventToChangeList(m_kqueue.change_list, m_close_fd_vec[i], EVFILT_WRITE,
+                      EV_DELETE, 0, 0, NULL);
       m_close_udata_map.erase(it);
+      
     }
     disconnectSocket(m_close_fd_vec[i]);
   } 
@@ -148,11 +156,18 @@ void Server::start(void)
       ft_error_exit(1, strerror(errno));
     }
     m_kqueue.change_list.clear();
-
+    std::cout << "cycle start --------------------------" << std::endl;
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
       current_udata = static_cast<t_event_udata *>(current_event->udata);
+      if (current_event->flags & EV_ERROR)
+      {
+        printf("filter: %d\n", current_event->filter);
+        std::cout << "flag is EV_ERROR: " << current_event->ident << " " << strerror(current_event->data) << std::endl;
+        // m_close_udata_map.insert(std::make_pair(current_event->ident, current_udata));
+        continue;
+      }
       event_status = getEventStatus(current_event, current_udata->m_type);
       switch (event_status)
       {
@@ -222,6 +237,8 @@ void Server::start(void)
         }
       }
     }
+    std::cout << "-------------------------- cycle END " << std::endl;
+
     if (m_close_fd_vec.size() > 0)
     {
       clearUdata();

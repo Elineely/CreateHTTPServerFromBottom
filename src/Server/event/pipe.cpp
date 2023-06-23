@@ -11,11 +11,20 @@ void Server::pipeReadEvent(struct kevent *current_event)
   ssize_t read_byte;
   t_event_udata *current_udata;
 
+  LOG_DEBUG("💧 PIPE READ EVENT 💧");
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   read_byte = read(current_event->ident, temp_buf, BUF_SIZE);
+  LOG_DEBUG("read_byte: %d", read_byte);
   
   if (read_byte == -1)
   {
+    std::cout << "pipe read_byte - 1" << std::endl;
+    close(current_udata->m_write_pipe_fd);
+    close(current_event->ident);
+    ft_delete(&(current_udata->m_other_udata->m_request));
+    ft_delete(&(current_udata->m_other_udata->m_response));
+    ft_delete(&(current_udata->m_other_udata));
+    ft_delete(&current_udata);
   }
   else if (read_byte > 0)
   {
@@ -35,7 +44,9 @@ void Server::pipeReadEvent(struct kevent *current_event)
   }
   else if (current_event->flags & EV_EOF || read_byte == 0)
   {
-    wait(NULL);
+    int status;
+
+    waitpid(current_udata->m_child_pid, &status, 0);
     current_udata->m_response->body.reserve(current_udata->m_total_read_byte);
     for (size_t i = 0; i < current_udata->m_read_buffer.size(); ++i)
     {
@@ -48,30 +59,31 @@ void Server::pipeReadEvent(struct kevent *current_event)
     }
     close(current_udata->m_write_pipe_fd);
     close(current_event->ident);
-    ResponseGenerator ok(*current_udata->m_request, *current_udata->m_response);
-    t_event_udata *udata;
-    try
+    if (!WIFSIGNALED(status))
     {
-      udata =
-          new t_event_udata(CLIENT, current_udata->m_servers,
-                            current_udata->m_request, current_udata->m_response);
-      m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
-    }
-    catch(const std::exception& e)
-    {
-      exit(EXIT_FAILURE);
-    }
-    udata->m_response_write.message = ok.generateResponseMessage();
-    udata->m_response_write.offset = 0;
-    udata->m_response_write.length = udata->m_response_write.message.size();
+      ResponseGenerator ok(*current_udata->m_request, *current_udata->m_response);
+      t_event_udata *udata;
+      try
+      {
+        udata = new t_event_udata(CLIENT, current_udata->m_servers);
+        m_close_udata_map.insert(std::make_pair(current_udata->m_client_sock, udata));
+      }
+      catch(const std::exception& e)
+      {
+        exit(EXIT_FAILURE);
+      }
+      udata->m_response_write.message = ok.generateResponseMessage();
+      udata->m_response_write.offset = 0;
+      udata->m_response_write.length = udata->m_response_write.message.size();
 
-    addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
-                         EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-    
-    Log::printRequestResult(current_udata);
-    
+      addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+      addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
+                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+ addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
+                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+      Log::printRequestResult(current_udata);
+    }
     if (current_udata->m_write_udata != NULL)
     {
       ft_delete(&current_udata->m_write_udata->m_request);
@@ -81,6 +93,8 @@ void Server::pipeReadEvent(struct kevent *current_event)
     ft_delete(&(current_udata->m_other_udata->m_request));
     ft_delete(&(current_udata->m_other_udata->m_response));
     ft_delete(&(current_udata->m_other_udata));
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
   }
 }
@@ -94,6 +108,7 @@ void Server::pipeWriteEvent(struct kevent *current_event)
   size_t file_write_offset;
   ssize_t write_byte;
 
+  LOG_DEBUG("🧪 PIPE WRITE EVENT 🧪");
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   struct Request &current_request = *current_udata->m_request;
   possible_write_length = current_event->data;

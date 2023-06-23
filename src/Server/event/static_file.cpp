@@ -21,7 +21,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     file_size = lseek(response.static_read_file_fd, 0, SEEK_END);
     if (file_size == 0)
     {
-      close(response.static_read_file_fd);
+      m_close_fd_vec.push_back(response.static_read_file_fd);
       Request *request = current_udata->m_request;
       Response *response = current_udata->m_response;
       ResponseGenerator response_generator(*request, *response);
@@ -30,7 +30,6 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       {
         udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
         m_close_udata_map.insert(std::make_pair(current_event->ident, udata));
-
       }
       catch(const std::exception &e)
       {
@@ -56,6 +55,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       new_response = new Response(response);
       udata = new t_event_udata(STATIC_FILE, current_udata->m_servers,
                                 new_request, new_response);
+      printf("%p \n", udata);
     }
     catch(const std::exception& e)
     {
@@ -110,7 +110,6 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-
   }
 }
 
@@ -124,7 +123,6 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   read_byte = read(current_event->ident, buf, BUF_SIZE);
   if (read_byte == -1)
   {
-    
     ft_error_exit(EXIT_FAILURE, "static file read failed");
   }
   else if (read_byte > 0)
@@ -136,7 +134,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   }
   if (read_byte < BUF_SIZE) // TODO: EVFILT_VNODE 필터로 바꿔서 감지할 지?
   {
-    close(current_event->ident);
+    m_close_fd_vec.push_back(current_event->ident);
     t_event_udata *udata;
     Request *request = current_udata->m_request;
     Response *response = current_udata->m_response;
@@ -158,6 +156,8 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+    addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                         EV_DELETE, EV_ADD | EV_ENABLE, 0, 0, udata);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
@@ -166,6 +166,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
 
 void Server::fileWriteEvent(struct kevent *current_event)
 {
+  std::cout << "in fileWrite";
   t_event_udata *current_udata;
   int possible_write_length;
   size_t request_body_size;
@@ -218,7 +219,7 @@ void Server::fileWriteEvent(struct kevent *current_event)
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     Log::printRequestResult(current_udata);
-    close(current_event->ident);
+    m_close_fd_vec.push_back(current_event->ident);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
