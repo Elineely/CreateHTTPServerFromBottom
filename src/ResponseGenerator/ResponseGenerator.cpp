@@ -65,11 +65,19 @@ void ResponseGenerator::cgiDataProcess()
     m_cgi_content_type = cgi_data.substr(content_type_begin,
                                          content_type_end - content_type_begin);
   }
+  else
+  {
+    m_response.status_code = INTERNAL_SERVER_ERROR_500;
+    m_cgi_content_type = "text/html";
+  }
 
   // generate body in case of cgi
   std::string::size_type cgi_body_begin = cgi_data.find("\r\n\r\n");
-  std::vector<char>::iterator iter =
-      m_response.body.begin() + cgi_body_begin + 4;
+  std::vector<char>::iterator iter;
+  if (cgi_body_begin != std::string::npos)
+    iter = m_response.body.begin() + cgi_body_begin + 4;
+  else
+    iter = m_response.body.begin();
   std::vector<char> cgi_body(iter, m_response.body.end());
   m_cgi_body = cgi_body;
 }

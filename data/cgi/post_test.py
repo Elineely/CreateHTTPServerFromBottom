@@ -1,15 +1,12 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 import cgi
 import os
 import sys
-
+# aaaadfdafadsfadsf d fsadf d;
 import cgitb
 cgitb.enable()
 
 upload_dir = './data/upload/'
-
-# while True:
-#     print()
 
 form = cgi.FieldStorage()
 
@@ -22,20 +19,20 @@ if 'image' in form:
         with open(save_path, 'wb') as a_file:
             a_file.write(image.file.read())
 
-        print('Content-Type:text/html\r')
+        print('Content-Type: text/html\r')
         print('Status: 200\r\n\r')
         print('<html><body>')
         print('<h2>Image saved successfully!</h2>')
         print('</body></html>')
     else:
-        print('Content-Type:text/html\r')
+        print('Content-Type: text/html\r')
         print('Status: 400\r\n\r')
         print('<html><body>')
         print('<h2>There is no image file!</h2>')
         print('</body></html>')
         
 else:
-    print('Content-Type:text/html\r')
+    print('Content-Type: text/html\r')
     print('Status: 500\r\n\r')
     print('<html><body>')
     print('<h2>No image file found in the form data!</h2>')
