@@ -21,10 +21,11 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     file_size = lseek(response.static_read_file_fd, 0, SEEK_END);
     if (file_size == 0)
     {
-      m_close_fd_vec.push_back(response.static_read_file_fd);
-      Request *request = current_udata->m_request;
-      Response *response = current_udata->m_response;
-      ResponseGenerator response_generator(*request, *response);
+      close(response.static_read_file_fd);
+      std::cerr << response.static_read_file_fd << " in << " << std::endl;
+      Request *current_request = current_udata->m_request;
+      Response *current_response = current_udata->m_response;
+      ResponseGenerator response_generator(*current_request, *current_response);
 
       try
       {
@@ -33,6 +34,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       }
       catch(const std::exception &e)
       {
+      std::cerr << e.what() << std::endl;
         exit(EXIT_FAILURE);
       }
       udata->m_response_write.message =
@@ -59,6 +61,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     }
     catch(const std::exception& e)
     {
+      std::cerr << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     udata->m_client_sock = current_event->ident;
@@ -79,6 +82,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     }
     catch(const std::exception& e)
     {
+      std::cerr << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     udata->m_client_sock = current_event->ident;
@@ -101,6 +105,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     }
     catch(const std::exception &e)
     {
+      std::cerr << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     udata->m_response_write.message = response_message;
@@ -134,7 +139,8 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   }
   if (read_byte < BUF_SIZE) // TODO: EVFILT_VNODE 필터로 바꿔서 감지할 지?
   {
-    m_close_fd_vec.push_back(current_event->ident);
+    std::cerr << current_event->ident << " << " << std::endl;
+    close(current_event->ident);
     t_event_udata *udata;
     Request *request = current_udata->m_request;
     Response *response = current_udata->m_response;
@@ -146,6 +152,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     }
     catch(const std::exception &e)
     {
+      std::cerr << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     udata->m_response_write.message =
@@ -156,17 +163,16 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                         EV_DELETE, EV_ADD | EV_ENABLE, 0, 0, udata);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
+    std::cerr << "static file read event end" << std::endl;
   }
 }
 
 void Server::fileWriteEvent(struct kevent *current_event)
 {
-  std::cout << "in fileWrite";
+  std::cerr << "in fileWrite" << std::endl;
   t_event_udata *current_udata;
   int possible_write_length;
   size_t request_body_size;
@@ -210,6 +216,7 @@ void Server::fileWriteEvent(struct kevent *current_event)
     }
     catch(const std::exception &e)
     {
+      std::cerr << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     udata->m_response_write.message = response_message;
@@ -219,7 +226,7 @@ void Server::fileWriteEvent(struct kevent *current_event)
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
     Log::printRequestResult(current_udata);
-    m_close_fd_vec.push_back(current_event->ident);
+    close(current_event->ident);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);

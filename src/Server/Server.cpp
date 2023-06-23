@@ -23,8 +23,6 @@ void Server::clearUdata()
         // addEventToChangeList(m_kqueue.change_list, m_close_fd_vec[i], EVFILT_WRITE,
         //                EV_DELETE, 0, 0, NULL);
       }
-      addEventToChangeList(m_kqueue.change_list, m_close_fd_vec[i], EVFILT_WRITE,
-                      EV_DELETE, 0, 0, NULL);
       m_close_udata_map.erase(it);
       
     }
@@ -98,6 +96,7 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
     }
     catch(std::exception e)
     {
+        std::cerr << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
@@ -156,19 +155,23 @@ void Server::start(void)
       ft_error_exit(1, strerror(errno));
     }
     m_kqueue.change_list.clear();
-    std::cout << "cycle start --------------------------" << std::endl;
+    std::cerr << "cycle start --------------------------" << std::endl << std::endl;
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
       current_udata = static_cast<t_event_udata *>(current_event->udata);
+
       if (current_event->flags & EV_ERROR)
       {
-        printf("filter: %d\n", current_event->filter);
-        std::cout << "flag is EV_ERROR: " << current_event->ident << " " << strerror(current_event->data) << std::endl;
+        std::cerr << "flag is EV_ERROR: " << current_event->ident << " " << strerror(current_event->data) << std::endl;
         // m_close_udata_map.insert(std::make_pair(current_event->ident, current_udata));
         continue;
       }
-      event_status = getEventStatus(current_event, current_udata->m_type);
+      else
+      {
+        event_status = getEventStatus(current_event, current_udata->m_type);
+        printf("filter: %d ident: %d  type:%d \n", current_event->filter, current_event->ident, event_status);
+      }
       switch (event_status)
       {
         case SERVER_READ:
@@ -237,7 +240,7 @@ void Server::start(void)
         }
       }
     }
-    std::cout << "-------------------------- cycle END " << std::endl;
+    std::cerr <<std::endl << "-------------------------- cycle END " << std::endl ;
 
     if (m_close_fd_vec.size() > 0)
     {
