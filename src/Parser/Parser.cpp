@@ -92,7 +92,7 @@ void Parser::readBuffer(char* buf, int recv_size, Request& request)
 {
   try
   {
-    // std::cerr << buf << std::endl;
+    // std::cout << buf << std::endl;
     if (request.validation_phase == COMPLETE)
     {
       return;

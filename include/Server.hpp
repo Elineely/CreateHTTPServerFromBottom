@@ -136,6 +136,23 @@ struct t_event_udata
   struct t_event_udata *m_other_udata;
   struct t_event_udata *m_write_udata;
 
+
+  t_event_udata(e_event_type type)
+    : m_type(type),
+      m_read_pipe_fd(-1),
+      m_write_pipe_fd(-1),
+      m_client_sock(-1),
+      m_server_sock(-1),
+      m_child_pid(-1),
+      m_file_write_offset(0),
+      m_total_read_byte(0),
+      m_request(NULL),
+      m_response(NULL),
+      m_other_udata(NULL),
+      m_write_udata(NULL)
+  {
+  }
+
   t_event_udata(e_event_type type, config_vector config, Request *request,
                 Response *response)
       : m_type(type),

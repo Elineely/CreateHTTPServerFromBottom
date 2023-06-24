@@ -19,6 +19,13 @@ void Server::addCloseFdVector(int fd)
 void Server::addUdataContent(int fd, t_event_udata *udata)
 {
   std::map<int, std::vector<t_event_udata *> >::iterator it;
+  
+  if (m_close_udata_map.find(fd) == m_close_udata_map.end())
+  {
+    std::vector<t_event_udata*> vec;
+    m_close_udata_map.insert(std::make_pair(fd , vec));
+    std::cout << "make new vector fd :" << fd << std::endl;
+  }
   it = m_close_udata_map.find(fd);
   if (it != m_close_udata_map.end())
   {
@@ -60,8 +67,10 @@ void Server::clearUdata()
     {
       if (it->second[j] != NULL)
       {
-        printf("delete %p ", it->second[j]);
+        printf("delete %p \n", it->second[j]);
         delete it->second[j];
+        addEventToChangeList(m_kqueue.change_list, *i, EVFILT_WRITE,
+                       EV_DELETE, 0, 0, NULL);
       }
     }
     it->second.clear();
@@ -170,7 +179,7 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
     }
     catch(std::exception e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
@@ -229,7 +238,7 @@ void Server::start(void)
       ft_error_exit(1, strerror(errno));
     }
     m_kqueue.change_list.clear();
-    std::cerr << "cycle start --------------------------" << std::endl << std::endl;
+    std::cout << "cycle start --------------------------" << std::endl << std::endl;
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
@@ -237,7 +246,9 @@ void Server::start(void)
 
       if (current_event->flags & EV_ERROR)
       {
-        std::cerr << "flag is EV_ERROR: " << current_event->ident << " " << strerror(current_event->data) << std::endl;
+        printf("filter: %d ident: %d \n", current_event->filter, current_event->ident);
+        std::cout << "flag is EV_ERROR: " << current_event->ident << " " << strerror(current_event->data) << std::endl;
+        printf("ERROR POINTER IS %p\n", current_event->udata);
         continue;
       }
       else
@@ -313,7 +324,7 @@ void Server::start(void)
         }
       }
     }
-    std::cerr << std::endl << "-------------------------- cycle END " << std::endl << std::endl;
+    std::cout << std::endl << "-------------------------- cycle END " << std::endl << std::endl;
 
     if (m_close_fd_vec.size() > 0)
     {

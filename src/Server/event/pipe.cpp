@@ -18,7 +18,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
   
   if (read_byte == -1)
   {
-    std::cerr << "pipe read_byte - 1" << std::endl;
+    std::cout << "pipe read_byte - 1" << std::endl;
     close(current_udata->m_write_pipe_fd);
     close(current_event->ident);
     ft_delete(&(current_udata->m_other_udata->m_request));
@@ -34,7 +34,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
     }
     catch(const std::exception& e)
     {
-      std::cerr << e.what() << std::endl;
+      std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     std::memmove(buf, temp_buf, read_byte);
@@ -71,7 +71,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
       }
       catch(const std::exception& e)
       {
-        std::cerr << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
         exit(EXIT_FAILURE);
       }
       udata->m_response_write.message = ok.generateResponseMessage();

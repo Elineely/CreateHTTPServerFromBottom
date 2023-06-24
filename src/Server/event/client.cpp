@@ -98,7 +98,7 @@ void Server::clientReadEvent(struct kevent *current_event)
   }
   catch(const std::exception &e)
   {
-    std::cerr << e.what() << std::endl;
+    std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
   current_udata->m_parser = new_parser;
@@ -121,10 +121,14 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
   if (current_event->flags & EV_EOF)
   {
+    addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
+                       EV_DELETE, 0, 0, NULL);
     clearUdataContent(current_event->ident, current_udata);
+    printf("client write delete %p", current_udata);
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
+    current_event->udata = NULL;
     return ;
   }
   send_byte = write(current_event->ident, message + response_write->offset,
@@ -132,13 +136,15 @@ void Server::clientWriteEvent(struct kevent *current_event)
   
   if (send_byte == -1)
   {
-    std::cerr << "send byte -1" << std::endl;
+    std::cout << "send byte -1" << std::endl;
     addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
     clearUdataContent(current_event->ident, current_udata);
+    printf("client write delete %p", current_udata);
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
+    current_event->udata = NULL;
     return ;
   }
   response_write->offset += send_byte;
@@ -146,13 +152,15 @@ void Server::clientWriteEvent(struct kevent *current_event)
   {
     return;
   }
-    std::cerr << "send is ok" << std::endl;
+    std::cout << "send is ok" << std::endl;
 
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
   clearUdataContent(current_event->ident, current_udata);
+    printf("client write delete %p", current_udata);
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);
+    current_event->udata = NULL;
 
 }

@@ -5,31 +5,31 @@
 
 void Log::start(void)
 {
-    std::cerr << "=========================================================================" << std::endl;
-    std::cerr << GREEN_TEXT << "WELCOME TO" << CUT_TEXT << std::endl;
-    std::cerr << " _____         _          _    _        _                             \n";
-    std::cerr << "/  __ \\       | |        | |  | |      | |                            \n";
-    std::cerr << "| /  \\/ _   _ | |_   ___ | |  | |  ___ | |__   ___   ___  _ __ __   __\n";
-    std::cerr << "| |    | | | || __| / _ \\| |\\/| | / _ \\| '_ \\ / __| / _ \\| '__|\\ \\ / /\n";
-    std::cerr << "| \\__/\\| |_| || |_ |  __/\\  /\\  /|  __/| |_) |\\__ \\|  __/| |    \\ V / \n";
-    std::cerr << " \\____/ \\__,_| \\__| \\___| \\/  \\/  \\___||_.__/ |___/ \\___||_|     \\_/  \n";
-    std::cerr << "                                                                     \n";
-    std::cerr << "=========================================================================" << std::endl;
+    std::cout << "=========================================================================" << std::endl;
+    std::cout << GREEN_TEXT << "WELCOME TO" << CUT_TEXT << std::endl;
+    std::cout << " _____         _          _    _        _                             \n";
+    std::cout << "/  __ \\       | |        | |  | |      | |                            \n";
+    std::cout << "| /  \\/ _   _ | |_   ___ | |  | |  ___ | |__   ___   ___  _ __ __   __\n";
+    std::cout << "| |    | | | || __| / _ \\| |\\/| | / _ \\| '_ \\ / __| / _ \\| '__|\\ \\ / /\n";
+    std::cout << "| \\__/\\| |_| || |_ |  __/\\  /\\  /|  __/| |_) |\\__ \\|  __/| |    \\ V / \n";
+    std::cout << " \\____/ \\__,_| \\__| \\___| \\/  \\/  \\___||_.__/ |___/ \\___||_|     \\_/  \n";
+    std::cout << "                                                                     \n";
+    std::cout << "=========================================================================" << std::endl;
 }
 
 void Log::printRequestResult(t_event_udata* current_udata)
 {
-  std::cerr << BLUE_TEXT << std::setw(6) << std::left << current_udata->m_request->method << CUT_TEXT;
-  std::cerr << std::setw(current_udata->m_request->uri.size() + 2) << std::left << current_udata->m_request->uri;
+  std::cout << BLUE_TEXT << std::setw(6) << std::left << current_udata->m_request->method << CUT_TEXT;
+  std::cout << std::setw(current_udata->m_request->uri.size() + 2) << std::left << current_udata->m_request->uri;
   if (current_udata->m_response->status_code >= 400)
   {
-    std::cerr << RED_TEXT;
+    std::cout << RED_TEXT;
   }
   else
   {
-    std::cerr << GREEN_TEXT;
+    std::cout << GREEN_TEXT;
   }
-  std::cerr << std::setw(3) << std::left << current_udata->m_response->status_code << CUT_TEXT << std::endl;
+  std::cout << std::setw(3) << std::left << current_udata->m_response->status_code << CUT_TEXT << std::endl;
 }
 
 void Log::printCallerInfo(const char* file, const char* function, int line)
@@ -40,7 +40,7 @@ void Log::printCallerInfo(const char* file, const char* function, int line)
   log_info_stream << "[" << file << ":" << line << "][" << function << "]";
   log_info_str = log_info_stream.str() + " ";
 
-  std::cerr << log_info_str;
+  std::cout << log_info_str;
 }
 
 void Log::printLogLevel(e_log_level level)
@@ -48,13 +48,13 @@ void Log::printLogLevel(e_log_level level)
   switch (level)
   {
     case INFO:
-      std::cerr << BLUE_TEXT << "[INFO] " << CUT_TEXT;
+      std::cout << BLUE_TEXT << "[INFO] " << CUT_TEXT;
       break;
     case DEBUG:
-      std::cerr << GREEN_TEXT << "[DEBUG] " << CUT_TEXT;
+      std::cout << GREEN_TEXT << "[DEBUG] " << CUT_TEXT;
       break;
     case ERROR:
-      std::cerr << RED_TEXT << "[ERROR] " << CUT_TEXT;
+      std::cout << RED_TEXT << "[ERROR] " << CUT_TEXT;
       break;
     default:
       break;
@@ -78,26 +78,26 @@ void Log::print(e_log_level level, const char* message, ...)
       switch (*p)
       {
         case 'd':
-          std::cerr << va_arg(ap, int);
+          std::cout << va_arg(ap, int);
           break;
         case 'f':
-          std::cerr << va_arg(ap, double);
+          std::cout << va_arg(ap, double);
           break;
         case 's':
-          std::cerr << va_arg(ap, const char*);
+          std::cout << va_arg(ap, const char*);
           break;
         default:
-          std::cerr << "[Invalid format specifier]";
+          std::cout << "[Invalid format specifier]";
           break;
       }
     }
     else
     {
-      std::cerr << *p;
+      std::cout << *p;
     }
   }
 
-  std::cerr << std::endl;
+  std::cout << std::endl;
 
   va_end(ap);
 }
@@ -120,26 +120,26 @@ void Log::print_line(e_log_level level, const char* file, const char* func, int 
       switch (*p)
       {
         case 'd':
-          std::cerr << va_arg(ap, int);
+          std::cout << va_arg(ap, int);
           break;
         case 'f':
-          std::cerr << va_arg(ap, double);
+          std::cout << va_arg(ap, double);
           break;
         case 's':
-          std::cerr << va_arg(ap, const char*);
+          std::cout << va_arg(ap, const char*);
           break;
         default:
-          std::cerr << "[Invalid format specifier]";
+          std::cout << "[Invalid format specifier]";
           break;
       }
     }
     else
     {
-      std::cerr << *p;
+      std::cout << *p;
     }
   }
 
-  std::cerr << std::endl;
+  std::cout << std::endl;
 
   va_end(ap);
 }

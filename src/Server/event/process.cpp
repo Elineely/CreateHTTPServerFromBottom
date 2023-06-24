@@ -25,7 +25,7 @@ t_event_udata *Server::createUdata(e_event_type type,
   }
   catch(const std::exception &e)
   {
-        std::cerr << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
   udata->m_read_pipe_fd = response.read_pipe_fd;
@@ -116,7 +116,7 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   }
   catch(const std::exception &e)
   {
-        std::cerr << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
   udata->m_response_write.message = response_message;

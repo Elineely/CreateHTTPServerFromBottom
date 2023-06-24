@@ -6,7 +6,7 @@ void showIterVector(std::vector<std::string> vector)
   for (std::vector<std::string>::iterator iter = vector.begin();
        iter != vector.end(); ++iter)
   {
-    std::cerr << iter[0] << " ";
+    std::cout << iter[0] << " ";
   }
 }
 
@@ -26,14 +26,14 @@ void Config::showServerConf()
 {
   showIterMap(m_server_conf[0].locations);
   showIterVector(m_server_conf[0].server_name);
-  std::cerr << std::endl;
+  std::cout << std::endl;
   showIterVector(m_server_conf[0].root);
-  std::cerr << std::endl;
+  std::cout << std::endl;
   showIterVector(m_server_conf[0].index);
-  std::cerr << std::endl;
+  std::cout << std::endl;
   showIterVector(m_server_conf[0].listen);
-  std::cerr << std::endl;
+  std::cout << std::endl;
   showIterVector(m_server_conf[0].max_body_size);
-  std::cerr << std::endl;
+  std::cout << std::endl;
   showIterVector(m_server_conf[0].max_header_size);
 }
