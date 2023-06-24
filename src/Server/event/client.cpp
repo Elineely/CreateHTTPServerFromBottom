@@ -54,11 +54,6 @@ void Server::clientReadEvent(struct kevent *current_event)
   {
     Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥",
                current_event->ident);
-    if (current_udata->m_child_pid != -1)
-    {
-      Log::print(INFO, "kill child pid: %d", current_udata->m_child_pid);
-      kill(current_udata->m_child_pid, SIGTERM);
-    }
     m_fd_set.insert(current_event->ident);
     addUdataMap(current_event->ident, current_udata);
     // ft_delete(&current_udata->m_request);
@@ -161,7 +156,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
   {
     return;
   }
-  std::cout << "send is ok" << std::endl;
+  // std::cout << "send is ok" << std::endl;
 
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);

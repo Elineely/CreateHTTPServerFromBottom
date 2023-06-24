@@ -134,8 +134,8 @@ void Server::start(void)
       current_event = &m_kqueue.event_list[i];
       current_udata = static_cast<t_event_udata *>(current_event->udata);
 
-      printf("filter: %d ident: %d \n", current_event->filter,
-             current_event->ident);
+      // printf("filter: %d ident: %d \n", current_event->filter,
+            //  current_event->ident);
       if (current_event->flags & EV_ERROR)
       {
         std::cout << "flag is EV_ERROR: " << current_event->ident << " "
@@ -146,7 +146,7 @@ void Server::start(void)
         continue;
       }
       event_status = getEventStatus(current_event, current_udata->m_type);
-      printf("type:%d \n", event_status);
+      // printf("type:%d \n", event_status);
       switch (event_status)
       {
         case SERVER_READ:
@@ -253,6 +253,20 @@ void Server::start(void)
           if (udata->m_response != NULL)
           {
             delete udata->m_response;
+          }
+          if (udata->m_child_pid != -1)
+          {
+            Log::print(INFO, "kill child pid: %d", udata->m_child_pid);
+            kill(udata->m_child_pid, SIGTERM);
+            waitpid(udata->m_child_pid, NULL, 0);
+          }
+          if (udata->m_read_pipe_fd != -1)
+          {
+            close(udata->m_read_pipe_fd);
+          }
+          if (udata->m_write_pipe_fd != -1)
+          {
+            close(udata->m_write_pipe_fd);
           }
           delete udata;
         }

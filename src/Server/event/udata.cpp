@@ -32,7 +32,7 @@ void Server::removeUdata(int fd, t_event_udata *udata)
   {
     return;
   }
-  printf("remove udata: %p\n", *udata_it);
+  // printf("remove udata: %p\n", *udata_it);
   udata_set.erase(udata_it);
 }
 // joonhan
