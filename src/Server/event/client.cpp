@@ -16,18 +16,19 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   char buff[BUF_SIZE];
 
   recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-  if (recv_size == 0)
+  if (recv_size == -1)
+  {
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
+    ft_delete(&current_udata);
+  }
+  else if (recv_size == 0)
   {
     disconnectSocket(current_event->ident);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
-
     ft_delete(&current_udata);
     return;
-  }
-  else if (recv_size == -1)
-  {
-    ft_error_exit(EXIT_FAILURE, "recv system call error");
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
                                      *current_udata->m_request);
@@ -124,7 +125,6 @@ void Server::clientWriteEvent(struct kevent *current_event)
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     clearUdataContent(current_event->ident, current_udata);
-    // printf("client write delete %p", current_udata);
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
@@ -136,11 +136,9 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
   if (send_byte == -1)
   {
-    std::cout << "send byte -1" << std::endl;
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     clearUdataContent(current_event->ident, current_udata);
-    // printf("client write delete %p", current_udata);
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
@@ -152,12 +150,9 @@ void Server::clientWriteEvent(struct kevent *current_event)
   {
     return;
   }
-  // std::cout << "send is ok" << std::endl;
-
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
   clearUdataContent(current_event->ident, current_udata);
-  // printf("client write delete %p", current_udata);
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);
