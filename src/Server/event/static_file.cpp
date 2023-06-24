@@ -30,7 +30,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       try
       {
         udata = new t_event_udata(CLIENT);
-        printf("static file udata 1%p \n", udata);
+        // printf("static file udata 1%p \n", udata);
 
         addUdataContent(current_event->ident, udata);
       }
@@ -56,7 +56,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       new_request = new Request(request);
       new_response = new Response(response);
       udata = new t_event_udata(STATIC_FILE, new_request, new_response);
-      printf("static file udata 2%p \n", udata);
+      // printf("static file udata 2%p \n", udata);
     }
     catch (const std::exception &e)
     {
@@ -77,7 +77,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       new_request = new Request(request);
       new_response = new Response(response);
       udata = new t_event_udata(STATIC_FILE, new_request, new_response);
-      printf("static file udata 3%p \n", udata);
+      // printf("static file udata 3%p \n", udata);
     }
     catch (const std::exception &e)
     {
@@ -99,7 +99,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     try
     {
       udata = new t_event_udata(CLIENT);
-      printf("static file udata 4%p \n", udata);
+      // printf("static file udata 4%p \n", udata);
 
       addUdataContent(current_event->ident, udata);
     }
@@ -140,9 +140,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   std::cout << current_udata->m_response->body.size() << " "
             << current_udata->m_response->static_read_file_size << std::endl;
   if (current_udata->m_response->body.size() ==
-      current_udata->m_response
-          ->static_read_file_size)  // TODO: EVFILT_VNODE 필터로 바꿔서 감지할
-                                    // 지?
+      current_udata->m_response->static_read_file_size)
   {
     close(current_event->ident);
     t_event_udata *udata;
@@ -153,7 +151,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     {
       udata = new t_event_udata(CLIENT);
 
-      printf("static file udata 5 %p \n", udata);
+      // printf("static file udata 5 %p \n", udata);
       addUdataContent(current_udata->m_client_sock, udata);
     }
     catch (const std::exception &e)
@@ -218,7 +216,7 @@ void Server::fileWriteEvent(struct kevent *current_event)
     try
     {
       udata = new t_event_udata(CLIENT);
-      printf("static file udata 6%p \n", udata);
+      // printf("static file udata 6%p \n", udata);
 
       addUdataContent(current_udata->m_client_sock, udata);
     }
