@@ -128,7 +128,6 @@ void Server::clientWriteEvent(struct kevent *current_event)
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
-    current_event->udata = NULL;
     return;
   }
   send_byte = write(current_event->ident, message + response_write->offset,
@@ -142,7 +141,6 @@ void Server::clientWriteEvent(struct kevent *current_event)
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
-    current_event->udata = NULL;
     return;
   }
   response_write->offset += send_byte;
@@ -156,5 +154,4 @@ void Server::clientWriteEvent(struct kevent *current_event)
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);
-  current_event->udata = NULL;
 }
