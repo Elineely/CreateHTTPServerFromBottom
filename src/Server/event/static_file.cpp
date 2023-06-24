@@ -27,10 +27,12 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       current_udata->m_response_write.message =
           response_generator.generateResponseMessage();
       current_udata->m_response_write.offset = 0;
-      current_udata->m_response_write.length = current_udata->m_response_write.message.size();
-      Log::printRequestResult(current_udata);
+      current_udata->m_response_write.length =
+          current_udata->m_response_write.message.size();
       addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
+                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+                           current_udata);
+      Log::printRequestResult(current_udata);
       return;
     }
 
@@ -43,51 +45,25 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
   // POST, PUT
   else if (response.static_write_file_fd != -1)
   {
-    t_event_udata *udata;
-
-    try
-    {
-      new_request = new Request(request);
-      new_response = new Response(response);
-      udata = new t_event_udata(STATIC_FILE, new_request, new_response);
-      // printf("static file udata 3%p \n", udata);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_client_sock = current_event->ident;
+    current_udata->m_type = STATIC_FILE;
     addEventToChangeList(m_kqueue.change_list, response.static_write_file_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   }
   // auto_index
   else
   {
     ResponseGenerator response_generator(request, response);
-    std::vector<char> response_message;
-    t_event_udata *udata;
 
-    response_message = response_generator.generateResponseMessage();
-    try
-    {
-      udata = new t_event_udata(CLIENT);
-      // printf("static file udata 4%p \n", udata);
+    current_udata->m_type = CLIENT;
+    current_udata->m_response_write.message =
+        response_generator.generateResponseMessage();
+    current_udata->m_response_write.offset = 0;
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
 
-      addUdataContent(current_event->ident, udata);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_response_write.message = response_message;
-    udata->m_response_write.offset = 0;
-    udata->m_response_write.length = response_message.size();
-
-    Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
+    Log::printRequestResult(current_udata);
   }
 }
 
@@ -124,7 +100,8 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     current_udata->m_response_write.message =
         response_generator.generateResponseMessage();
     current_udata->m_response_write.offset = 0;
-    current_udata->m_response_write.length = current_udata->m_response_write.message.size();
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
     // addUdataContent(current_udata->m_client_sock, current_udata);
 
     Log::printRequestResult(current_udata);
@@ -170,31 +147,16 @@ void Server::fileWriteEvent(struct kevent *current_event)
   {
     ResponseGenerator response_generator(*current_udata->m_request,
                                          *current_udata->m_response);
-    std::vector<char> response_message;
-    t_event_udata *udata;
-    response_message = response_generator.generateResponseMessage();
-    try
-    {
-      udata = new t_event_udata(CLIENT);
-      // printf("static file udata 6%p \n", udata);
-
-      addUdataContent(current_udata->m_client_sock, udata);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_response_write.message = response_message;
-    udata->m_response_write.offset = 0;
-    udata->m_response_write.length = response_message.size();
+    current_udata->m_type = CLIENT;
+    current_udata->m_response_write.message =
+        response_generator.generateResponseMessage();
+    current_udata->m_response_write.offset = 0;
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
 
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
     Log::printRequestResult(current_udata);
     close(current_event->ident);
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
   }
 }
