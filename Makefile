@@ -47,7 +47,8 @@ SRC_SERVER_FILES		:=	Server.cpp 				\
 							event/pipe.cpp			\
 							event/process.cpp		\
 							event/server.cpp		\
-							event/static_file.cpp
+							event/static_file.cpp	\
+							event/udata.cpp
 
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\
