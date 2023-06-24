@@ -42,10 +42,12 @@ void Server::serverReadEvent(struct kevent *current_event)
 
     udata =
         new t_event_udata(CLIENT, current_udata->m_servers, request, response);
+    udata->m_client_sock = client_sock;
+    addUdataMap(client_sock, udata);
   }
   catch (std::exception &e)
   {
-        std::cout << e.what() << std::endl;
+    std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
 

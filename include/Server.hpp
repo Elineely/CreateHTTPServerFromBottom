@@ -180,6 +180,12 @@ class Server
   std::vector<t_multi_server> servers;
   std::map<int, std::vector<t_event_udata *> > m_close_udata_map;
   std::set<int> m_close_fd_set;
+
+  // joonhan
+  std::set<int> m_fd_set;
+  std::map<int, std::set<t_event_udata *> > m_udata_map;
+  // joonhan
+  
   t_kqueue m_kqueue;
   Server();
 
@@ -241,6 +247,9 @@ class Server
 
   // write.cpp
   void staticFileWriteEvent(struct kevent *current_event);
+
+  void addUdataMap(int fd, t_event_udata* udata);
+  void removeUdata(int fd, t_event_udata* udata);
 };
 
 #endif

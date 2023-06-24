@@ -1,5 +1,42 @@
 #include "Server.hpp"
 
+// joonhan
+void Server::addUdataMap(int fd, t_event_udata *udata)
+{
+  if (m_udata_map.find(fd) == m_udata_map.end())
+  {
+    std::set<t_event_udata *> udata_set;
+
+    m_udata_map.insert(std::make_pair(fd, udata_set));
+  }
+  std::map<int, std::set<t_event_udata *> >::iterator it;
+
+  it = m_udata_map.find(fd);
+  it->second.insert(udata);
+}
+
+void Server::removeUdata(int fd, t_event_udata *udata)
+{
+  std::map<int, std::set<t_event_udata *> >::iterator it;
+
+  it = m_udata_map.find(fd);
+  if (it == m_udata_map.end())
+  {
+    return;
+  }
+  std::set<t_event_udata *> &udata_set = it->second;
+  std::set<t_event_udata *>::iterator udata_it;
+
+  udata_it = udata_set.find(udata);
+  if (udata_it == udata_set.end())
+  {
+    return;
+  }
+  printf("remove udata: %p\n", *udata_it);
+  udata_set.erase(udata_it);
+}
+// joonhan
+
 void Server::addCloseFdSet(int fd)
 {
   if (m_close_udata_map.find(fd) == m_close_udata_map.end())
