@@ -35,9 +35,10 @@ void Server::clearUdataContent(int fd, t_event_udata *udata)
   {
     for (size_t i = 0; i < it->second.size(); ++i)
     {
+      printf("%p %p \n",it->second[i], udata);
       if (it->second[i] == udata){
         std::cout << "in here" << std::endl;
-         it->second.erase(it->second.begin() + i);
+         it->second[i] = NULL;
       }
     }
   }
@@ -48,25 +49,18 @@ void Server::clearUdata()
   std::cout << "claerUdata" << std::endl;
   for (std::set<int>::iterator i = m_close_fd_vec.begin(); i != m_close_fd_vec.end(); ++i)
   {
-    std::cout << "claerUdata2 : " << *i << std::endl;
-
     std::map<int, std::vector<t_event_udata *> >::iterator it;
     it = m_close_udata_map.find(*i);
     if (it == m_close_udata_map.end())
     {
       continue;
     }
-    std::cout << "claerUdata3" << std::endl;
 
     for (size_t j = 0; j < it->second.size(); ++j)
     {
-      std::cout << "claerUdata4" << std::endl;
-
       if (it->second[j] != NULL)
       {
-        printf("%p ", it->second[j]);
-        std::cout << "claerUdata5" << std::endl;
-
+        printf("delete %p ", it->second[j]);
         delete it->second[j];
       }
     }
@@ -98,35 +92,68 @@ e_kqueue_event getEventStatus(struct kevent *current_event, e_event_type type)
   if (current_event->flags & EV_ERROR)
   {
     if (type == SERVER)
+    {
+      LOG_DEBUG("SERVER ERROR");
       return SERVER_ERROR;
+    }
     else if (type == CLIENT)
+    {
+      LOG_DEBUG("CLIENT ERROR");
       return CLIENT_ERROR;
+    }
   }
   if (current_event->filter == EVFILT_TIMER)
   {
-    return CGI_PROCESS_TIMEOUT;
+    {
+      LOG_DEBUG("CGI TIMEOUT");
+      return CGI_PROCESS_TIMEOUT;
+    }
   }
   if (current_event->filter == EVFILT_READ)
   {
     if (type == SERVER)
+    {
+      LOG_DEBUG("SERVER READ");
       return SERVER_READ;
+    }
     else if (type == CLIENT)
+    {
+      LOG_DEBUG("CLIENT READ");
       return CLIENT_READ;
+    }
     else if (type == PIPE)
+    {
+      LOG_DEBUG("PIPE READ");
       return PIPE_READ;
+    }
     else if (type == STATIC_FILE)
+    {
+      LOG_DEBUG("STATIC FILE READ");
       return STATIC_FILE_READ;
+    }
   }
   if (current_event->filter == EVFILT_WRITE)
   {
     if (type == SERVER)
+    {
+      LOG_DEBUG("SERVER WRITE");
       return SERVER_WRITE;
+    }  
     else if (type == CLIENT)
+    {
+      LOG_DEBUG("CLIENT WRITE");
       return CLIENT_WRITE;
+    }  
     else if (type == PIPE)
+    {
+      LOG_DEBUG("PIPE WRITE");
       return PIPE_WRITE;
+    }  
     else if (type == STATIC_FILE)
+    {
+      LOG_DEBUG("STATIC FILE WRITE");
       return STATIC_FILE_WRITE;
+    }  
   }
   return NOTHING;
 }
@@ -215,8 +242,8 @@ void Server::start(void)
       }
       else
       {
-        event_status = getEventStatus(current_event, current_udata->m_type);
         printf("filter: %d ident: %d  type:%d \n", current_event->filter, current_event->ident, event_status);
+        event_status = getEventStatus(current_event, current_udata->m_type);
       }
       switch (event_status)
       {
@@ -286,7 +313,7 @@ void Server::start(void)
         }
       }
     }
-    std::cerr <<std::endl << "-------------------------- cycle END " << std::endl ;
+    std::cerr << std::endl << "-------------------------- cycle END " << std::endl << std::endl;
 
     if (m_close_fd_vec.size() > 0)
     {

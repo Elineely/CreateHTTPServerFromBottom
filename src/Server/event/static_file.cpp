@@ -144,7 +144,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     try
     {
       udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
-
+    
       addUdataContent(current_udata->m_client_sock, udata);
     }
     catch(const std::exception &e)
