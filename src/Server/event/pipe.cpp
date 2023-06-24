@@ -66,7 +66,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
       t_event_udata *udata;
       try
       {
-        udata = new t_event_udata(CLIENT, current_udata->m_servers);
+        udata = new t_event_udata(CLIENT);
         addUdataContent(current_udata->m_client_sock, udata);
       }
       catch(const std::exception& e)

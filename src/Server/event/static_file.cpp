@@ -1,7 +1,7 @@
 #include "HttpProcessor.hpp"
 #include "Log.hpp"
-#include "Server.hpp"
 #include "ResponseGenerator.hpp"
+#include "Server.hpp"
 #include "ServerFinder.hpp"
 
 void Server::addStaticRequestEvent(struct kevent *current_event,
@@ -34,9 +34,9 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
 
         addUdataContent(current_event->ident, udata);
       }
-      catch(const std::exception &e)
+      catch (const std::exception &e)
       {
-      std::cout << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
         exit(EXIT_FAILURE);
       }
       udata->m_response_write.message =
@@ -45,8 +45,8 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       udata->m_response_write.length = udata->m_response_write.message.size();
       Log::printRequestResult(current_udata);
       addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-      return ;
+                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+      return;
     }
 
     lseek(response.static_read_file_fd, 0, SEEK_SET);
@@ -55,12 +55,10 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     {
       new_request = new Request(request);
       new_response = new Response(response);
-      udata = new t_event_udata(STATIC_FILE, current_udata->m_servers,
-                                new_request, new_response);
+      udata = new t_event_udata(STATIC_FILE, new_request, new_response);
       printf("static file udata 2%p \n", udata);
-
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
@@ -78,12 +76,10 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     {
       new_request = new Request(request);
       new_response = new Response(response);
-      udata = new t_event_udata(STATIC_FILE, current_udata->m_servers,
-                                new_request, new_response);
+      udata = new t_event_udata(STATIC_FILE, new_request, new_response);
       printf("static file udata 3%p \n", udata);
-
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
@@ -102,12 +98,12 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
     response_message = response_generator.generateResponseMessage();
     try
     {
-      udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+      udata = new t_event_udata(CLIENT);
       printf("static file udata 4%p \n", udata);
 
       addUdataContent(current_event->ident, udata);
     }
-    catch(const std::exception &e)
+    catch (const std::exception &e)
     {
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
@@ -141,8 +137,12 @@ void Server::staticFileReadEvent(struct kevent *current_event)
       current_udata->m_response->body.push_back(buf[idx]);
     }
   }
-  std::cout << current_udata->m_response->body.size() << " " << current_udata->m_response->static_read_file_size << std::endl;
-  if (current_udata->m_response->body.size() == current_udata->m_response->static_read_file_size) // TODO: EVFILT_VNODE 필터로 바꿔서 감지할 지?
+  std::cout << current_udata->m_response->body.size() << " "
+            << current_udata->m_response->static_read_file_size << std::endl;
+  if (current_udata->m_response->body.size() ==
+      current_udata->m_response
+          ->static_read_file_size)  // TODO: EVFILT_VNODE 필터로 바꿔서 감지할
+                                    // 지?
   {
     close(current_event->ident);
     t_event_udata *udata;
@@ -156,7 +156,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
       printf("static file udata 5 %p \n", udata);
       addUdataContent(current_udata->m_client_sock, udata);
     }
-    catch(const std::exception &e)
+    catch (const std::exception &e)
     {
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
@@ -217,12 +217,12 @@ void Server::fileWriteEvent(struct kevent *current_event)
     response_message = response_generator.generateResponseMessage();
     try
     {
-      udata = new t_event_udata(CLIENT, current_udata->m_servers, NULL, NULL);
+      udata = new t_event_udata(CLIENT);
       printf("static file udata 6%p \n", udata);
 
       addUdataContent(current_udata->m_client_sock, udata);
     }
-    catch(const std::exception &e)
+    catch (const std::exception &e)
     {
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
