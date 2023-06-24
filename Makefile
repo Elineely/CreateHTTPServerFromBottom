@@ -47,7 +47,8 @@ SRC_SERVER_FILES		:=	Server.cpp 				\
 							event/pipe.cpp			\
 							event/process.cpp		\
 							event/server.cpp		\
-							event/static_file.cpp
+							event/static_file.cpp	\
+							event/udata.cpp
 
 SRC_UTILS_DIR			:=	utils/
 SRC_UTILS_FILES			:=	ft_config_split.cpp		\
@@ -77,7 +78,7 @@ SRCS					:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJ_DIR					:=	obj/
 OBJS					:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
-CXXFLAGS				:=	-Wall -Werror -Wextra -std=c++98 -pedantic
+# CXXFLAGS				:=	-Wall -Werror -Wextra -std=c++98 -pedantic
 
 ifdef DEBUG_MODE
 	CXXFLAGS			:=	$(CXXFLAGS) -g3

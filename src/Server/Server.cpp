@@ -69,8 +69,9 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
     {
       udata = new t_event_udata(SERVER, server_conf.get_m_server_conf());
     }
-    catch(std::exception e)
+    catch (std::exception e)
     {
+      std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
@@ -82,9 +83,7 @@ Server::Server(Config &server_conf)
 {
   setServers(server_conf, servers);
   setSocket(servers);
-
   startBind(servers);
-
   startListen(servers, BACK_LOG);
 
   m_kqueue.kq = getKqueue();
@@ -94,12 +93,9 @@ Server::Server(Config &server_conf)
 
 Server::Server() {}
 
-Server::Server(const Server &other)
-{
-  *this = other;
-}
+Server::Server(const Server &other) { *this = other; }
 
-Server::~Server() { }
+Server::~Server() {}
 
 Server &Server::operator=(const Server &other)
 {
@@ -124,17 +120,32 @@ void Server::start(void)
     current_events = kevent(m_kqueue.kq, &m_kqueue.change_list[0],
                             m_kqueue.change_list.size(), m_kqueue.event_list,
                             MAX_EVENT_LIST_SIZE, NULL);
+
     if (current_events == -1)
     {
-      ft_error_exit(1, strerror(errno));
+      ft_error_exit(EXIT_FAILURE, strerror(errno));
     }
+    
     m_kqueue.change_list.clear();
-
+    std::cout << "cycle start --------------------------" << std::endl
+              << std::endl;
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
       current_udata = static_cast<t_event_udata *>(current_event->udata);
+
+      if (current_event->flags & EV_ERROR)
+      {
+        printf("filter: %d ident: %d \n", current_event->filter,
+               current_event->ident);
+        // std::cout << "flag is EV_ERROR: " << current_event->ident << " " <<
+        // strerror(current_event->data) << std::endl; printf("ERROR POINTER IS
+        // %p\n", current_event->udata);
+        continue;
+      }
       event_status = getEventStatus(current_event, current_udata->m_type);
+      printf("filter: %d ident: %d  type:%d \n", current_event->filter,
+              current_event->ident, event_status);
       switch (event_status)
       {
         case SERVER_READ:
@@ -152,6 +163,18 @@ void Server::start(void)
         case CLIENT_READ:
         {
           clientReadEvent(current_event);
+          break;
+        }
+
+        case CLIENT_WRITE:
+        {
+          clientWriteEvent(current_event);
+          break;
+        }
+
+        case CLIENT_ERROR:
+        {
+          disconnectSocket(current_event->ident);
           break;
         }
 
@@ -185,23 +208,19 @@ void Server::start(void)
           break;
         }
 
-        case CLIENT_WRITE:
-        {
-          clientWriteEvent(current_event);
-          break;
-        }
-
-        case CLIENT_ERROR:
-        {
-          disconnectSocket(current_event->ident);
-          break;
-        }
-
         default:
         {
           break;
         }
       }
+    }
+    std::cout << std::endl
+              << "-------------------------- cycle END " << std::endl
+              << std::endl;
+
+    if (m_close_fd_set.size() > 0)
+    {
+      clearUdata();
     }
   }
   for (size_t i = 0; i < servers.size(); ++i)

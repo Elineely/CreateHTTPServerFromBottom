@@ -33,7 +33,8 @@ bool Config::isVaildServerBlock(t_server &server)
   }
   if (server.max_body_size.size() == 0)
   {
-    Log::print(ERROR,"Invaild Server Content, does not have max_body_size content");
+    Log::print(ERROR,
+               "Invaild Server Content, does not have max_body_size content");
     return 1;
   }
   return 0;
@@ -43,12 +44,13 @@ bool Config::isVaildLocationBlock(t_location &location)
 {
   if (location.root == "")
   {
-    Log::print(ERROR,"Invaild Location, does not have root content");
+    Log::print(ERROR, "Invaild Location, does not have root content");
     return 1;
   }
   if (location.accepted_method == "")
   {
-    Log::print(ERROR,"Invaild Location, does not have accepted_method content");
+    Log::print(ERROR,
+               "Invaild Location, does not have accepted_method content");
     return 1;
   }
   return 0;
@@ -62,7 +64,9 @@ t_location Config::get_location_expand(std::ifstream &config_file,
 {
   if (isContentCount(content_size, 3))
   {
-    Log::print(ERROR, "[get_location_expand:isContentCount] Invalid content  in %s", config_file_name.c_str());
+    Log::print(ERROR,
+               "[get_location_expand:isContentCount] Invalid content  in %s",
+               config_file_name.c_str());
     exit(EXIT_FAILURE);
   }
   std::string read_line;
@@ -79,8 +83,10 @@ t_location Config::get_location_expand(std::ifstream &config_file,
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list) ||
         split_content_line.size() >= 3)
     {
-      Log::print(ERROR, "[get_location_expand:isVaildServerBlockContent]Invalid content  in %s",
-               config_file_name.c_str());
+      Log::print(ERROR,
+                 "[get_location_expand:isVaildServerBlockContent]Invalid "
+                 "content  in %s",
+                 config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     temp_location_map.insert(std::pair<std::string, std::string>(
@@ -129,6 +135,10 @@ void Config::openErrorPage(t_server &server)
   }
 
   read_byte = read(file_fd, buf, BUF_SIZE);
+  if (read_byte == -1)
+  {
+    ft_error_exit(EXIT_FAILURE, "failed to read default error page");
+  }
   while (read_byte > 0)
   {
     for (ssize_t i = 0; i < read_byte; ++i)
@@ -136,6 +146,10 @@ void Config::openErrorPage(t_server &server)
       server.error_page_vector.push_back(buf[i]);
     }
     read_byte = read(file_fd, buf, BUF_SIZE);
+    if (read_byte == -1)
+    {
+      ft_error_exit(EXIT_FAILURE, "failed to read default error page");
+    }
   }
   close(file_fd);
 }
@@ -159,7 +173,10 @@ t_server Config::get_parse_server_block(std::ifstream &file,
     }
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list))
     {
-      Log::print(ERROR, "[get_parse_server_block:isVaildServerBlockContent] Invalid content  in %s", config_file_name.c_str());
+      Log::print(ERROR,
+                 "[get_parse_server_block:isVaildServerBlockContent] Invalid "
+                 "content  in %s",
+                 config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     if (split_content_line[0] == "location")
@@ -167,13 +184,12 @@ t_server Config::get_parse_server_block(std::ifstream &file,
       std::string temp_string;
       if (temp_conf.find("max_body_size") == temp_conf.end())
         temp_string = "";
-      else 
+      else
         temp_string = temp_conf["max_body_size"][0];
       temp_locations.insert(std::pair<std::string, t_location>(
           split_content_line[1],
           get_location_expand(file, config_file_name, vaild_content_list,
-                              split_content_line.size(),
-                              temp_string)));
+                              split_content_line.size(), temp_string)));
     }
     else
     {
@@ -214,7 +230,8 @@ void Config::set_m_server_conf(std::ifstream &config_file,
     if (split_content_line.size() != 2 || split_content_line[0] != "server" ||
         split_content_line[1] != "{")
     {
-      Log::print(ERROR, "[set_m_server_conf] Invalid content  in %s", config_file_name.c_str());
+      Log::print(ERROR, "[set_m_server_conf] Invalid content  in %s",
+                 config_file_name.c_str());
       exit(EXIT_FAILURE);
     }
     m_server_conf.push_back(get_parse_server_block(

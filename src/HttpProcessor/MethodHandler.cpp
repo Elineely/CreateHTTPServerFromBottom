@@ -157,6 +157,7 @@ void GetMethodHandler::methodRun()
     {
       throw NOT_FOUND_404;
     }
+    fcntl(infile_fd, F_SETFL, O_NONBLOCK);
     m_response_data.static_read_file_fd = infile_fd;
   }
   else
@@ -175,6 +176,7 @@ void GetMethodHandler::methodRun()
       {
         throw NOT_FOUND_404;
       }
+      fcntl(infile_fd, F_SETFL, O_NONBLOCK);
       m_response_data.static_read_file_fd = infile_fd;
     }
     else if (m_response_data.auto_index == true)
@@ -224,6 +226,7 @@ void PostMethodHandler::methodRun()
   {
     throw INTERNAL_SERVER_ERROR_500;
   }
+    fcntl(outfile_fd, F_SETFL, O_NONBLOCK);
   m_response_data.static_write_file_fd = outfile_fd;
 }
 
@@ -288,5 +291,6 @@ void PutMethodHandler::methodRun()
   {
     throw INTERNAL_SERVER_ERROR_500;
   }
+  fcntl(outfile_fd, F_SETFL, O_NONBLOCK);
   m_response_data.static_write_file_fd = outfile_fd;
 }

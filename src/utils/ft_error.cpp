@@ -8,7 +8,7 @@ void print_error(const char *message)
 
 void print_error(const char *message, int num)
 {
-  std::cerr << message << " " << num << std::endl;
+  std::cout << message << " " << num << std::endl;
   return;
 }
 

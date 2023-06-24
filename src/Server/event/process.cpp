@@ -20,11 +20,11 @@ t_event_udata *Server::createUdata(e_event_type type,
 
     new_response = new Response(response);
 
-    udata = new t_event_udata(type, current_udata->m_servers, new_request,
-                              new_response);
+    udata = new t_event_udata(type, new_request, new_response);
   }
-  catch(const std::exception &e)
+  catch (const std::exception &e)
   {
+    std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
   udata->m_read_pipe_fd = response.read_pipe_fd;
@@ -75,8 +75,11 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
 
   read_pipe_udata->m_other_udata = timeout_udata;
   read_pipe_udata->m_write_udata = write_pipe_udata;
+  read_pipe_udata->m_child_pid = response.cgi_child_pid;
   timeout_udata->m_other_udata = read_pipe_udata;
   timeout_udata->m_write_udata = write_pipe_udata;
+
+  current_udata->m_child_pid = response.cgi_child_pid;
 
   fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
   addEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
@@ -84,7 +87,7 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
   addEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
                        EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS,
                        DEFAULT_TIMEOUT_SECOND, timeout_udata);
-  return ;
+  return;
 }
 
 void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
@@ -106,11 +109,13 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   response_message = not_ok.generateResponseMessage();
   try
   {
-    udata = new t_event_udata(CLIENT, current_udata->m_servers,
-                          current_udata->m_request, current_udata->m_response);
+    udata = new t_event_udata(CLIENT, current_udata->m_request,
+                              current_udata->m_response);
+    addUdataContent(current_udata->m_client_sock, udata);
   }
-  catch(const std::exception &e)
+  catch (const std::exception &e)
   {
+    std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
   udata->m_response_write.message = response_message;
@@ -121,7 +126,8 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 
   addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-  for (size_t i = 0; i < current_udata->m_other_udata->m_read_buffer.size(); ++i)
+  for (size_t i = 0; i < current_udata->m_other_udata->m_read_buffer.size();
+       ++i)
   {
     delete current_udata->m_other_udata->m_read_buffer[i];
   }

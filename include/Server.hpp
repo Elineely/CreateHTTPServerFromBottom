@@ -17,6 +17,8 @@
 
 // std::container header
 #include <list>
+#include <map>
+#include <set>
 #include <vector>
 
 // common I/O header
@@ -39,7 +41,7 @@
 
 // Server 세팅
 #define BUF_SIZE 650000
-#define MAX_EVENT_LIST_SIZE 128
+#define MAX_EVENT_LIST_SIZE 1000
 #define DEFAULT_TIMEOUT_SECOND 3600
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
@@ -112,6 +114,7 @@ struct t_response_write
   {
   }
 };
+
 struct t_event_udata
 {
   e_event_type m_type;
@@ -119,8 +122,8 @@ struct t_event_udata
   int m_write_pipe_fd;
   int m_client_sock;
   int m_server_sock;
-  size_t m_file_write_offset;
   pid_t m_child_pid;
+  size_t m_file_write_offset;
   size_t m_total_read_byte;
   std::vector<size_t> m_read_bytes;
   std::vector<char *> m_read_buffer;
@@ -133,12 +136,16 @@ struct t_event_udata
   struct t_event_udata *m_other_udata;
   struct t_event_udata *m_write_udata;
 
-  t_event_udata(e_event_type type, config_vector config, Request *request,
-                Response *response)
+  t_event_udata(e_event_type type, Request *request = NULL,
+                Response *response = NULL)
       : m_type(type),
+        m_read_pipe_fd(-1),
+        m_write_pipe_fd(-1),
+        m_client_sock(-1),
+        m_server_sock(-1),
+        m_child_pid(-1),
         m_file_write_offset(0),
         m_total_read_byte(0),
-        m_servers(config),
         m_request(request),
         m_response(response),
         m_other_udata(NULL),
@@ -146,11 +153,19 @@ struct t_event_udata
   {
   }
 
-  t_event_udata(e_event_type type, config_vector config)
+  t_event_udata(e_event_type type, config_vector config,
+                Request *request = NULL, Response *response = NULL)
       : m_type(type),
+        m_read_pipe_fd(-1),
+        m_write_pipe_fd(-1),
+        m_client_sock(-1),
+        m_server_sock(-1),
+        m_child_pid(-1),
         m_file_write_offset(0),
         m_total_read_byte(0),
         m_servers(config),
+        m_request(request),
+        m_response(response),
         m_other_udata(NULL),
         m_write_udata(NULL)
   {
@@ -163,6 +178,8 @@ class Server
 {
  private:
   std::vector<t_multi_server> servers;
+  std::map<int, std::vector<t_event_udata *> > m_close_udata_map;
+  std::set<int> m_close_fd_set;
   t_kqueue m_kqueue;
   Server();
 
@@ -196,6 +213,10 @@ class Server
   void pipeWriteEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
+  void clearUdata();
+  void clearUdataContent(int fd, t_event_udata *udata);
+  void addUdataContent(int fd, t_event_udata *udata);
+  void addCloseFdSet(int fd);
 
   void disconnectSocket(int socket);
   void addServerSocketEvent(std::vector<t_multi_server> &servers,
