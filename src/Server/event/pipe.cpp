@@ -18,9 +18,17 @@ void Server::pipeReadEvent(struct kevent *current_event)
   {
     close(current_udata->m_write_pipe_fd);
     close(current_event->ident);
+    if (current_udata->m_write_udata != NULL)
+    {
+      ft_delete(&current_udata->m_write_udata->m_request);
+      ft_delete(&current_udata->m_write_udata->m_response);
+      ft_delete(&current_udata->m_write_udata);
+    }
     ft_delete(&(current_udata->m_other_udata->m_request));
     ft_delete(&(current_udata->m_other_udata->m_response));
     ft_delete(&(current_udata->m_other_udata));
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
   }
   else if (read_byte > 0)
