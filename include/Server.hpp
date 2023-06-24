@@ -179,7 +179,7 @@ class Server
  private:
   std::vector<t_multi_server> servers;
   std::map<int, std::vector<t_event_udata *> > m_close_udata_map;
-  std::set<int> m_close_fd_vec;
+  std::set<int> m_close_fd_set;
   t_kqueue m_kqueue;
   Server();
 
@@ -216,7 +216,7 @@ class Server
   void clearUdata();
   void clearUdataContent(int fd, t_event_udata *udata);
   void addUdataContent(int fd, t_event_udata *udata);
-  void addCloseFdVector(int fd);
+  void addCloseFdSet(int fd);
 
   void disconnectSocket(int socket);
   void addServerSocketEvent(std::vector<t_multi_server> &servers,

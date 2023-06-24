@@ -27,7 +27,7 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   }
   else if (recv_size == -1)
   {
-    ft_error_exit(EXIT_FAILURE,"recv system call error");
+    ft_error_exit(EXIT_FAILURE, "recv system call error");
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
                                      *current_udata->m_request);
@@ -49,20 +49,20 @@ void Server::clientReadEvent(struct kevent *current_event)
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
 
-  addCloseFdVector(current_event->ident);
+  addCloseFdSet(current_event->ident);
   if (current_event->flags & EV_EOF)
   {
-    Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥", current_event->ident);
+    Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥",
+               current_event->ident);
     if (current_udata->m_child_pid != -1)
     {
-      LOG_DEBUG("I will kill you");
+      Log::print(INFO, "kill child pid: %d", current_udata->m_child_pid);
       kill(current_udata->m_child_pid, SIGTERM);
-      // waitpid(current_udata->m_child_pid, NULL, 0);
     }
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
-    m_close_fd_vec.insert(current_event->ident);
+    m_close_fd_set.insert(current_event->ident);
     return;
   }
 
@@ -96,7 +96,7 @@ void Server::clientReadEvent(struct kevent *current_event)
     current_udata->m_request = new Request();
     current_udata->m_response = new Response();
   }
-  catch(const std::exception &e)
+  catch (const std::exception &e)
   {
     std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
@@ -121,46 +121,45 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
   if (current_event->flags & EV_EOF)
   {
-    addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
-                       EV_DELETE, 0, 0, NULL);
+    addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                         EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     clearUdataContent(current_event->ident, current_udata);
-    printf("client write delete %p", current_udata);
+    // printf("client write delete %p", current_udata);
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
     current_event->udata = NULL;
-    return ;
+    return;
   }
   send_byte = write(current_event->ident, message + response_write->offset,
-                   response_write->length - response_write->offset);
-  
+                    response_write->length - response_write->offset);
+
   if (send_byte == -1)
   {
     std::cout << "send byte -1" << std::endl;
-    addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
-                       EV_DELETE, 0, 0, NULL);
+    addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                         EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
     clearUdataContent(current_event->ident, current_udata);
-    printf("client write delete %p", current_udata);
+    // printf("client write delete %p", current_udata);
     ft_delete(&(current_udata->m_request));
     ft_delete(&(current_udata->m_response));
     ft_delete(&current_udata);
     current_event->udata = NULL;
-    return ;
+    return;
   }
   response_write->offset += send_byte;
   if (response_write->length > response_write->offset)
   {
     return;
   }
-    std::cout << "send is ok" << std::endl;
+  // std::cout << "send is ok" << std::endl;
 
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
   clearUdataContent(current_event->ident, current_udata);
-    printf("client write delete %p", current_udata);
+  // printf("client write delete %p", current_udata);
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);
-    current_event->udata = NULL;
-
+  current_event->udata = NULL;
 }
