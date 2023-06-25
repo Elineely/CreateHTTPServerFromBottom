@@ -8,9 +8,6 @@ cgitb.enable()
 
 upload_dir = './data/upload/'
 
-while True:
-    print()
-
 form = cgi.FieldStorage()
 
 if 'image' in form:

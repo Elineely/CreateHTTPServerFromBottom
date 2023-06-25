@@ -11,19 +11,24 @@ void Server::pipeReadEvent(struct kevent *current_event)
   ssize_t read_byte;
   t_event_udata *current_udata;
 
-  LOG_DEBUG("💧 PIPE READ EVENT 💧");
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   read_byte = read(current_event->ident, temp_buf, BUF_SIZE);
-  LOG_DEBUG("read_byte: %d", read_byte);
-  
+
   if (read_byte == -1)
   {
-    std::cout << "pipe read_byte - 1" << std::endl;
     close(current_udata->m_write_pipe_fd);
     close(current_event->ident);
+    if (current_udata->m_write_udata != NULL)
+    {
+      ft_delete(&current_udata->m_write_udata->m_request);
+      ft_delete(&current_udata->m_write_udata->m_response);
+      ft_delete(&current_udata->m_write_udata);
+    }
     ft_delete(&(current_udata->m_other_udata->m_request));
     ft_delete(&(current_udata->m_other_udata->m_response));
     ft_delete(&(current_udata->m_other_udata));
+    ft_delete(&current_udata->m_request);
+    ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
   }
   else if (read_byte > 0)
@@ -32,7 +37,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
     {
       buf = new char[read_byte]();
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
@@ -62,14 +67,15 @@ void Server::pipeReadEvent(struct kevent *current_event)
     close(current_event->ident);
     if (!WIFSIGNALED(status))
     {
-      ResponseGenerator ok(*current_udata->m_request, *current_udata->m_response);
+      ResponseGenerator ok(*current_udata->m_request,
+                           *current_udata->m_response);
       t_event_udata *udata;
       try
       {
         udata = new t_event_udata(CLIENT);
         addUdataContent(current_udata->m_client_sock, udata);
       }
-      catch(const std::exception& e)
+      catch (const std::exception &e)
       {
         std::cout << e.what() << std::endl;
         exit(EXIT_FAILURE);
@@ -79,11 +85,11 @@ void Server::pipeReadEvent(struct kevent *current_event)
       udata->m_response_write.length = udata->m_response_write.message.size();
 
       addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
       addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
-                          EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
- addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                          EVFILT_READ, EV_DELETE, 0, 0, NULL);
+                           EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+      addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                           EVFILT_READ, EV_DELETE, 0, 0, NULL);
       Log::printRequestResult(current_udata);
     }
     if (current_udata->m_write_udata != NULL)
@@ -110,7 +116,6 @@ void Server::pipeWriteEvent(struct kevent *current_event)
   size_t file_write_offset;
   ssize_t write_byte;
 
-  LOG_DEBUG("🧪 PIPE WRITE EVENT 🧪");
   current_udata = static_cast<t_event_udata *>(current_event->udata);
   struct Request &current_request = *current_udata->m_request;
   possible_write_length = current_event->data;
@@ -132,7 +137,7 @@ void Server::pipeWriteEvent(struct kevent *current_event)
               file_write_length);
     if (write_byte == -1)
     {
-      Log::print(ERROR, "write error");
+      return;
     }
     else
     {

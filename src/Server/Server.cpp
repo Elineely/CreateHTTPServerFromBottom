@@ -125,10 +125,8 @@ void Server::start(void)
     {
       ft_error_exit(EXIT_FAILURE, strerror(errno));
     }
-    
+
     m_kqueue.change_list.clear();
-    std::cout << "cycle start --------------------------" << std::endl
-              << std::endl;
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
@@ -136,16 +134,9 @@ void Server::start(void)
 
       if (current_event->flags & EV_ERROR)
       {
-        printf("filter: %d ident: %d \n", current_event->filter,
-               current_event->ident);
-        // std::cout << "flag is EV_ERROR: " << current_event->ident << " " <<
-        // strerror(current_event->data) << std::endl; printf("ERROR POINTER IS
-        // %p\n", current_event->udata);
         continue;
       }
       event_status = getEventStatus(current_event, current_udata->m_type);
-      printf("filter: %d ident: %d  type:%d \n", current_event->filter,
-              current_event->ident, event_status);
       switch (event_status)
       {
         case SERVER_READ:
@@ -214,10 +205,6 @@ void Server::start(void)
         }
       }
     }
-    std::cout << std::endl
-              << "-------------------------- cycle END " << std::endl
-              << std::endl;
-
     if (m_close_fd_set.size() > 0)
     {
       clearUdata();
