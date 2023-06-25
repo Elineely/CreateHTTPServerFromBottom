@@ -217,7 +217,6 @@ void Server::start(void)
         }
       }
     }
-
     if (m_fd_set.size() > 0)
     {
       clearUdata();
