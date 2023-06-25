@@ -48,8 +48,7 @@ t_event_udata *Server::createUdata(e_event_type type,
     pipe 의 최대 버퍼 크기 제한이 있어서
     한 번에 데이터를 읽고 쓰는 것이 불가능 하기 때문입니다.
 */
-void Server::addCgiRequestEvent(struct kevent *current_event,
-                                t_event_udata *current_udata,
+void Server::addCgiRequestEvent(t_event_udata *current_udata,
                                 struct Request &request,
                                 struct Response &response)
 {
@@ -59,8 +58,7 @@ void Server::addCgiRequestEvent(struct kevent *current_event,
     current_udata->m_write_pipe_fd = response.write_pipe_fd;
     fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
     addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-                         current_udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   }
 
   current_udata->m_read_pipe_fd = response.read_pipe_fd;
@@ -93,25 +91,16 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   current_udata->m_type = CLIENT;
   current_udata->m_response_write.message = not_ok.generateResponseMessage();
   current_udata->m_response_write.offset = 0;
-  current_udata->m_response_write.length = current_udata->m_response_write.message.size();
+  current_udata->m_response_write.length =
+      current_udata->m_response_write.message.size();
 
+  for (size_t i = 0; i < current_udata->m_read_buffer.size(); ++i)
+  {
+    delete current_udata->m_read_buffer[i];
+  }
+  current_udata->m_read_buffer.clear();
 
   addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                        EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   Log::printRequestResult(current_udata);
-  for (size_t i = 0; i < current_udata->m_other_udata->m_read_buffer.size();
-       ++i)
-  {
-    delete current_udata->m_other_udata->m_read_buffer[i];
-  }
-  if (current_udata->m_write_udata != NULL)
-  {
-    ft_delete(&current_udata->m_write_udata->m_request);
-    ft_delete(&current_udata->m_write_udata->m_response);
-    ft_delete(&current_udata->m_write_udata);
-  }
-  ft_delete(&current_udata->m_other_udata->m_request);
-  ft_delete(&current_udata->m_other_udata->m_response);
-  ft_delete(&current_udata->m_other_udata);
-  ft_delete(&current_udata);
 }

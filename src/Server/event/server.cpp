@@ -14,13 +14,6 @@ void Server::serverReadEvent(struct kevent *current_event)
   t_event_udata *current_udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
-  // 서버 소켓 에러가 발생한 경우
-  if (current_event->flags & EV_ERROR)
-  {
-    disconnectSocket(current_event->ident);
-    ft_delete(&current_udata);
-    return;
-  }
 
   int client_sock;
   Request *request;
@@ -51,7 +44,6 @@ void Server::serverReadEvent(struct kevent *current_event)
     exit(EXIT_FAILURE);
   }
 
-  std::cout << "register client : " << client_sock << std::endl;
   addEventToChangeList(m_kqueue.change_list, client_sock, EVFILT_READ,
                        EV_ADD | EV_ENABLE, 0, 0, udata);
 }

@@ -9,9 +9,6 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
                                    struct Request &request,
                                    struct Response &response)
 {
-  Request *new_request;
-  Response *new_response;
-
   // GET, HEAD, DELETE
   if (response.static_read_file_fd != -1)
   {
@@ -23,7 +20,6 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
       close(response.static_read_file_fd);
       ResponseGenerator response_generator(request, response);
 
-      // addUdataContent(current_event->ident, current_udata);
       current_udata->m_response_write.message =
           response_generator.generateResponseMessage();
       current_udata->m_response_write.offset = 0;
@@ -86,10 +82,8 @@ void Server::staticFileReadEvent(struct kevent *current_event)
       current_udata->m_response->body.push_back(buf[idx]);
     }
   }
-  // std::cout << current_udata->m_response->body.size() << " "
-  //           << current_udata->m_response->static_read_file_size << std::endl;
   if (current_udata->m_response->body.size() ==
-      current_udata->m_response->static_read_file_size)
+      static_cast<size_t>(current_udata->m_response->static_read_file_size))
   {
     close(current_event->ident);
     Request *request = current_udata->m_request;
@@ -102,18 +96,15 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     current_udata->m_response_write.offset = 0;
     current_udata->m_response_write.length =
         current_udata->m_response_write.message.size();
-    // addUdataContent(current_udata->m_client_sock, current_udata);
 
     Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
                          EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
-    std::cout << "static file read event end" << std::endl;
   }
 }
 
 void Server::fileWriteEvent(struct kevent *current_event)
 {
-  std::cout << "in fileWrite" << std::endl;
   t_event_udata *current_udata;
   int possible_write_length;
   size_t request_body_size;

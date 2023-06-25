@@ -74,6 +74,7 @@ void Server::addServerSocketEvent(std::vector<t_multi_server> &servers,
       std::cout << e.what() << std::endl;
       exit(EXIT_FAILURE);
     }
+    addUdataMap(servers[i].server_sock, udata);
     addEventToChangeList(m_kqueue.change_list, servers[i].server_sock,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
   }
@@ -127,26 +128,17 @@ void Server::start(void)
     }
 
     m_kqueue.change_list.clear();
-    // std::cout << "cycle start --------------------------" << std::endl
-    //           << std::endl;
     for (int i = 0; i < current_events; ++i)
     {
       current_event = &m_kqueue.event_list[i];
       current_udata = static_cast<t_event_udata *>(current_event->udata);
 
-      // printf("filter: %d ident: %d \n", current_event->filter,
-            //  current_event->ident);
       if (current_event->flags & EV_ERROR)
       {
-        std::cout << "flag is EV_ERROR: " << current_event->ident << " "
-                  << strerror(current_event->data) << std::endl;
-        printf("ERROR POINTER IS %p\n", current_event->udata);
         m_fd_set.insert(current_event->ident);
-        // addUdataMap(current_event->ident, current_udata);
         continue;
       }
       event_status = getEventStatus(current_event, current_udata->m_type);
-      // printf("type:%d \n", event_status);
       switch (event_status)
       {
         case SERVER_READ:
@@ -215,76 +207,10 @@ void Server::start(void)
         }
       }
     }
-    // std::cout << std::endl
-    //           << "-------------------------- cycle END " << std::endl
-    //           << std::endl;
 
-    // if (m_close_fd_set.size() > 0)
-    // {
-    //   clearUdata();
-    // }
     if (m_fd_set.size() > 0)
     {
-      int fd;
-      std::set<int>::iterator it;
-      t_event_udata *udata;
-      std::map<int, std::set<t_event_udata *> >::iterator map_it;
-      std::set<t_event_udata *>::iterator udata_it;
-
-      it = m_fd_set.begin();
-      for (; it != m_fd_set.end(); ++it)
-      {
-        fd = *it;
-        map_it = m_udata_map.find(fd);
-        if (map_it == m_udata_map.end())
-        {
-          continue;
-        }
-        std::set<t_event_udata *> &udata_set = map_it->second;
-        udata_it = udata_set.begin();
-        for (; udata_it != udata_set.end(); ++udata_it)
-        {
-          udata = *udata_it;
-          printf("delete udata: %p\n", udata);
-          if (udata->m_read_buffer.size() > 0)
-          {
-            std::vector<char*>::iterator vec_it;
-
-            vec_it = udata->m_read_buffer.begin();
-            for (; vec_it != udata->m_read_buffer.end(); ++vec_it)
-            {
-              delete *vec_it;
-            }
-            udata->m_read_buffer.clear();
-          }
-          if (udata->m_request != NULL)
-          {
-            delete udata->m_request;
-          }
-          if (udata->m_response != NULL)
-          {
-            delete udata->m_response;
-          }
-          if (udata->m_child_pid != -1)
-          {
-            Log::print(INFO, "kill child pid: %d", udata->m_child_pid);
-            kill(udata->m_child_pid, SIGTERM);
-            waitpid(udata->m_child_pid, NULL, 0);
-          }
-          if (udata->m_read_pipe_fd != -1)
-          {
-            close(udata->m_read_pipe_fd);
-          }
-          if (udata->m_write_pipe_fd != -1)
-          {
-            close(udata->m_write_pipe_fd);
-          }
-          delete udata;
-        }
-        disconnectSocket(fd);
-        udata_set.clear();
-      }
-      m_fd_set.clear();
+      clearUdata();
     }
   }
   for (size_t i = 0; i < servers.size(); ++i)

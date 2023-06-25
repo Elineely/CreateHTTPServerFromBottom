@@ -42,7 +42,7 @@
 // Server 세팅
 #define BUF_SIZE 650000
 #define MAX_EVENT_LIST_SIZE 1000
-#define DEFAULT_TIMEOUT_SECOND 3600
+#define DEFAULT_TIMEOUT_SECOND 2
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
 #define BACK_LOG SOMAXCONN
@@ -178,14 +178,9 @@ class Server
 {
  private:
   std::vector<t_multi_server> servers;
-  std::map<int, std::vector<t_event_udata *> > m_close_udata_map;
-  std::set<int> m_close_fd_set;
-
-  // joonhan
   std::set<int> m_fd_set;
   std::map<int, std::set<t_event_udata *> > m_udata_map;
-  // joonhan
-  
+
   t_kqueue m_kqueue;
   Server();
 
@@ -219,10 +214,6 @@ class Server
   void pipeWriteEvent(struct kevent *current_event);
   void pipeEOFevent(struct kevent *current_event);
   void cgiProcessTimeoutEvent(struct kevent *current_event);
-  void clearUdata();
-  void clearUdataContent(int fd, t_event_udata *udata);
-  void addUdataContent(int fd, t_event_udata *udata);
-  void addCloseFdSet(int fd);
 
   void disconnectSocket(int socket);
   void addServerSocketEvent(std::vector<t_multi_server> &servers,
@@ -232,8 +223,7 @@ class Server
   void serverReadEvent(struct kevent *current_event);
   void readClientSocketBuffer(struct kevent *current_event,
                               t_event_udata *current_udata);
-  void addCgiRequestEvent(struct kevent *current_event,
-                          t_event_udata *current_udata, struct Request &request,
+  void addCgiRequestEvent(t_event_udata *current_udata, struct Request &request,
                           struct Response &response);
   void addStaticRequestEvent(struct kevent *current_event,
                              t_event_udata *current_udata,
@@ -248,8 +238,9 @@ class Server
   // write.cpp
   void staticFileWriteEvent(struct kevent *current_event);
 
-  void addUdataMap(int fd, t_event_udata* udata);
-  void removeUdata(int fd, t_event_udata* udata);
+  void addUdataMap(int fd, t_event_udata *udata);
+  void removeUdata(int fd, t_event_udata *udata);
+  void clearUdata(void);
 };
 
 #endif
