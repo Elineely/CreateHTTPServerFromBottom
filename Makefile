@@ -78,7 +78,7 @@ SRCS					:=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJ_DIR					:=	obj/
 OBJS					:=	$(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
-# CXXFLAGS				:=	-Wall -Werror -Wextra -std=c++98 -pedantic
+CXXFLAGS				:=	-Wall -Werror -Wextra -std=c++98 -pedantic
 
 ifdef DEBUG_MODE
 	CXXFLAGS			:=	$(CXXFLAGS) -g3
