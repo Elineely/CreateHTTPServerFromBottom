@@ -36,7 +36,6 @@ class PathFinder
                 std::string root_path, Response& response_data);
   void setMaxSize(Request request_data, std::string max_body_size);
   void checkMaxSize(Request request_data, long max_body_size);
-  void setErrorPage(t_server server_data, Response& response_data);
 
   // functions for abstraction
   bool isRootBlock(std::string locationBlock, t_server& server_data,

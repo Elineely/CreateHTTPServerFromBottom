@@ -365,16 +365,6 @@ void PathFinder::manySlashesInUri(std::string locationBlock,
                          response_data);
 }
 
-void PathFinder::setErrorPage(t_server server_data, Response& response_data)
-{
-  if (server_data.error_page.size() == 0)
-  {
-    response_data.error_keyword = false;
-    return;
-  }
-  response_data.error_keyword = true;
-}
-
 PathFinder::PathFinder(Request& request_data, t_server& server_data,
                        Response& response_data)
 {
