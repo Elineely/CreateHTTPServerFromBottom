@@ -8,8 +8,8 @@ cgitb.enable()
 
 upload_dir = './data/upload/'
 
-while True:
-    print()
+# while True:
+#     print()
 
 form = cgi.FieldStorage()
 
