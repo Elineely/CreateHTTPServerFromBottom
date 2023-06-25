@@ -42,7 +42,7 @@
 // Server 세팅
 #define BUF_SIZE 650000
 #define MAX_EVENT_LIST_SIZE 1000
-#define DEFAULT_TIMEOUT_SECOND 2
+#define DEFAULT_TIMEOUT_SECOND 3600
 
 // 한 소켓에 최대로 기다릴 수 있는 요청의 수
 #define BACK_LOG SOMAXCONN
