@@ -9,106 +9,58 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
                                    struct Request &request,
                                    struct Response &response)
 {
-  Request *new_request;
-  Response *new_response;
-
   // GET, HEAD, DELETE
   if (response.static_read_file_fd != -1)
   {
     off_t file_size;
-    t_event_udata *udata;
 
     file_size = lseek(response.static_read_file_fd, 0, SEEK_END);
     if (file_size == 0)
     {
       close(response.static_read_file_fd);
-      Request *current_request = current_udata->m_request;
-      Response *current_response = current_udata->m_response;
-      ResponseGenerator response_generator(*current_request, *current_response);
+      ResponseGenerator response_generator(request, response);
 
-      try
-      {
-        udata = new t_event_udata(CLIENT);
-
-        addUdataContent(current_event->ident, udata);
-      }
-      catch (const std::exception &e)
-      {
-        std::cout << e.what() << std::endl;
-        exit(EXIT_FAILURE);
-      }
-      udata->m_response_write.message =
+      current_udata->m_response_write.message =
           response_generator.generateResponseMessage();
-      udata->m_response_write.offset = 0;
-      udata->m_response_write.length = udata->m_response_write.message.size();
-      Log::printRequestResult(current_udata);
+      current_udata->m_response_write.offset = 0;
+      current_udata->m_response_write.length =
+          current_udata->m_response_write.message.size();
       addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
+                           current_udata);
+      Log::printRequestResult(current_udata);
       return;
     }
 
     lseek(response.static_read_file_fd, 0, SEEK_SET);
     response.static_read_file_size = file_size;
-    try
-    {
-      new_request = new Request(request);
-      new_response = new Response(response);
-      udata = new t_event_udata(STATIC_FILE, new_request, new_response);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_client_sock = current_event->ident;
+    response.body.reserve(file_size);
+    current_udata->m_type = STATIC_FILE;
     addEventToChangeList(m_kqueue.change_list, response.static_read_file_fd,
-                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   }
   // POST, PUT
   else if (response.static_write_file_fd != -1)
   {
-    t_event_udata *udata;
-
-    try
-    {
-      new_request = new Request(request);
-      new_response = new Response(response);
-      udata = new t_event_udata(STATIC_FILE, new_request, new_response);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_client_sock = current_event->ident;
+    current_udata->m_type = STATIC_FILE;
     addEventToChangeList(m_kqueue.change_list, response.static_write_file_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   }
   // auto_index
   else
   {
     ResponseGenerator response_generator(request, response);
-    std::vector<char> response_message;
-    t_event_udata *udata;
 
-    response_message = response_generator.generateResponseMessage();
-    try
-    {
-      udata = new t_event_udata(CLIENT);
-      addUdataContent(current_event->ident, udata);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_response_write.message = response_message;
-    udata->m_response_write.offset = 0;
-    udata->m_response_write.length = response_message.size();
+    current_udata->m_type = CLIENT;
+    current_udata->m_response_write.message =
+        response_generator.generateResponseMessage();
+    current_udata->m_response_write.offset = 0;
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
 
-    Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
+    Log::printRequestResult(current_udata);
   }
 }
 
@@ -122,7 +74,8 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   read_byte = read(current_event->ident, buf, BUF_SIZE);
   if (read_byte == -1)
   {
-    ft_error_exit(EXIT_FAILURE, "static file read failed");
+    m_fd_set.insert(current_udata->m_client_sock);
+    return;
   }
   else if (read_byte > 0)
   {
@@ -132,34 +85,24 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     }
   }
   if (current_udata->m_response->body.size() ==
-      current_udata->m_response->static_read_file_size)
+      static_cast<size_t>(current_udata->m_response->static_read_file_size))
   {
     close(current_event->ident);
-    t_event_udata *udata;
     Request *request = current_udata->m_request;
     Response *response = current_udata->m_response;
     ResponseGenerator response_generator(*request, *response);
-    try
-    {
-      udata = new t_event_udata(CLIENT);
-      addUdataContent(current_udata->m_client_sock, udata);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_response_write.message =
+
+    current_udata->m_response->static_read_file_fd = -1;
+    current_udata->m_type = CLIENT;
+    current_udata->m_response_write.message =
         response_generator.generateResponseMessage();
-    udata->m_response_write.offset = 0;
-    udata->m_response_write.length = udata->m_response_write.message.size();
+    current_udata->m_response_write.offset = 0;
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
 
     Log::printRequestResult(current_udata);
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   }
 }
 
@@ -186,9 +129,8 @@ void Server::fileWriteEvent(struct kevent *current_event)
               file_write_length);
     if (write_byte == -1)
     {
-      ft_delete(&current_udata->m_request);
-      ft_delete(&current_udata->m_response);
-      ft_delete(&current_udata);
+      m_fd_set.insert(current_udata->m_client_sock);
+      Log::print(ERROR, "write error");
       return;
     }
     else
@@ -201,29 +143,17 @@ void Server::fileWriteEvent(struct kevent *current_event)
   {
     ResponseGenerator response_generator(*current_udata->m_request,
                                          *current_udata->m_response);
-    std::vector<char> response_message;
-    t_event_udata *udata;
-    response_message = response_generator.generateResponseMessage();
-    try
-    {
-      udata = new t_event_udata(CLIENT);
-      addUdataContent(current_udata->m_client_sock, udata);
-    }
-    catch (const std::exception &e)
-    {
-      std::cout << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    udata->m_response_write.message = response_message;
-    udata->m_response_write.offset = 0;
-    udata->m_response_write.length = response_message.size();
+    current_udata->m_type = CLIENT;
+    current_udata->m_response->static_write_file_fd = -1;
+    current_udata->m_response_write.message =
+        response_generator.generateResponseMessage();
+    current_udata->m_response_write.offset = 0;
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
 
     addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
     Log::printRequestResult(current_udata);
     close(current_event->ident);
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
   }
 }

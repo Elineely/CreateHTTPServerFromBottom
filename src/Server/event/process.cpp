@@ -48,45 +48,27 @@ t_event_udata *Server::createUdata(e_event_type type,
     pipe 의 최대 버퍼 크기 제한이 있어서
     한 번에 데이터를 읽고 쓰는 것이 불가능 하기 때문입니다.
 */
-void Server::addCgiRequestEvent(struct kevent *current_event,
-                                t_event_udata *current_udata,
+void Server::addCgiRequestEvent(t_event_udata *current_udata,
                                 struct Request &request,
                                 struct Response &response)
 {
-  t_event_udata *read_pipe_udata = NULL;
-  t_event_udata *timeout_udata = NULL;
-  t_event_udata *write_pipe_udata = NULL;
-
+  current_udata->m_type = PIPE;
   if (request.method == "POST")
   {
-    struct Response new_response;
-
-    write_pipe_udata =
-        createUdata(PIPE, current_event, current_udata, new_response);
-
+    current_udata->m_write_pipe_fd = response.write_pipe_fd;
     fcntl(response.write_pipe_fd, F_SETFL, O_NONBLOCK);
     addEventToChangeList(m_kqueue.change_list, response.write_pipe_fd,
-                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0,
-                         write_pipe_udata);
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
   }
 
-  read_pipe_udata = createUdata(PIPE, current_event, current_udata, response);
-  timeout_udata = createUdata(PROCESS, current_event, current_udata, response);
-
-  read_pipe_udata->m_other_udata = timeout_udata;
-  read_pipe_udata->m_write_udata = write_pipe_udata;
-  read_pipe_udata->m_child_pid = response.cgi_child_pid;
-  timeout_udata->m_other_udata = read_pipe_udata;
-  timeout_udata->m_write_udata = write_pipe_udata;
-
+  current_udata->m_read_pipe_fd = response.read_pipe_fd;
   current_udata->m_child_pid = response.cgi_child_pid;
-
   fcntl(response.read_pipe_fd, F_SETFL, O_NONBLOCK);
   addEventToChangeList(m_kqueue.change_list, response.read_pipe_fd, EVFILT_READ,
-                       EV_ADD | EV_ENABLE, 0, 0, read_pipe_udata);
+                       EV_ADD | EV_ENABLE, 0, 0, current_udata);
   addEventToChangeList(m_kqueue.change_list, response.cgi_child_pid,
                        EVFILT_TIMER, EV_ADD | EV_ONESHOT, NOTE_SECONDS,
-                       DEFAULT_TIMEOUT_SECOND, timeout_udata);
+                       DEFAULT_TIMEOUT_SECOND, current_udata);
   return;
 }
 
@@ -94,7 +76,6 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
 {
   std::vector<char> response_message;
   t_event_udata *current_udata;
-  t_event_udata *udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
 
@@ -106,39 +87,21 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
   current_udata->m_response->is_cgi_timeout = true;
   ResponseGenerator not_ok(*current_udata->m_request,
                            *current_udata->m_response);
-  response_message = not_ok.generateResponseMessage();
-  try
-  {
-    udata = new t_event_udata(CLIENT, current_udata->m_request,
-                              current_udata->m_response);
-    addUdataContent(current_udata->m_client_sock, udata);
-  }
-  catch (const std::exception &e)
-  {
-    std::cout << e.what() << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  udata->m_response_write.message = response_message;
-  udata->m_response_write.offset = 0;
-  udata->m_response_write.length = response_message.size();
 
-  Log::printRequestResult(current_udata);
+  current_udata->m_type = CLIENT;
+  current_udata->m_child_pid = -1;
+  current_udata->m_response_write.message = not_ok.generateResponseMessage();
+  current_udata->m_response_write.offset = 0;
+  current_udata->m_response_write.length =
+      current_udata->m_response_write.message.size();
+
+  for (size_t i = 0; i < current_udata->m_read_buffer.size(); ++i)
+  {
+    delete current_udata->m_read_buffer[i];
+  }
+  current_udata->m_read_buffer.clear();
 
   addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                       EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-  for (size_t i = 0; i < current_udata->m_other_udata->m_read_buffer.size();
-       ++i)
-  {
-    delete current_udata->m_other_udata->m_read_buffer[i];
-  }
-  if (current_udata->m_write_udata != NULL)
-  {
-    ft_delete(&current_udata->m_write_udata->m_request);
-    ft_delete(&current_udata->m_write_udata->m_response);
-    ft_delete(&current_udata->m_write_udata);
-  }
-  ft_delete(&current_udata->m_other_udata->m_request);
-  ft_delete(&current_udata->m_other_udata->m_response);
-  ft_delete(&current_udata->m_other_udata);
-  ft_delete(&current_udata);
+                       EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
+  Log::printRequestResult(current_udata);
 }

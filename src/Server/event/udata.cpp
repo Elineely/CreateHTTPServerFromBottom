@@ -1,70 +1,102 @@
 #include "Server.hpp"
 
-void Server::addCloseFdSet(int fd)
+void Server::addUdataMap(int fd, t_event_udata *udata)
 {
-  if (m_close_udata_map.find(fd) == m_close_udata_map.end())
+  if (m_udata_map.find(fd) == m_udata_map.end())
   {
-    std::vector<t_event_udata *> vec;
-    m_close_udata_map.insert(std::make_pair(fd, vec));
+    std::set<t_event_udata *> udata_set;
+
+    m_udata_map.insert(std::make_pair(fd, udata_set));
   }
+  std::map<int, std::set<t_event_udata *> >::iterator it;
+
+  it = m_udata_map.find(fd);
+  it->second.insert(udata);
 }
 
-void Server::addUdataContent(int fd, t_event_udata *udata)
+void Server::removeUdata(int fd, t_event_udata *udata)
 {
-  std::map<int, std::vector<t_event_udata *> >::iterator it;
+  std::map<int, std::set<t_event_udata *> >::iterator it;
 
-  if (m_close_udata_map.find(fd) == m_close_udata_map.end())
+  it = m_udata_map.find(fd);
+  if (it == m_udata_map.end())
   {
-    std::vector<t_event_udata *> vec;
-    m_close_udata_map.insert(std::make_pair(fd, vec));
+    return;
   }
-  it = m_close_udata_map.find(fd);
-  if (it != m_close_udata_map.end())
+  std::set<t_event_udata *> &udata_set = it->second;
+  std::set<t_event_udata *>::iterator udata_it;
+
+  udata_it = udata_set.find(udata);
+  if (udata_it == udata_set.end())
   {
-    it->second.push_back(udata);
+    return;
   }
+
+  udata_set.erase(udata_it);
 }
 
-void Server::clearUdataContent(int fd, t_event_udata *udata)
+void Server::clearUdata(void)
 {
-  std::map<int, std::vector<t_event_udata *> >::iterator it;
-  it = m_close_udata_map.find(fd);
-  if (it != m_close_udata_map.end())
-  {
-    for (size_t i = 0; i < it->second.size(); ++i)
-    {
-      if (it->second[i] == udata)
-      {
-        it->second[i] = NULL;
-      }
-    }
-  }
-}
+  int fd;
+  std::set<int>::iterator it;
+  t_event_udata *udata;
+  std::map<int, std::set<t_event_udata *> >::iterator map_it;
+  std::set<t_event_udata *>::iterator udata_it;
 
-void Server::clearUdata()
-{
-  for (std::set<int>::iterator i = m_close_fd_set.begin();
-       i != m_close_fd_set.end(); ++i)
+  it = m_fd_set.begin();
+  for (; it != m_fd_set.end(); ++it)
   {
-    std::map<int, std::vector<t_event_udata *> >::iterator it;
-    it = m_close_udata_map.find(*i);
-    if (it == m_close_udata_map.end())
+    fd = *it;
+    map_it = m_udata_map.find(fd);
+    if (map_it == m_udata_map.end())
     {
       continue;
     }
-
-    for (size_t j = 0; j < it->second.size(); ++j)
+    std::set<t_event_udata *> &udata_set = map_it->second;
+    udata_it = udata_set.begin();
+    for (; udata_it != udata_set.end(); ++udata_it)
     {
-      if (it->second[j] != NULL)
+      udata = *udata_it;
+      if (udata->m_read_buffer.size() > 0)
       {
-        delete it->second[j];
-        addEventToChangeList(m_kqueue.change_list, *i, EVFILT_WRITE, EV_DELETE,
-                             0, 0, NULL);
+        std::vector<char *>::iterator vec_it;
+
+        vec_it = udata->m_read_buffer.begin();
+        for (; vec_it != udata->m_read_buffer.end(); ++vec_it)
+        {
+          delete *vec_it;
+        }
+        udata->m_read_buffer.clear();
       }
+      if (udata->m_response->static_read_file_fd != -1)
+      {
+        close(udata->m_response->static_read_file_fd);
+      }
+      if (udata->m_child_pid != -1)
+      {
+        Log::print(INFO, "kill child pid: %d", udata->m_child_pid);
+        kill(udata->m_child_pid, SIGTERM);
+        waitpid(udata->m_child_pid, NULL, 0);
+        addEventToChangeList(m_kqueue.change_list, udata->m_child_pid,
+                             EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+      }
+      if (udata->m_read_pipe_fd != -1)
+      {
+        close(udata->m_read_pipe_fd);
+      }
+      if (udata->m_write_pipe_fd != -1)
+      {
+        close(udata->m_write_pipe_fd);
+      }
+      // std::cout << fd << " : fd ";
+
+      // printf("delete %p\n", udata);
+      ft_delete(&udata->m_request);
+      ft_delete(&udata->m_response);
+      ft_delete(&udata);
     }
-    it->second.clear();
-    m_close_udata_map.erase(it);
-    disconnectSocket(*i);
+    disconnectSocket(fd);
+    udata_set.clear();
   }
-  m_close_fd_set.clear();
+  m_fd_set.clear();
 }

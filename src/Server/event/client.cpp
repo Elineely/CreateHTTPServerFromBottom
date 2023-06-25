@@ -16,19 +16,9 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   char buff[BUF_SIZE];
 
   recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
-  if (recv_size == -1)
+  if (recv_size == 0 || recv_size == -1)
   {
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
-    m_close_fd_set.insert(current_event->ident);
-  }
-  else if (recv_size == 0)
-  {
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
-    m_close_fd_set.insert(current_event->ident);
+    m_fd_set.insert(current_event->ident);
     return;
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
@@ -51,20 +41,15 @@ void Server::clientReadEvent(struct kevent *current_event)
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
 
-  addCloseFdSet(current_event->ident);
   if (current_event->flags & EV_EOF)
   {
     Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥",
                current_event->ident);
-    if (current_udata->m_child_pid != -1)
-    {
-      Log::print(INFO, "kill child pid: %d", current_udata->m_child_pid);
-      kill(current_udata->m_child_pid, SIGTERM);
-    }
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
-    m_close_fd_set.insert(current_event->ident);
+    // std::cout << current_event->ident << "cleint boom delete register "
+    //           << std::endl;
+    m_fd_set.insert(current_event->ident);
+    addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                         EVFILT_READ, EV_DELETE, 0, 0, NULL);
     return;
   }
 
@@ -78,32 +63,36 @@ void Server::clientReadEvent(struct kevent *current_event)
   struct Response &response = *current_udata->m_response;
   ServerFinder server_finder(request, current_udata->m_servers);
   HttpProcessor http_processor(request, response, server_finder.get_server());
-  Parser new_parser;
 
   // cgi 분기 확인
   if (response.cgi_flag == true)
   {
-    addCgiRequestEvent(current_event, current_udata, request, response);
+    addCgiRequestEvent(current_udata, request, response);
   }
   else
   {
     addStaticRequestEvent(current_event, current_udata, request, response);
   }
 
-  ft_delete(&current_udata->m_request);
-  ft_delete(&current_udata->m_response);
-
   try
   {
-    current_udata->m_request = new Request();
-    current_udata->m_response = new Response();
+    t_event_udata *new_udata;
+
+    new_udata = new t_event_udata(CLIENT, current_udata->m_servers);
+    new_udata->m_request = new Request();
+    new_udata->m_response = new Response();
+    new_udata->m_client_sock = current_event->ident;
+    addUdataMap(current_event->ident, new_udata);
+    // printf("new udata fd: %d  new udata : %p \n", current_event->ident,
+    //        new_udata);
+    addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                         EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, new_udata);
   }
   catch (const std::exception &e)
   {
     std::cout << e.what() << std::endl;
     exit(EXIT_FAILURE);
   }
-  current_udata->m_parser = new_parser;
 }
 
 /*
@@ -123,25 +112,19 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
   if (current_event->flags & EV_EOF)
   {
-    addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                         EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    clearUdataContent(current_event->ident, current_udata);
-    ft_delete(&(current_udata->m_request));
-    ft_delete(&(current_udata->m_response));
-    ft_delete(&current_udata);
+    // std::cout << current_event->ident << " write eof delete register "
+    //           << std::endl;
+    m_fd_set.insert(current_event->ident);
     return;
   }
   send_byte = write(current_event->ident, message + response_write->offset,
                     response_write->length - response_write->offset);
-
   if (send_byte == -1)
   {
-    addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                         EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    clearUdataContent(current_event->ident, current_udata);
-    ft_delete(&(current_udata->m_request));
-    ft_delete(&(current_udata->m_response));
-    ft_delete(&current_udata);
+    // std::cout << current_event->ident << " write -1  delete register "
+    //           << std::endl;
+    Log::print(ERROR, "write error");
+    m_fd_set.insert(current_event->ident);
     return;
   }
   response_write->offset += send_byte;
@@ -149,9 +132,10 @@ void Server::clientWriteEvent(struct kevent *current_event)
   {
     return;
   }
+
   addEventToChangeList(m_kqueue.change_list, current_event->ident, EVFILT_WRITE,
                        EV_DELETE, 0, 0, NULL);
-  clearUdataContent(current_event->ident, current_udata);
+  removeUdata(current_event->ident, current_udata);
   ft_delete(&(current_udata->m_request));
   ft_delete(&(current_udata->m_response));
   ft_delete(&current_udata);

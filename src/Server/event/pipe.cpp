@@ -16,20 +16,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
 
   if (read_byte == -1)
   {
-    close(current_udata->m_write_pipe_fd);
-    close(current_event->ident);
-    if (current_udata->m_write_udata != NULL)
-    {
-      ft_delete(&current_udata->m_write_udata->m_request);
-      ft_delete(&current_udata->m_write_udata->m_response);
-      ft_delete(&current_udata->m_write_udata);
-    }
-    ft_delete(&(current_udata->m_other_udata->m_request));
-    ft_delete(&(current_udata->m_other_udata->m_response));
-    ft_delete(&(current_udata->m_other_udata));
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
+    m_fd_set.insert(current_udata->m_client_sock);
   }
   else if (read_byte > 0)
   {
@@ -63,47 +50,30 @@ void Server::pipeReadEvent(struct kevent *current_event)
       }
       delete current_udata->m_read_buffer[i];
     }
+    current_udata->m_read_buffer.clear();
+    if (WIFSIGNALED(status))
+    {
+      m_fd_set.insert(current_udata->m_client_sock);
+      return;
+    }
+    ResponseGenerator ok(*current_udata->m_request, *current_udata->m_response);
     close(current_udata->m_write_pipe_fd);
     close(current_event->ident);
-    if (!WIFSIGNALED(status))
-    {
-      ResponseGenerator ok(*current_udata->m_request,
-                           *current_udata->m_response);
-      t_event_udata *udata;
-      try
-      {
-        udata = new t_event_udata(CLIENT);
-        addUdataContent(current_udata->m_client_sock, udata);
-      }
-      catch (const std::exception &e)
-      {
-        std::cout << e.what() << std::endl;
-        exit(EXIT_FAILURE);
-      }
-      udata->m_response_write.message = ok.generateResponseMessage();
-      udata->m_response_write.offset = 0;
-      udata->m_response_write.length = udata->m_response_write.message.size();
 
-      addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
-                           EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, udata);
-      addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
-                           EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-      addEventToChangeList(m_kqueue.change_list, current_event->ident,
-                           EVFILT_READ, EV_DELETE, 0, 0, NULL);
-      Log::printRequestResult(current_udata);
-    }
-    if (current_udata->m_write_udata != NULL)
-    {
-      ft_delete(&current_udata->m_write_udata->m_request);
-      ft_delete(&current_udata->m_write_udata->m_response);
-      ft_delete(&current_udata->m_write_udata);
-    }
-    ft_delete(&(current_udata->m_other_udata->m_request));
-    ft_delete(&(current_udata->m_other_udata->m_response));
-    ft_delete(&(current_udata->m_other_udata));
-    ft_delete(&current_udata->m_request);
-    ft_delete(&current_udata->m_response);
-    ft_delete(&current_udata);
+    current_udata->m_write_pipe_fd = -1;
+    current_udata->m_read_pipe_fd = -1;
+    current_udata->m_type = CLIENT;
+    current_udata->m_response_write.message = ok.generateResponseMessage();
+    current_udata->m_response_write.offset = 0;
+    current_udata->m_response_write.length =
+        current_udata->m_response_write.message.size();
+
+    addEventToChangeList(m_kqueue.change_list, current_udata->m_client_sock,
+                         EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, current_udata);
+    addEventToChangeList(m_kqueue.change_list, current_udata->m_child_pid,
+                         EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
+    current_udata->m_child_pid = -1;
+    Log::printRequestResult(current_udata);
   }
 }
 
@@ -137,6 +107,8 @@ void Server::pipeWriteEvent(struct kevent *current_event)
               file_write_length);
     if (write_byte == -1)
     {
+      m_fd_set.insert(current_udata->m_client_sock);
+      Log::print(ERROR, "write error");
       return;
     }
     else
@@ -148,5 +120,6 @@ void Server::pipeWriteEvent(struct kevent *current_event)
   if (current_udata->m_file_write_offset == request_body_size)
   {
     close(current_event->ident);
+    current_udata->m_write_pipe_fd = -1;
   }
 }

@@ -14,13 +14,6 @@ void Server::serverReadEvent(struct kevent *current_event)
   t_event_udata *current_udata;
 
   current_udata = static_cast<t_event_udata *>(current_event->udata);
-  // 서버 소켓 에러가 발생한 경우
-  if (current_event->flags & EV_ERROR)
-  {
-    disconnectSocket(current_event->ident);
-    ft_delete(&current_udata);
-    return;
-  }
 
   int client_sock;
   Request *request;
@@ -42,6 +35,8 @@ void Server::serverReadEvent(struct kevent *current_event)
 
     udata =
         new t_event_udata(CLIENT, current_udata->m_servers, request, response);
+    udata->m_client_sock = client_sock;
+    addUdataMap(client_sock, udata);
   }
   catch (std::exception &e)
   {
