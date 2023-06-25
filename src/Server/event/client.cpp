@@ -18,7 +18,6 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
   if (recv_size == 0 || recv_size == -1)
   {
-    // std::cout << current_event->ident << "rec  delete register " << std::endl;
     m_fd_set.insert(current_event->ident);
     return;
   }
@@ -124,6 +123,7 @@ void Server::clientWriteEvent(struct kevent *current_event)
   {
     // std::cout << current_event->ident << " write -1  delete register "
     //           << std::endl;
+    Log::print(ERROR, "write error");
     m_fd_set.insert(current_event->ident);
     return;
   }
