@@ -146,10 +146,7 @@ void PathFinder::setMaxSize(Request request_data, std::string max_body_size)
 
 void PathFinder::checkMaxSize(Request request_data, long max_body_size)
 {
-  if (max_body_size < 0)
-  {
-    throw BAD_REQUEST_400;
-  }
+
   if (static_cast<long>(request_data.body.size()) > max_body_size)
   {
     throw PAYLOAD_TOO_LARGE_413;

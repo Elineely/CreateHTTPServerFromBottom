@@ -11,6 +11,11 @@ void Server::setSocket(std::vector<t_multi_server>& servers)
     Log::print(INFO, "Server port number: %d (socket fd: %d)", servers[i].server_port,
              servers[i].server_sock);
 
+    if (servers[i].server_port <= 0)
+    {
+      ft_error_exit(1, strerror(errno));
+    }
+
     if (servers[i].server_sock == -1)
     {
       ft_error_exit(1, strerror(errno));
