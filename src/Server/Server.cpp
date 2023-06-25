@@ -130,18 +130,28 @@ void Server::start(void)
     m_kqueue.change_list.clear();
     for (int i = 0; i < current_events; ++i)
     {
+      // printf("\n cycle start ------------------ \n");
       current_event = &m_kqueue.event_list[i];
       current_udata = static_cast<t_event_udata *>(current_event->udata);
 
+      // printf("ident: %d / filter: %d / flags: %d udata: %p\n",
+      //        current_event->ident, current_event->filter, current_event->flags,
+      //        current_udata);
       if (current_event->flags & EV_ERROR)
       {
+        // std::cout << current_event->ident << "server delete register "
+        //           << std::endl;
+        if (m_fd_set.find(current_event->ident) == m_fd_set.end())
+        {
+          continue;
+        }
         m_fd_set.insert(current_event->ident);
         continue;
       }
       event_status = getEventStatus(current_event, current_udata->m_type);
       switch (event_status)
       {
-        case SERVER_READ:
+      case SERVER_READ:
         {
           serverReadEvent(current_event);
           break;
@@ -212,6 +222,7 @@ void Server::start(void)
     {
       clearUdata();
     }
+    // printf(" ------------------  cycle end \n\n");
   }
   for (size_t i = 0; i < servers.size(); ++i)
   {

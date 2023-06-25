@@ -18,6 +18,7 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
   recv_size = recv(current_event->ident, buff, sizeof(buff), 0);
   if (recv_size == 0 || recv_size == -1)
   {
+    // std::cout << current_event->ident << "rec  delete register " << std::endl;
     m_fd_set.insert(current_event->ident);
     return;
   }
@@ -45,8 +46,11 @@ void Server::clientReadEvent(struct kevent *current_event)
   {
     Log::print(INFO, "💥 Client socket(fd: %d) will be close 💥",
                current_event->ident);
+    // std::cout << current_event->ident << "cleint boom delete register "
+    //           << std::endl;
     m_fd_set.insert(current_event->ident);
-    addUdataMap(current_event->ident, current_udata);
+    addEventToChangeList(m_kqueue.change_list, current_event->ident,
+                         EVFILT_READ, EV_DELETE, 0, 0, NULL);
     return;
   }
 
@@ -80,6 +84,8 @@ void Server::clientReadEvent(struct kevent *current_event)
     new_udata->m_response = new Response();
     new_udata->m_client_sock = current_event->ident;
     addUdataMap(current_event->ident, new_udata);
+    // printf("new udata fd: %d  new udata : %p \n", current_event->ident,
+    //        new_udata);
     addEventToChangeList(m_kqueue.change_list, current_event->ident,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, new_udata);
   }
@@ -107,6 +113,8 @@ void Server::clientWriteEvent(struct kevent *current_event)
 
   if (current_event->flags & EV_EOF)
   {
+    // std::cout << current_event->ident << " write eof delete register "
+    //           << std::endl;
     m_fd_set.insert(current_event->ident);
     return;
   }
@@ -114,6 +122,8 @@ void Server::clientWriteEvent(struct kevent *current_event)
                     response_write->length - response_write->offset);
   if (send_byte == -1)
   {
+    // std::cout << current_event->ident << " write -1  delete register "
+    //           << std::endl;
     m_fd_set.insert(current_event->ident);
     return;
   }

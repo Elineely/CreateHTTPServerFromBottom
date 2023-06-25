@@ -90,6 +90,7 @@ void Server::staticFileReadEvent(struct kevent *current_event)
     Response *response = current_udata->m_response;
     ResponseGenerator response_generator(*request, *response);
 
+    current_udata->m_response->static_read_file_fd = -1;
     current_udata->m_type = CLIENT;
     current_udata->m_response_write.message =
         response_generator.generateResponseMessage();
@@ -139,6 +140,7 @@ void Server::fileWriteEvent(struct kevent *current_event)
     ResponseGenerator response_generator(*current_udata->m_request,
                                          *current_udata->m_response);
     current_udata->m_type = CLIENT;
+    current_udata->m_response->static_write_file_fd = -1;
     current_udata->m_response_write.message =
         response_generator.generateResponseMessage();
     current_udata->m_response_write.offset = 0;

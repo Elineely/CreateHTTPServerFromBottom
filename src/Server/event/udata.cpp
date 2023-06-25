@@ -68,9 +68,10 @@ void Server::clearUdata(void)
         }
         udata->m_read_buffer.clear();
       }
-
-      ft_delete(&udata->m_request);
-      ft_delete(&udata->m_response);
+      if (udata->m_response->static_read_file_fd != -1)
+      {
+        close(udata->m_response->static_read_file_fd);
+      }
       if (udata->m_child_pid != -1)
       {
         Log::print(INFO, "kill child pid: %d", udata->m_child_pid);
@@ -85,6 +86,11 @@ void Server::clearUdata(void)
       {
         close(udata->m_write_pipe_fd);
       }
+      // std::cout << fd << " : fd ";
+
+      // printf("delete %p\n", udata);
+      ft_delete(&udata->m_request);
+      ft_delete(&udata->m_response);
       ft_delete(&udata);
     }
     disconnectSocket(fd);
