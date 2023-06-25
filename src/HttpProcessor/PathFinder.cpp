@@ -71,7 +71,7 @@ void PathFinder::setAutoIndex(std::string auto_index, Response& response_data)
 }
 
 bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
-                        Response& response_data)
+                        Response& response_data, Request& request_data)
 {
   std::size_t pos_dot = locationBlock.find_last_of(".");
   if (pos_dot == std::string::npos) return (false);  // uri 내부 .이 없는 경우
@@ -97,6 +97,7 @@ bool PathFinder::setCgi(std::string locationBlock, t_server server_data,
                             // 경로가 디렉토리일 경우 error
   else
   {  // cgi 일때 response 값 설정
+    setMaxSize(request_data, current_location.max_body_size);
     response_data.cgi_flag = true;
     response_data.cgi_bin_path = current_location.ourcgi_pass;
     response_data.root_path = current_location.root;
@@ -178,9 +179,9 @@ bool PathFinder::isRootBlock(std::string locationBlock, t_server& server_data,
 }
 
 bool PathFinder::isCgiBlock(std::string locationBlock, t_server& server_data,
-                            Response& response_data)
+                            Response& response_data, Request& request_data)
 {
-  if (setCgi((locationBlock), server_data, response_data))
+  if (setCgi((locationBlock), server_data, response_data, request_data))
   {
     return true;
   }
@@ -383,7 +384,7 @@ PathFinder::PathFinder(Request& request_data, t_server& server_data,
 
   if (isRootBlock(locationBlock, server_data, response_data, request_data))
     return;
-  if (isCgiBlock(locationBlock, server_data, response_data)) return;
+  if (isCgiBlock(locationBlock, server_data, response_data, request_data)) return;
 
   std::size_t pos_last = (locationBlock).rfind("/");
   if (pos_last == 0)
