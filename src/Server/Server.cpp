@@ -134,7 +134,17 @@ void Server::start(void)
 
       if (current_event->flags & EV_ERROR)
       {
-        continue;
+        if (current_event->filter == EVFILT_READ)
+        {
+          ft_delete(&current_udata->m_request);
+          ft_delete(&current_udata->m_response);
+          ft_delete(&current_udata);
+          m_close_fd_set.insert(current_event->ident);
+        }
+        else if (current_event->filter == EVFILT_WRITE)
+        {
+          continue;
+        }
       }
       event_status = getEventStatus(current_event, current_udata->m_type);
       switch (event_status)

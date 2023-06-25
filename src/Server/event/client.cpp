@@ -21,13 +21,14 @@ void Server::readClientSocketBuffer(struct kevent *current_event,
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
+    m_close_fd_set.insert(current_event->ident);
   }
   else if (recv_size == 0)
   {
-    disconnectSocket(current_event->ident);
     ft_delete(&current_udata->m_request);
     ft_delete(&current_udata->m_response);
     ft_delete(&current_udata);
+    m_close_fd_set.insert(current_event->ident);
     return;
   }
   current_udata->m_parser.readBuffer(buff, recv_size,
