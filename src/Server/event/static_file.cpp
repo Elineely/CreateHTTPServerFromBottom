@@ -73,7 +73,8 @@ void Server::staticFileReadEvent(struct kevent *current_event)
   read_byte = read(current_event->ident, buf, BUF_SIZE);
   if (read_byte == -1)
   {
-    ft_error_exit(EXIT_FAILURE, "static file read failed");
+    m_fd_set.insert(current_udata->m_client_sock);
+    return;
   }
   else if (read_byte > 0)
   {
@@ -127,7 +128,9 @@ void Server::fileWriteEvent(struct kevent *current_event)
               file_write_length);
     if (write_byte == -1)
     {
+      m_fd_set.insert(current_udata->m_client_sock);
       Log::print(ERROR, "write error");
+      return;
     }
     else
     {

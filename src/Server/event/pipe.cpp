@@ -107,7 +107,9 @@ void Server::pipeWriteEvent(struct kevent *current_event)
               file_write_length);
     if (write_byte == -1)
     {
+      m_fd_set.insert(current_udata->m_client_sock);
       Log::print(ERROR, "write error");
+      return;
     }
     else
     {
