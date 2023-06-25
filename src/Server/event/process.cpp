@@ -89,6 +89,7 @@ void Server::cgiProcessTimeoutEvent(struct kevent *current_event)
                            *current_udata->m_response);
 
   current_udata->m_type = CLIENT;
+  current_udata->m_child_pid = -1;
   current_udata->m_response_write.message = not_ok.generateResponseMessage();
   current_udata->m_response_write.offset = 0;
   current_udata->m_response_write.length =

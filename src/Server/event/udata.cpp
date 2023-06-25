@@ -77,6 +77,8 @@ void Server::clearUdata(void)
         Log::print(INFO, "kill child pid: %d", udata->m_child_pid);
         kill(udata->m_child_pid, SIGTERM);
         waitpid(udata->m_child_pid, NULL, 0);
+        addEventToChangeList(m_kqueue.change_list, udata->m_child_pid,
+                             EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
       }
       if (udata->m_read_pipe_fd != -1)
       {
