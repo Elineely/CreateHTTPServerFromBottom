@@ -37,6 +37,12 @@ bool Config::isVaildServerBlock(t_server &server)
                "Invaild Server Content, does not have max_body_size content");
     return 1;
   }
+  else if(std::atol(server.max_body_size[0].c_str()) <= 0)
+  { 
+    Log::print(ERROR,
+               "Invaild Server Content, has INVALID max_body_size content");
+    return 1;
+  }
   return 0;
 }
 
@@ -81,7 +87,7 @@ t_location Config::get_location_expand(std::ifstream &config_file,
       break;
     }
     if (isVaildServerBlockContent(split_content_line[0], vaild_content_list) ||
-        split_content_line.size() >= 3)
+        split_content_line.size() >= 3 || split_content_line.size() == 1)
     {
       Log::print(ERROR,
                  "[get_location_expand:isVaildServerBlockContent]Invalid "
@@ -104,6 +110,12 @@ t_location Config::get_location_expand(std::ifstream &config_file,
   temp_location.max_body_size = server_max_size;
   if (temp_location_map["max_body_size"] != "")
   {
+    if (std::atol(temp_location_map["max_body_size"].c_str()) <= 0)
+    { 
+     Log::print(ERROR,
+               "Invaild Location Content, has INVALID max_body_size content");
+      exit(EXIT_FAILURE);
+    }
     temp_location.max_body_size = temp_location_map["max_body_size"];
   }
 
