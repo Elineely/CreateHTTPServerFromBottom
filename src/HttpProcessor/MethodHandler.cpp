@@ -292,5 +292,6 @@ void PutMethodHandler::methodRun()
     throw INTERNAL_SERVER_ERROR_500;
   }
   fcntl(outfile_fd, F_SETFL, O_NONBLOCK);
+  lseek(outfile_fd, 0, SEEK_END);
   m_response_data.static_write_file_fd = outfile_fd;
 }
