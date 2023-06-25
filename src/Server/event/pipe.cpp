@@ -61,6 +61,7 @@ void Server::pipeReadEvent(struct kevent *current_event)
       }
       delete current_udata->m_read_buffer[i];
     }
+    current_udata->m_read_buffer.clear();
     if (WIFSIGNALED(status))
     {
       m_fd_set.insert(current_udata->m_client_sock);

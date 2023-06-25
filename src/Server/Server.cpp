@@ -246,6 +246,17 @@ void Server::start(void)
         {
           udata = *udata_it;
           printf("delete udata: %p\n", udata);
+          if (udata->m_read_buffer.size() > 0)
+          {
+            std::vector<char*>::iterator vec_it;
+
+            vec_it = udata->m_read_buffer.begin();
+            for (; vec_it != udata->m_read_buffer.end(); ++vec_it)
+            {
+              delete *vec_it;
+            }
+            udata->m_read_buffer.clear();
+          }
           if (udata->m_request != NULL)
           {
             delete udata->m_request;
