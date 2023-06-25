@@ -136,10 +136,8 @@ void Server::start(void)
       {
         if (current_event->filter == EVFILT_READ)
         {
-          ft_delete(&current_udata->m_request);
-          ft_delete(&current_udata->m_response);
-          ft_delete(&current_udata);
           m_close_fd_set.insert(current_event->ident);
+          continue;
         }
         else if (current_event->filter == EVFILT_WRITE)
         {
