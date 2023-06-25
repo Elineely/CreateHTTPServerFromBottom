@@ -34,6 +34,7 @@ void Server::addStaticRequestEvent(struct kevent *current_event,
 
     lseek(response.static_read_file_fd, 0, SEEK_SET);
     response.static_read_file_size = file_size;
+    response.body.reserve(file_size);
     current_udata->m_type = STATIC_FILE;
     addEventToChangeList(m_kqueue.change_list, response.static_read_file_fd,
                          EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, current_udata);
