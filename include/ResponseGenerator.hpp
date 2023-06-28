@@ -23,6 +23,7 @@ class ResponseGenerator
 
   std::string m_cgi_content_type;
   std::vector<char> m_cgi_body;
+  std::vector<char>::iterator m_cgi_body_it;
 
   void appendStrToResponse_message(std::string str);
   void appendStrToBody(std::string str);

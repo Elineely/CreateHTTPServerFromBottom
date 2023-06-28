@@ -1,5 +1,6 @@
 #include "ResponseGenerator.hpp"
 
+#include <algorithm>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -29,57 +30,85 @@ std::string ResponseGenerator::statusCodeToString()
 void ResponseGenerator::cgiDataProcess()
 {
   if (m_response.cgi_flag == false) return;
-  std::string cgi_data(m_response.body.begin(), m_response.body.end());
+  // std::string cgi_data(m_response.body.begin(), m_response.body.end());
 
-  // get error code from cgi data
-  std::string::size_type status_begin;
-  std::string::size_type status_end;
-  std::string cgi_status_code;
-  if (cgi_data.size() == 0)
+  if (m_response.body.size() == 0)
   {
     m_response.status_code = BAD_GATEWAY_502;
     throw m_response.status_code;
   }
-  status_begin = cgi_data.find("Status: ");
-  status_end = cgi_data.find("\r\n", status_begin);
-  if (status_begin != std::string::npos && status_end != std::string::npos)
+
+  // get error code from cgi data
+  std::string cgi_status_key = "Status:";
+  std::vector<char>::iterator status_it;
+
+  status_it = std::search(m_response.body.begin(), m_response.body.end(),
+                          cgi_status_key.begin(), cgi_status_key.end());
+  if (status_it == m_response.body.end())
+  {
+    m_response.status_code = OK_200;
+  }
+  else
   {
     std::stringstream ss;
     int status_code;
-    cgi_status_code = cgi_data.substr(status_begin + 8, 3);
-    ss << cgi_status_code;
+
+    while (status_it != m_response.body.end() && *status_it != '\r')
+    {
+      if (std::isdigit(*status_it))
+      {
+        ss << *status_it;
+      }
+      status_it++;
+    }
+
     ss >> status_code;
+    // cgi_status_code = status_it.substr(status_begin + 8, 3);
+    // ss << status_it;
+    // ss >> status_code;
     m_response.status_code = static_cast<StatusCode>(status_code);
   }
-  else
-    m_response.status_code = OK_200;
 
   // generate content-type header in case of cgi
-  std::string::size_type content_type_begin;
-  std::string::size_type content_type_end;
-  content_type_begin = cgi_data.find("Content-Type: ");
-  content_type_end = cgi_data.find("\r\n", content_type_begin);
-  if (content_type_begin != std::string::npos &&
-      content_type_end != std::string::npos)
-  {
-    m_cgi_content_type = cgi_data.substr(content_type_begin,
-                                         content_type_end - content_type_begin);
-  }
-  else
+  std::string content_type_key = "Content-Type:";
+  std::vector<char>::iterator content_type_it;
+
+  content_type_it =
+      std::search(m_response.body.begin(), m_response.body.end(),
+                  content_type_key.begin(), content_type_key.end());
+  if (content_type_it == m_response.body.end())
   {
     m_response.status_code = INTERNAL_SERVER_ERROR_500;
     m_cgi_content_type = "text/html";
   }
+  else
+  {
+    std::stringstream ss;
+    std::vector<char>::iterator newline_it;
+
+    std::advance(content_type_it, content_type_key.length());
+    newline_it = std::find(content_type_it, m_response.body.end(), '\r');
+    std::string content_type(content_type_it, newline_it);
+
+    ss << ft_strtrim(content_type);
+    ss >> m_cgi_content_type;
+  }
 
   // generate body in case of cgi
-  std::string::size_type cgi_body_begin = cgi_data.find("\r\n\r\n");
-  std::vector<char>::iterator iter;
-  if (cgi_body_begin != std::string::npos)
-    iter = m_response.body.begin() + cgi_body_begin + 4;
+  std::string body_start = "\r\n\r\n";
+  std::vector<char>::iterator body_start_it;
+
+  body_start_it = std::search(content_type_it, m_response.body.end(),
+                          body_start.begin(), body_start.end());
+  if (body_start_it == m_response.body.end())
+  {
+    m_cgi_body_it = m_response.body.begin();
+  }
   else
-    iter = m_response.body.begin();
-  std::vector<char> cgi_body(iter, m_response.body.end());
-  m_cgi_body = cgi_body;
+  {
+    std::advance(body_start_it, body_start.length());
+    m_cgi_body_it = body_start_it;
+  }
 }
 
 ResponseGenerator::ResponseGenerator(Request& request_data,
@@ -117,7 +146,7 @@ ResponseGenerator& ResponseGenerator::operator=(ResponseGenerator const& obj)
   return (*this);
 }
 
-ResponseGenerator::~ResponseGenerator(){}
+ResponseGenerator::~ResponseGenerator() {}
 
 void ResponseGenerator::generateVersion()
 {
@@ -172,7 +201,10 @@ void ResponseGenerator::generateContentLength()
     }
     else
     {
-      ss << m_cgi_body.size();
+      size_t before_body_size;
+
+      before_body_size = std::distance(m_response.body.begin(), m_cgi_body_it);
+      ss << m_response.body.size() - before_body_size;
     }
   }
   else
@@ -288,7 +320,7 @@ void ResponseGenerator::setBody()
     else
     {
       m_response.response_message.insert(m_response.response_message.end(),
-                                         m_cgi_body.begin(), m_cgi_body.end());
+                                         m_cgi_body_it, m_response.body.end());
     }
   }
   else
@@ -334,3 +366,7 @@ std::vector<char>& ResponseGenerator::generateResponseMessage()
 
   return (m_response.response_message);
 }
+
+// 09:05:27 시작
+// 09:09:07 4개 도착 (3:40)
+// 09:10:20 20개 도착
