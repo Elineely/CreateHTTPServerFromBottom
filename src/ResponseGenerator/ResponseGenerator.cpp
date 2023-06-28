@@ -366,7 +366,3 @@ std::vector<char>& ResponseGenerator::generateResponseMessage()
 
   return (m_response.response_message);
 }
-
-// 09:05:27 시작
-// 09:09:07 4개 도착 (3:40)
-// 09:10:20 20개 도착
