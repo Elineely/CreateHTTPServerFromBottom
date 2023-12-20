@@ -15,6 +15,22 @@ HTTP/1.1 을 기준으로 만들었으며, RFC 7230~7235 까지의 메서드 및
 - I/O 멀티플렉싱을 통한 동시 요청 처리
 - 사용자 정의 설정 파일을 통한 유연한 구성
 
+## 성능 테스트 결과
+성능 테스트는 siege 툴을 이용해 진행했습니다.
+1. 25명의 사용자 동시 접속, 57분간 요청 지속
+<img width="535" alt="스크린샷 2023-12-19 오후 4 53 15" src="https://github.com/Elineely/CreateHTTPServerFromBottom/assets/80635378/e416b18d-9b95-4d1e-8bba-e0f5750dbf68">
+
+응답률 100%, 평균 응답 시간 0.01 초
+
+2. 100명의 사용자 동시 접속, 100초간 요청 지속
+<img width="522" alt="스크린샷 2023-12-19 오후 4 59 10" src="https://github.com/Elineely/CreateHTTPServerFromBottom/assets/80635378/ef66f62f-8edf-49e7-8b0c-788f2c1f95a7">
+
+응답률 100%, 평균 응답 시간 0.03초
+
+3. 150명의 사용자 동시 접속, 39초간 요청 지속
+<img width="562" alt="스크린샷 2023-12-19 오후 9 12 09" src="https://github.com/Elineely/CreateHTTPServerFromBottom/assets/80635378/cbb2ad9c-8578-40fd-86ba-1f45b824ff94">
+응답률 99.21%, 평균 응답 시간 0.04초
+
 ## 🦿작동방법
 1. repository를 git clone 합니다.
 ```
@@ -36,10 +52,7 @@ make
 ./cuteWebserv yourConfigFile.config //사용자가 원하는 설정파일 기반 실행
 ```
 
-### Prerequisites / 선행 조건
+### 선행 조건
+1. 사용자가 특정 config 파일로 HTTP 서버 실행을 원하는 경우, 실행파일(./cuteWebserv) 실행시 두번째 인자로 해당 cofig 파일 경로를 넘겨야합니다.
+2. HTTP 서버가 실행 되지 않는 경우, config 파일 내부에 지정된 포트번호가 이미 사용중인지 확인하십시오.
 
-아래 사항들이 설치가 되어있어야합니다.
-
-```
-예시
-```
