@@ -29,7 +29,9 @@ HTTP/1.1 을 기준으로 만들었으며, RFC 7230~7235 까지의 메서드 및
 
 3. 150명의 사용자 동시 접속, 39초간 요청 지속
 <img width="562" alt="스크린샷 2023-12-19 오후 9 12 09" src="https://github.com/Elineely/CreateHTTPServerFromBottom/assets/80635378/cbb2ad9c-8578-40fd-86ba-1f45b824ff94">
+
 응답률 99.21%, 평균 응답 시간 0.04초
+
 
 ## 🦿작동방법
 1. repository를 git clone 합니다.
